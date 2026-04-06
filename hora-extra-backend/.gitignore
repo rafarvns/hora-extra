@@ -1,0 +1,20 @@
+# Node.js ignore
+node_modules/
+dist/
+build/
+
+# Config files
+.env
+.env.local
+.env.*.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# Project specific
+package-lock.json (if you want to force updates, but usually it's kept)
+# No, usually we KEEP package-lock.json in git.
+# So I'll remove it from the ignore.

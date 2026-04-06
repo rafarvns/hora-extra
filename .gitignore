@@ -1,0 +1,28 @@
+# OS specific files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+
+# Backup files
+*.bak
+*.tmp
+*.temp
+
+# Node modules (just in case they are at the root, though they shouldn't be)
+node_modules/
+
+# Local configuration
+.env
+.env.local
+.env.*.local
