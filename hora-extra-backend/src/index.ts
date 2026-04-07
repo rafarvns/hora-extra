@@ -1,10 +1,17 @@
 import express, { Request, Response } from 'express';
+import { createServer } from 'http';
+import { SocketManager } from './sockets/SocketManager.js'; // Import with extension for ESM
 
 const app = express();
+const httpServer = createServer(app); // Crie o servidor HTTP a partir do Express
 const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(express.json());
+
+// Initialize Sockets
+const socketManager = SocketManager.initialize(httpServer);
+console.log(`[SOCKET] Socket.IO inicializado.`);
 
 // Health Check Endpoint
 app.get('/health', (req: Request, res: Response) => {
@@ -21,7 +28,9 @@ app.get('/', (req: Request, res: Response) => {
   res.send('Hora Extra Backend is running. Access /health for status.');
 });
 
-app.listen(PORT, () => {
+// Listen on HTTP Server instead of Express app directly
+httpServer.listen(PORT, () => {
   console.log(`[SERVER] Hora Extra Backend running on http://localhost:${PORT}`);
   console.log(`[HEALTH] Check status at http://localhost:${PORT}/health`);
 });
+
