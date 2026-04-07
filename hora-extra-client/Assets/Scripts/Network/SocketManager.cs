@@ -16,6 +16,11 @@ public class SocketManager : MonoBehaviour
     public string ServerUrl = "http://localhost:3000";
     public bool AutoConnect = true;
 
+    [Header("Development & Testing")]
+    [Tooltip("Se ativado, utiliza o token de teste fixo em vez de pedir o login real.")]
+    public bool UseTestToken = true;
+    public string TestToken = "horaextra_dev_test_token_2026";
+
     private SocketIOUnity _socket;
 
     private void Awake()
@@ -43,12 +48,14 @@ public class SocketManager : MonoBehaviour
     {
         Debug.Log($"[NETWORK] Conectando ao servidor: {ServerUrl}");
 
+        string token = UseTestToken ? TestToken : HoraExtra.Network.NetworkSettings.AuthToken;
+
         var uri = new Uri(ServerUrl);
         _socket = new SocketIOUnity(uri, new SocketIOOptions
         {
             Query = new System.Collections.Generic.Dictionary<string, string>
             {
-                {"token", "UNITY_CLIENT_TOKEN"} // Para autenticação futura
+                {"token", token}
             },
             Transport = SocketIOClient.Transport.TransportProtocol.WebSocket
         });

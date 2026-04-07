@@ -52,6 +52,23 @@ _socket.Connect();
 > [!IMPORTANT]
 > Se o token for inválido, o servidor emitirá um erro de conexão (`connect_error`) e o cliente não conseguirá emitir ou receber eventos.
 
+### 🛠️ Dica de Desenvolvimento (Modo de Teste)
+
+Para evitar ter que passar pela tela de login toda vez que você der "Play", você pode usar o **Token de Teste** no `SocketManager.cs`:
+
+1. No servidor, certifique-se que `NODE_ENV=development` e `DEV_TEST_TOKEN` estão configurados no `.env`.
+2. No Unity, passe o valor fixo no handshake:
+
+```csharp
+// Exemplo temporário para testes rápidos
+Auth = new Dictionary<string, string>
+{
+    { "token", "horaextra_dev_test_token_2026" }
+}
+```
+
+O servidor reconhecerá este token e lhe atribuirá um ID de jogador de teste automaticamente.
+
 ### 2. Escutar Eventos (Receber dados)
 Use `OnUnityThread` para que o seu código de UI ou Game Objects funcione sem erros:
 ```csharp

@@ -32,12 +32,26 @@ export class SocketManager {
      */
     private setupMiddleware(): void {
         this.io.use((socket, next) => {
-            const token = socket.handshake.auth.token;
+            // Tenta obter o token do handshake.auth (padrão v4) ou do query (fallback para clientes customizados)
+            const token = socket.handshake.auth?.token || socket.handshake.query?.token;
 
             if (!token) {
                 console.warn(`[SOCKET] Tentativa de conexão sem token: ${socket.id}`);
                 return next(new Error('Authentication error: Token missing.'));
             }
+
+            // --- BYPASS DE TESTE EM DESENVOLVIMENTO ---
+            // Permite que o frontend use uma chave mestra para testes rápidos sem login.
+            const isDev = process.env.NODE_ENV === 'development';
+            const devToken = process.env.DEV_TEST_TOKEN;
+            const devPlayerId = process.env.DEV_TEST_USER_ID || 'dev-test-player';
+
+            if (isDev && devToken && token === devToken) {
+                console.log(`[SOCKET] Sessão de TESTE iniciada: ${socket.id} (ID: ${devPlayerId})`);
+                socket.data.jogadorId = devPlayerId;
+                return next();
+            }
+            // ------------------------------------------
 
             const decoded = authService.verifyToken(token);
 
