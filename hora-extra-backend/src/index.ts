@@ -1,36 +1,34 @@
 import express, { Request, Response } from 'express';
 import { createServer } from 'http';
-import { SocketManager } from './sockets/SocketManager.js'; // Import with extension for ESM
+import { SocketManager } from './sockets/SocketManager.js';
+import apiRouter from './api/routes/index.js';
+import { errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
-const httpServer = createServer(app); // Crie o servidor HTTP a partir do Express
+const httpServer = createServer(app);
 const PORT = process.env.PORT || 3000;
 
-// Middleware
+// 1. Middlewares Globais
 app.use(express.json());
 
-// Initialize Sockets
+// 2. Setup Sockets
 const socketManager = SocketManager.initialize(httpServer);
 console.log(`[SOCKET] Socket.IO inicializado.`);
 
-// Health Check Endpoint
-app.get('/health', (req: Request, res: Response) => {
-  res.status(200).json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    service: 'hora-extra-backend'
-  });
-});
+// 3. Rotas da API REST (/api/v1/...)
+app.use('/api', apiRouter);
 
-// Root Endpoint (Quick check)
+// 4. Root (Quick check)
 app.get('/', (req: Request, res: Response) => {
-  res.send('Hora Extra Backend is running. Access /health for status.');
+  res.send('Hora Extra Backend is running. Use /api/health for status.');
 });
 
-// Listen on HTTP Server instead of Express app directly
+// 5. Middleware de Tratamento de Erros (sempre ao final!)
+app.use(errorHandler);
+
+// Inicializar Servidor
 httpServer.listen(PORT, () => {
-  console.log(`[SERVER] Hora Extra Backend running on http://localhost:${PORT}`);
-  console.log(`[HEALTH] Check status at http://localhost:${PORT}/health`);
+  console.log(`[SERVER] Hora Extra Backend rodando em http://localhost:${PORT}`);
+  console.log(`[HEALTH] Verifique o status em http://localhost:${PORT}/api/health`);
 });
 

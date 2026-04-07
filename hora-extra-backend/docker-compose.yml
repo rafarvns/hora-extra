@@ -1,0 +1,40 @@
+services:
+  # Banco de Dados MySQL
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: hora_extra_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - hora_extra_network
+
+  # Backend da Aplicação
+  app:
+    build: .
+    restart: always
+    environment:
+      # URL interna para comunicação entre containers (usa o nome do serviço 'db')
+      DATABASE_URL: mysql://user:password@db:3306/hora_extra_db
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    networks:
+      - hora_extra_network
+
+# Redes para comunicação entre serviços
+networks:
+  hora_extra_network:
+    driver: bridge
+
+# Volumes para persistência de dados do MySQL
+volumes:
+  mysql_data:

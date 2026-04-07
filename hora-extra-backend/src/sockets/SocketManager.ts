@@ -1,5 +1,11 @@
 import { Server, Socket } from 'socket.io';
 import { Server as HttpServer } from 'http';
+import authService from '../services/authService.js';
+import { SocketHandlerFactory } from './factories/SocketHandler.Factory.js';
+
+interface SocketData {
+    jogadorId: string;
+}
 
 /**
  * SocketManager: Singleton para gerenciar as conexões Socket.IO
@@ -7,7 +13,7 @@ import { Server as HttpServer } from 'http';
  */
 export class SocketManager {
     private static instance: SocketManager;
-    private io: Server;
+    private io: Server<any, any, any, SocketData>;
 
     private constructor(server: HttpServer) {
         this.io = new Server(server, {
@@ -17,7 +23,33 @@ export class SocketManager {
             }
         });
 
+        this.setupMiddleware();
         this.setupEventListeners();
+    }
+
+    /**
+     * Middleware de Autenticação: Garante que o cliente enviou um token válido.
+     */
+    private setupMiddleware(): void {
+        this.io.use((socket, next) => {
+            const token = socket.handshake.auth.token;
+
+            if (!token) {
+                console.warn(`[SOCKET] Tentativa de conexão sem token: ${socket.id}`);
+                return next(new Error('Authentication error: Token missing.'));
+            }
+
+            const decoded = authService.verifyToken(token);
+
+            if (!decoded) {
+                console.warn(`[SOCKET] Token inválido para o cliente: ${socket.id}`);
+                return next(new Error('Authentication error: Invalid or expired token.'));
+            }
+
+            // Anexar o ID do jogador ao dado do socket para uso posterior
+            socket.data.jogadorId = decoded.id;
+            next();
+        });
     }
 
     public static initialize(server: HttpServer): SocketManager {
@@ -36,35 +68,34 @@ export class SocketManager {
 
     private setupEventListeners(): void {
         this.io.on('connection', (socket: Socket) => {
-            console.log(`[SOCKET] Novo cliente conectado: ${socket.id}`);
+            console.log(`[SOCKET] Cliente conectado: ${socket.id} (Jogador: ${socket.data.jogadorId})`);
 
             // Enviar confirmação imediata
             socket.emit('connection_success', { id: socket.id, time: Date.now() });
 
-            // Handler: Entrar em uma sala
-            socket.on('join_room', (data: { roomId: string, playerName: string }) => {
-                const { roomId, playerName } = data;
-                socket.join(roomId);
-                console.log(`[SOCKET] Jogador ${playerName} (${socket.id}) entrou na sala: ${roomId}`);
+            // Registrar todos os eventos definidos na Factory dinamicamente
+            const events = SocketHandlerFactory.getRegisteredEvents();
 
-                // Notificar outros jogadores na sala
-                socket.to(roomId).emit('player_joined', { id: socket.id, name: playerName });
-
-                // Confirmar entrada para o remetente
-                socket.emit('room_joined', {
-                    roomId,
-                    playerId: socket.id,
-                    message: `Bem-vindo à sala ${roomId}`
+            events.forEach(eventName => {
+                socket.on(eventName, async (data: any) => {
+                    const handler = SocketHandlerFactory.createHandler(eventName);
+                    if (handler) {
+                        try {
+                            await handler.handle(socket, this.io, data);
+                        } catch (error) {
+                            console.error(`[SOCKET] Erro ao processar evento '${eventName}':`, error);
+                        }
+                    }
                 });
             });
 
-            // Handler: Desconexão
+            // Handler: Desconexão (Mantido aqui por ser um evento lifecycle padrão)
             socket.on('disconnect', (reason) => {
                 console.log(`[SOCKET] Cliente desconectado (${socket.id}). Motivo: ${reason}`);
                 this.io.emit('player_disconnected', { id: socket.id });
             });
 
-            // Handler: Ping de latência
+            // Handler: Ping de latência (Mantido aqui por ser utilitário básico)
             socket.on('ping', (data: { timestamp: number }) => {
                 socket.emit('pong', { timestamp: data.timestamp });
             });
