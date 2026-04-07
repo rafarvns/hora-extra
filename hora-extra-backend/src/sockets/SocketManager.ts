@@ -2,6 +2,7 @@ import { Server, Socket } from 'socket.io';
 import { Server as HttpServer } from 'http';
 import authService from '../services/authService.js';
 import { SocketHandlerFactory } from './factories/SocketHandler.Factory.js';
+import logger from '../utils/Logger.js';
 
 interface SocketData {
     jogadorId: string;
@@ -36,7 +37,7 @@ export class SocketManager {
             const token = socket.handshake.auth?.token || socket.handshake.query?.token;
 
             if (!token) {
-                console.warn(`[SOCKET] Tentativa de conexão sem token: ${socket.id}`);
+                logger.warn(`Tentativa de conexão sem token: ${socket.id}`, { module: 'SOCKET' });
                 return next(new Error('Authentication error: Token missing.'));
             }
 
@@ -47,7 +48,7 @@ export class SocketManager {
             const devPlayerId = process.env.DEV_TEST_USER_ID || 'dev-test-player';
 
             if (isDev && devToken && token === devToken) {
-                console.log(`[SOCKET] Sessão de TESTE iniciada: ${socket.id} (ID: ${devPlayerId})`);
+                logger.info(`Sessão de TESTE iniciada: ${socket.id} (ID: ${devPlayerId})`, { module: 'SOCKET' });
                 socket.data.jogadorId = devPlayerId;
                 return next();
             }
@@ -56,7 +57,7 @@ export class SocketManager {
             const decoded = authService.verifyToken(token);
 
             if (!decoded) {
-                console.warn(`[SOCKET] Token inválido para o cliente: ${socket.id}`);
+                logger.warn(`Token inválido para o cliente: ${socket.id}`, { module: 'SOCKET' });
                 return next(new Error('Authentication error: Invalid or expired token.'));
             }
 
@@ -82,7 +83,11 @@ export class SocketManager {
 
     private setupEventListeners(): void {
         this.io.on('connection', (socket: Socket) => {
-            console.log(`[SOCKET] Cliente conectado: ${socket.id} (Jogador: ${socket.data.jogadorId})`);
+            logger.info(`Cliente conectado: ${socket.id} (Jogador: ${socket.data.jogadorId})`, { 
+                module: 'SOCKET',
+                socketId: socket.id,
+                jogadorId: socket.data.jogadorId 
+            });
 
             // Enviar confirmação imediata
             socket.emit('connection_success', { id: socket.id, time: Date.now() });
@@ -97,7 +102,12 @@ export class SocketManager {
                         try {
                             await handler.handle(socket, this.io, data);
                         } catch (error) {
-                            console.error(`[SOCKET] Erro ao processar evento '${eventName}':`, error);
+                            logger.error(`Erro ao processar evento '${eventName}':`, { 
+                                module: 'SOCKET', 
+                                error, 
+                                eventName, 
+                                socketId: socket.id 
+                            });
                         }
                     }
                 });
@@ -105,7 +115,11 @@ export class SocketManager {
 
             // Handler: Desconexão (Mantido aqui por ser um evento lifecycle padrão)
             socket.on('disconnect', (reason) => {
-                console.log(`[SOCKET] Cliente desconectado (${socket.id}). Motivo: ${reason}`);
+                logger.info(`Cliente desconectado: ${socket.id} (Jogador: ${socket.data.jogadorId}). Motivo: ${reason}`, { 
+                    module: 'SOCKET',
+                    socketId: socket.id,
+                    reason 
+                });
                 this.io.emit('player_disconnected', { id: socket.id });
             });
 

@@ -30,5 +30,9 @@ Este workflow assume que um plano de implementação (`implementation_plan.md`) 
 - **NUNCA** crie suítes de testes unitários ou pastas `Tests/` no Unity.
 - **NUNCA** use `GameObject.Find` ou interações diretas em threads secundárias.
 
-## 6. Relatório
+## 6. Documentação (OBRIGATÓRIO)
+1. **Localização**: Adicione ou atualize a documentação em `e:\PUC\hora-extra\hora-extra-client\Docs`.
+2. **Padrão**: Utilize Markdown e inclua diagramas Mermaid se houver lógica complexa de networking ou estado.
+
+## 7. Relatório
 Crie o artefato `walkthrough.md` com prints ou vídeos de demonstração se possível.

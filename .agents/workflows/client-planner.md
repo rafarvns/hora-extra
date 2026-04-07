@@ -4,6 +4,9 @@ description: Workflow para planejamento de ações no frontend (Unity/C#) do pro
 
 Este workflow deve ser utilizado antes de qualquer implementação técnica no cliente Unity para garantir que a arquitetura e os padrões de rede foram respeitados.
 
+> [!CAUTION]
+> **ESTE WORKFLOW É APENAS PARA PLANEJAMENTO. O AGENTE NÃO DEVE REALIZAR NENHUMA ALTERAÇÃO NO UNITY EDITOR OU SCRIPTS C# DURANTE ESTA FASE.**
+
 ## 1. Análise Exaustiva (Sequential Thinking)
 Você **DEVE** utilizar a ferramenta `sequential-thinking` para:
 1.  **Compreender o Requisito**: Analisar o impacto visual e lógico no gameplay.
@@ -20,6 +23,7 @@ Você **DEVE** utilizar a ferramenta `sequential-thinking` para:
 O resultado final deste workflow deve ser um artefato `implementation_plan.md` contendo:
 - Lista de scripts C# a serem criados/modificados.
 - Definição de eventos de rede (se houver comunicação).
-- Impacto nos componentes do Unity Inspector (`[SerializeField]`, `[Header]`).
+- Impact nos componentes do Unity Inspector (`[SerializeField]`, `[Header]`).
+- **Documentação (OBRIGATÓRIO)**: Planejar onde a funcionalidade será documentada em `e:\PUC\hora-extra\hora-extra-client\Docs`.
 
-Aguarde a aprovação do usuário antes de prosseguir para a execução (`client.md`).
+Aguarde a aprovação do usuário antes de prosseguir para a execução (`client.md`). **Nenhuma ação de implementação deve ser tomada sem a aprovação do plano.**

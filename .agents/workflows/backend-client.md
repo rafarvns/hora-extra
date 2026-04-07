@@ -4,16 +4,17 @@ description: Workflow para execução de tarefas que envolvem o backend e fronte
 
 Este workflow assume que o contrato de rede e o plano de implementação (`implementation_plan.md`) já foram aprovados.
 
-## 1. Contrato (Documentação)
-1. Atualize obrigatoriamente o arquivo `hora-extra-client/Docs/Networking/COMMUNICATION.md` com o novo evento.
-2. Certifique-se de que as chaves curtas para payloads de alta frequência estão documentadas.
+## 1. Documentação (OBRIGATÓRIO)
+1. Atualize obrigatoriamente `e:\PUC\hora-extra\hora-extra-client\Docs\Networking\COMMUNICATION.md` com o novo evento e payload.
+2. Adicione ou atualize guias em `e:\PUC\hora-extra\hora-extra-backend\docs` e `e:\PUC\hora-extra\hora-extra-client\Docs` conforme a necessidade da tarefa.
 
-## 2. Implementação Backend (Server-Authoritative)
-1. **Handler**: Crie o handler em `src/sockets/handlers/`.
-2. **Interface**: Defina o payload em `src/types/`.
-3. **Lógica**: Implemente a validação antes do broadcast.
+## 2. Implementação Backend (TDD / Server-Authoritative)
+1. **Testes**: Crie testes unitários para a nova lógica em `src/services/`.
+2. **Handler**: Crie o handler em `src/sockets/handlers/`.
+3. **Interface**: Defina o payload em `src/types/`.
+4. **Lógica**: Implemente a validação antes do broadcast baseada nos testes.
 // turbo
-4. **Build**: Execute `npm run build` no backend.
+5. **Build**: Execute `npm run build` no backend.
 
 ## 3. Implementação Frontend (Unity Client)
 1. **Events**: Adicione em `Assets/Scripts/Network/NetworkEvents.cs`.

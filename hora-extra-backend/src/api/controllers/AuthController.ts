@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { BaseController } from '../../core/BaseController.js';
 import { ApiError } from '../../core/ApiError.js';
 import { ServiceFactory } from '../../core/factories/Service.Factory.js';
+import logger from '../../utils/Logger.js';
 
 const authService = ServiceFactory.getAuthService();
 const prisma = ServiceFactory.getPrismaClient();
@@ -28,6 +29,7 @@ export class AuthController extends BaseController {
       });
 
       if (playerExists) {
+        logger.warn(`Tentativa de registro com e-mail já existente: ${email}`, { module: 'AUTH' });
         throw ApiError.badRequest('Este e-mail já está cadastrado.');
       }
 
@@ -41,6 +43,11 @@ export class AuthController extends BaseController {
           email,
           senha: hashedSenha,
         },
+      });
+
+      logger.info(`Novo jogador registrado: ${player.email} (ID: ${player.id})`, { 
+        module: 'AUTH', 
+        playerId: player.id 
       });
 
       // Gera o token
@@ -77,6 +84,7 @@ export class AuthController extends BaseController {
       });
 
       if (!player) {
+         logger.warn(`Tentativa de login com e-mail inexistente: ${email}`, { module: 'AUTH' });
          throw ApiError.unauthorized('E-mail ou senha inválidos.');
       }
 
@@ -84,8 +92,14 @@ export class AuthController extends BaseController {
       const isPasswordValid = await authService.comparePasswords(senha, player.senha);
 
       if (!isPasswordValid) {
+         logger.warn(`Senha incorreta para o jogador: ${email}`, { module: 'AUTH' });
          throw ApiError.unauthorized('E-mail ou senha inválidos.');
       }
+
+      logger.info(`Login realizado com sucesso: ${player.email} (ID: ${player.id})`, { 
+        module: 'AUTH', 
+        playerId: player.id 
+      });
 
       // Gera o token
       const token = authService.generateToken(player.id);

@@ -4,6 +4,9 @@ description: Workflow para planejamento de ações no Product Owner do projeto H
 
 Este workflow deve ser utilizado antes de criar ou refinar tarefas no backlog do Trello ou GitHub. O objetivo é garantir o alinhamento com a visão de negócio.
 
+> [!CAUTION]
+> **ESTE WORKFLOW É APENAS PARA PLANEJAMENTO. O AGENTE NÃO DEVE REALIZAR ALTERAÇÕES NO TRELLO OU NO CÓDIGO FONTE DURANTE ESTA FASE.**
+
 ## 1. Análise Exaustiva (Sequential Thinking)
 Você **DEVE** utilizar a ferramenta `sequential-thinking` para:
 1.  **Compreender o Requisito de Negócio**: Analisar se a funcionalidade contribui para o MVP ou se é um "nice to have".
@@ -21,4 +24,4 @@ O resultado final deste workflow deve ser um artefato `implementation_plan.md` c
 - Definição de Pronto (DoD) para cada item de valor.
 - Critérios de Aceite testáveis pelo PO.
 
-Aguarde a aprovação do usuário antes de prosseguir para a execução (`po.md`).
+Aguarde a aprovação do usuário antes de prosseguir para a execução (`po.md`). **Nenhuma ação externa deve ser tomada sem a aprovação do plano.**

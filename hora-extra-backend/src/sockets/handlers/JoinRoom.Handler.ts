@@ -1,5 +1,6 @@
 import { Server, Socket } from 'socket.io';
 import { ISocketHandler } from '../types/SocketEvent.js';
+import logger from '../../utils/Logger.js';
 
 interface JoinRoomData {
     roomId: string;
@@ -15,13 +16,18 @@ export class JoinRoomHandler implements ISocketHandler {
         const { roomId, playerName } = data;
 
         if (!roomId || !playerName) {
-            console.warn(`[SOCKET] Dados inválidos recebidos no JoinRoom do cliente: ${socket.id}`);
+            logger.warn(`Dados inválidos recebidos no JoinRoom do cliente: ${socket.id}`, { module: 'SOCKET' });
             return;
         }
 
         // Entrar na sala
         socket.join(roomId);
-        console.log(`[SOCKET] Jogador ${playerName} (${socket.id}) entrou na sala: ${roomId} [VIA FACTORY-HANDLER]`);
+        logger.info(`Jogador ${playerName} (${socket.id}) entrou na sala: ${roomId}`, { 
+            module: 'SOCKET',
+            socketId: socket.id,
+            playerName,
+            roomId 
+        });
 
         // Notificar outros jogadores na sala
         socket.to(roomId).emit('player_joined', {
