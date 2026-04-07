@@ -1,63 +1,59 @@
-# Documentação de Comunicação Socket - Hora-Extra
+# Documentação de Comunicação Socket (UDP Root) - Hora-Extra
 
-Esta documentação define o protocolo de comunicação em tempo real entre o cliente (Unity) e o servidor (Node.js).
+Esta documentação define o protocolo de comunicação em tempo real via UDP entre o cliente (Unity) e o servidor (Node.js).
 
 ## 1. Visão Geral
-- **Protocolo**: Socket.io (Engine.IO v4)
-- **Formato**: JSON
-- **Endereço**: `http://localhost:3000` (Local)
+- **Protocolo**: UDP Datagram (Raw)
+- **Porta**: `3001` (UDP)
+- **Endereço**: `127.0.0.1` (Local)
+- **Formato**: JSON (dentro do datagrama)
 - **Frequência de Tick (Sync)**: 20Hz (a cada 50ms)
 
-## 2. Fluxo de Conexão
-1. O cliente se conecta enviando o **Token JWT** no campo `auth: { token: "..." }`.
-2. O servidor valida o token via middleware. Se for inválido, a conexão falha (`connect_error`).
-3. O servidor emite `connection_success` e atribui o `socket.data.jogadorId`.
+## 2. Fluxo de Conexão (Handshake)
+O UDP é connectionless, então implementamos um handshake manual:
+1. O cliente envia o evento `CONN` contendo o **Token JWT** e dados iniciais.
+2. O servidor valida o token. Se válido, cria uma sessão vinculada ao `IP:PORTA` do remetente.
+3. O servidor responde com `CONN_SUCCESS` contendo o ID persistente do jogador.
 4. O cliente emite `join_room` com o ID da sala.
-5. O servidor responde com `room_joined` contendo o estado inicial.
+5. O servidor responde with `room_joined` e associa a sessão à sala (room).
 
-## 3. Eventos: Cliente -> Servidor
+## 3. Estrutura do Pacote UDP
+Cada datagrama deve conter um JSON no seguinte formato:
+```json
+{
+  "e": "nome_do_evento",
+  "d": { "payload": "..." },
+  "token": "..." 
+}
+```
+*(Nota: O campo `token` só é obrigatório no evento `CONN`).*
+
+## 4. Eventos: Cliente -> Servidor (UDP)
 
 | Evento | Payload | Descrição |
 | :--- | :--- | :--- |
-| `join_room` | `{ "roomId": string, "playerName": string }` | Solicita entrada em uma sala específica. |
-| `player_input` | `{ "direction": { "x": number, "y": number }, "actions": string[] }` | Envia comandos de movimento e ações (ex: 'interact'). |
-| `ping` | `{ "timestamp": number }` | Usado para medir a latência (RTT). |
+| `CONN` | `{ "token": string, "d": { "playerName": string } }` | Handshake inicial de autenticação. |
+| `join_room` | `{ "roomId": string, "playerName": string }` | Solicita entrada em uma sala. |
+| `player_move` | `{ "p": [x, y, z], "r": rotation }` | Envia posição e rotação Y do jogador local. |
+| `npc_register` | `{ "id": string, "type": string, "p": [x,y,z], "r": float }` | Registra um NPC/Boss na sala. |
+| `npc_move_request` | `{ "id": string, "p": [x, y, z], "r": rotation }` | Solicita movimento de um NPC (Master apenas). |
+| `ping` | `{ "timestamp": number }` | Cálculo de latência. |
 
-## 4. Eventos: Servidor -> Cliente
+## 5. Eventos: Servidor -> Cliente (UDP)
 
 | Evento | Payload | Descrição |
 | :--- | :--- | :--- |
-| `room_joined` | `{ "roomId": string, "players": Player[], "gameState": object }` | Confirmar entrada e enviar estado inicial. |
-| `state_update` | `{ "tick": number, "players": PlayerUpdate[] }` | Broadcast periódico com a posição e estado de todos os jogadores na sala. |
-| `player_disconnected` | `{ "playerId": string }` | Notifica que um jogador saiu da partida. |
-| `pong` | `{ "timestamp": number }` | Resposta ao ping para cálculo de latência. |
-
-## 5. Estruturas de Dados (Schemas)
-
-### Player
-```json
-{
-  "id": "socket_id",
-  "name": "nome_do_jogador",
-  "position": { "x": 0.0, "y": 0.0, "z": 0.0 },
-  "rotation": 0.0,
-  "status": "idle | walking | interacting"
-}
-```
-
-### PlayerUpdate
-```json
-{
-  "id": "socket_id",
-  "p": [x, y, z],
-  "r": rotation
-}
-```
-*(Nota: Nomes de chaves encurtados para 'p' e 'r' para economizar banda em atualizações frequentes).*
+| `CONN_SUCCESS` | `{ "id": string }` | Sucesso na autenticação inicial. |
+| `CONN_ERROR` | `{ "message": string }` | Falha na autenticação ou token expirado. |
+| `room_joined` | `{ "roomId": string, "playerId": string }` | Confirmar entrada na sala. |
+| `player_move` | `{ "id": string, "p": [x, y, z], "r": number }` | Atualização de posição de outros jogadores. |
+| `npc_move` | `{ "id": string, "p": [x, y, z], "r": number }` | Atualização de posição de NPCs/Bosses. |
+| `npc_registered` | `{ "id": string, "type": string, "p": [x,y,z], "r": float }` | Notifica registro de NPC na sala. |
+| `player_joined` | `{ "id": string, "name": string }` | Notifica novo jogador na sala. |
 
 ---
 
-## 6. Boas Práticas (Co-op Profissional)
-1. **Interpolação de Snapshot**: O cliente Unity não deve "snappar" o jogador para a posição recebida, mas sim interpolar suavemente entre o último e o penúltimo estado recebido.
-2. **Timeout**: O cliente deve tentar reconectar automaticamente em caso de perda de sinal cardíaco (heartbeat).
-3. **Validação**: O servidor ignora pacotes com timestamps muito antigos ou velocidades impossíveis.
+## 6. Boas Práticas (UDP Mode)
+1. **Unreliable**: Espere que alguns pacotes de movimento se percam. O cliente deve estar preparado para lacunas.
+2. **Heartbeat**: A sessão no servidor expira após 30 segundos sem pacotes. O cliente deve manter o envio de `ping` ou `move` constante.
+3. **Ordem**: Implementar um campo de `sequence` ou `timestamp` se a ordem dos pacotes se tornar um problema crítico.

@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 import { createServer } from 'http';
-import { SocketManager } from './sockets/SocketManager.js';
+import { UdpSocketManager } from './sockets/UdpSocketManager.js';
 import apiRouter from './api/routes/index.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import logger from './utils/Logger.js';
@@ -26,9 +26,10 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
-// 2. Setup Sockets
-const socketManager = SocketManager.initialize(httpServer);
-logger.info('Socket.IO inicializado.', { module: 'SOCKET' });
+// 2. Setup Sockets (UDP)
+const UDP_PORT = Number(process.env.UDP_PORT) || 3001;
+const udpSocketManager = UdpSocketManager.initialize(UDP_PORT);
+logger.info(`UDP Socket inicializado na porta ${UDP_PORT}`, { module: 'UDP_SOCKET' });
 
 // 3. Rotas da API REST (/api/v1/...)
 app.use('/api', apiRouter);
@@ -42,8 +43,9 @@ app.get('/', (req: Request, res: Response) => {
 app.use(errorHandler);
 
 // Inicializar Servidor
-httpServer.listen(PORT, () => {
-  logger.info(`Hora Extra Backend rodando em http://localhost:${PORT}`, { module: 'SERVER' });
+const HOST = '0.0.0.0'; // Escuta em todas as interfaces de rede locales
+httpServer.listen(Number(PORT), HOST, () => {
+  logger.info(`Hora Extra Backend rodando em http://${HOST}:${PORT}`, { module: 'SERVER' });
   logger.info(`Verifique o status em http://localhost:${PORT}/api/health`, { module: 'HEALTH' });
 });
 

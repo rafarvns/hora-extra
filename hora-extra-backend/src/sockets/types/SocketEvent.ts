@@ -1,11 +1,17 @@
-import { Server, Socket } from 'socket.io';
+import { RemoteInfo } from 'dgram';
 
 /**
- * Interface obrigatória para todo Socket Handler.
+ * Interface obrigatória para todo Socket Handler (UDP).
  * Cada classe de handler deve implementar o método 'handle'.
+ * O parâmetro 'server' é passado como any para evitar dependência circular 
+ * com UdpSocketManager.
  */
 export interface ISocketHandler {
-    handle(socket: Socket, io: Server, data?: any): void | Promise<void>;
+    handle(
+        server: any, 
+        remoteInfo: RemoteInfo, 
+        data: any
+    ): void | Promise<void>;
 }
 
 /**
