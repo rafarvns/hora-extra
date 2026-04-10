@@ -26,3 +26,4 @@ node_modules/
 .env
 .env.local
 .env.*.local
+*.blend1
