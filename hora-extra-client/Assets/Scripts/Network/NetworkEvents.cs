@@ -7,6 +7,7 @@ public static class NetworkEvents
     public const string JOIN_ROOM = "join_room";
     public const string PLAYER_INPUT = "player_input";
     public const string PLAYER_MOVE = "player_move";
+    public const string PLAYER_SPRINT = "player_sprint";
     public const string NPC_REGISTER = "npc_register";
     public const string NPC_MOVE_REQUEST = "npc_move_request";
     public const string PING = "ping";

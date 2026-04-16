@@ -14,6 +14,7 @@ interface PlayerSession {
     lastRotation?: number;
     lastSeen: number;
     movePacketCount: number; // Contador para log não poluído
+    isSprinting?: boolean; // Novo campo para estado de corrida
 }
 
 /**

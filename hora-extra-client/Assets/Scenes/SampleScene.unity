@@ -556,6 +556,17 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
+--- !u!114 &170164719 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 55981692606716331, guid: fd585768979f79b45b23f438c5e6aced, type: 3}
+  m_PrefabInstance: {fileID: 1316540528}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5da66943abb04144d9a84c463ca184ca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Characters.PlayerController
 --- !u!1001 &170244989
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2473,9 +2484,17 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 55981692606716331, guid: fd585768979f79b45b23f438c5e6aced, type: 3}
+      propertyPath: _runSpeed
+      value: 18
+      objectReference: {fileID: 0}
+    - target: {fileID: 55981692606716331, guid: fd585768979f79b45b23f438c5e6aced, type: 3}
       propertyPath: _playerCamera
       value: 
       objectReference: {fileID: 1211756855}
+    - target: {fileID: 444383891014742103, guid: fd585768979f79b45b23f438c5e6aced, type: 3}
+      propertyPath: _staminaImage
+      value: 
+      objectReference: {fileID: 1009833047}
     - target: {fileID: 3521616022291983963, guid: fd585768979f79b45b23f438c5e6aced, type: 3}
       propertyPath: m_LocalPosition.x
       value: 5.03
@@ -2963,6 +2982,7 @@ GameObject:
   - component: {fileID: 1591192983}
   - component: {fileID: 1591192982}
   - component: {fileID: 1591192981}
+  - component: {fileID: 1591192985}
   m_Layer: 5
   m_Name: HUD_Canvas
   m_TagString: Untagged
@@ -3053,6 +3073,20 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!114 &1591192985
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1591192980}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0649018eca370c54aa554949ece836e3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Characters.StaminaBarUI
+  _playerController: {fileID: 170164719}
+  _staminaFill: {fileID: 1009833046}
 --- !u!1001 &1707902667
 PrefabInstance:
   m_ObjectHideFlags: 0

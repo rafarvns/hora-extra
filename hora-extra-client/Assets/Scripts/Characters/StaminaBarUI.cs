@@ -1,40 +1,72 @@
 using UnityEngine;
 using HoraExtra.Characters;
 
-public class StaminaBarUI : MonoBehaviour
+namespace HoraExtra.Characters
 {
-    [Header("Referências")]
-    [SerializeField] private PlayerController _playerController;
-    [SerializeField] private RectTransform _staminaFill;
-
-    private float _initialWidth;
-
-    private void Start()
+    /// <summary>
+    /// Gerencia o preenchimento visual da barra de stamina usando a largura de um RectTransform.
+    /// Funciona de forma resiliente, buscando o jogador local se necessário.
+    /// </summary>
+    public class StaminaBarUI : MonoBehaviour
     {
-        if (_staminaFill == null)
+        [Header("Referências")]
+        [SerializeField] private PlayerController _playerController;
+        [SerializeField, Tooltip("O objeto (Child) que representa a parte colorida preenchível da barra.")] 
+        private RectTransform _staminaFill;
+
+        private float _initialWidth;
+
+        private void Start()
         {
-            Debug.LogError("StaminaBarUI: Stamina Fill não foi atribuído no Inspector.");
-            return;
+            if (_staminaFill == null)
+            {
+                Debug.LogError($"[UI] StaminaBarUI em {gameObject.name}: Stamina Fill não atribuído no Inspector!");
+                return;
+            }
+
+            _initialWidth = _staminaFill.sizeDelta.x;
+            
+            if (_playerController == null)
+            {
+                FindLocalPlayer();
+            }
         }
 
-        if (_playerController == null)
+        private void FindLocalPlayer()
         {
             _playerController = FindObjectOfType<PlayerController>();
+            if (_playerController != null)
+            {
+                Debug.Log("[UI] StaminaBarUI: PlayerController encontrado e vinculado.");
+            }
         }
 
-        _initialWidth = _staminaFill.sizeDelta.x;
-    }
+        private void Update()
+        {
+            if (_staminaFill == null) return;
 
-    private void Update()
-    {
-        if (_playerController == null || _staminaFill == null)
-            return;
+            // Busca resiliente caso o player tenha sido instanciado depois ou em outro frame
+            if (_playerController == null)
+            {
+                FindLocalPlayer();
+                return; 
+            }
 
-        float staminaPercent = _playerController.CurrentStamina / _playerController.MaxStamina;
-        staminaPercent = Mathf.Clamp01(staminaPercent);
+            UpdateBar();
+        }
 
-        Vector2 newSize = _staminaFill.sizeDelta;
-        newSize.x = _initialWidth * staminaPercent;
-        _staminaFill.sizeDelta = newSize;
+        private void UpdateBar()
+        {
+            float max = _playerController.MaxStamina;
+            float current = _playerController.CurrentStamina;
+
+            if (max <= 0) return;
+
+            float staminaPercent = Mathf.Clamp01(current / max);
+
+            Vector2 newSize = _staminaFill.sizeDelta;
+            newSize.x = _initialWidth * staminaPercent;
+            _staminaFill.sizeDelta = newSize;
+        }
     }
 }

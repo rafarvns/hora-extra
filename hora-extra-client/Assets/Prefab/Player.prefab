@@ -239,6 +239,7 @@ GameObject:
   - component: {fileID: 4262968361981585854}
   - component: {fileID: 2187326101106687831}
   - component: {fileID: 55981692606716331}
+  - component: {fileID: 444383891014742103}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -319,6 +320,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Characters.PlayerController
   _walkSpeed: 6
+  _runSpeed: 10
   _gravity: -9.81
   _playerCamera: {fileID: 0}
   _lookSensitivity: 0.5
@@ -327,3 +329,22 @@ MonoBehaviour:
   _networkTickRate: 20
   _onlyMoveViaNetwork: 1
   _reconciliationThreshold: 1
+--- !u!114 &444383891014742103
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3723225028747301847}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 136596c4a00f40e429116e73cd1f2055, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Characters.PlayerStamina
+  _maxStamina: 100
+  _currentStamina: 100
+  _consumptionRate: 20
+  _recoveryRate: 15
+  _recoveryDelay: 1.5
+  _staminaSlider: {fileID: 0}
+  _staminaImage: {fileID: 0}
