@@ -11,6 +11,21 @@ const __dirname = path.dirname(__filename);
  * Supports switching between MySQL and SQLite based on USE_SQLITE environment variable.
  */
 async function setupDatabase() {
+  // Load .env manually if it exists, as ts-node doesn't do it automatically
+  const envPath = path.join(__dirname, '../.env');
+  if (fs.existsSync(envPath)) {
+    const envContent = fs.readFileSync(envPath, 'utf8');
+    for (const line of envContent.split(/\r?\n/)) {
+      const trimmedLine = line.trim();
+      if (!trimmedLine || trimmedLine.startsWith('#')) continue;
+      
+      const [key, ...val] = trimmedLine.split('=');
+      if (key && val.length > 0) {
+        process.env[key.trim()] = val.join('=').trim().replace(/^["']|["']$/g, '');
+      }
+    }
+  }
+
   const useSqlite = process.env.USE_SQLITE === 'true';
   const schemaPath = path.join(__dirname, '../prisma/schema.prisma');
   const backupSchemaPath = path.join(__dirname, '../prisma/schema.prisma.bak');
