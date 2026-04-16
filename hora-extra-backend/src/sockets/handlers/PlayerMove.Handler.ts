@@ -42,6 +42,6 @@ export class PlayerMoveHandler implements ISocketHandler {
             r: data.r
         };
 
-        server.broadcastToRoom(session.roomId, 'player_move', payload);
+        server.broadcastToRoom(session.roomId, 'player_move', payload, rinfo);
     }
 }

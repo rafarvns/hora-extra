@@ -52,7 +52,7 @@ namespace HoraExtra.AI
             // Quando envia o RequestMove, o targetPosition muda e o NetworkEntity começa a mover.
             // Como somos o mestre, podemos estimar a velocidade localmente ou via Rigidbody.
             Rigidbody rb = GetComponent<Rigidbody>();
-            float currentSpeed = rb != null ? rb.velocity.magnitude : 0f;
+            float currentSpeed = rb != null ? rb.linearVelocity.magnitude : 0f;
             
             _animator.SetFloat(Speed, currentSpeed);
             _animator.SetBool(IsWalking, currentSpeed > 0.1f);
