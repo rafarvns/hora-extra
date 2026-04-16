@@ -41,11 +41,11 @@ namespace HoraExtra.Network
         private void Start()
         {
             if (string.IsNullOrEmpty(_networkId))
-                _networkId = gameObject.name + "_" + GetInstanceID();
+                _networkId = gameObject.name; // Usar apenas o nome para consistência entre clientes
 
             // Sincronizar com o SocketManager
             SocketManager.Instance.On(NetworkEvents.NPC_MOVE, OnMoveReceived);
-            SocketManager.Instance.On(NetworkEvents.NPC_REGISTERED, OnMoveReceived); // Usar o mesmo handler para sincronia inicial
+            SocketManager.Instance.On(NetworkEvents.NPC_REGISTERED, OnRegistered); // Usar handler específico para registro
             
             RegisterOnServer();
         }
@@ -95,11 +95,39 @@ namespace HoraExtra.Network
             float[] p = data["p"]?.ToObject<float[]>();
             float r = data["r"]?.Value<float>() ?? 0f;
 
+            // Se o payload contiver isMaster explicitamente (evento de registro)
+            if (data["isMaster"] != null)
+            {
+                _isMaster = data["isMaster"].Value<bool>();
+                UpdateKinematicState();
+            }
+
             if (p != null && p.Length == 3)
             {
                 _targetPosition = new Vector3(p[0], p[1], p[2]);
                 _targetRotation = r;
             }
+        }
+
+        private void UpdateKinematicState()
+        {
+            if (_rb == null) return;
+            
+            // Se eu NÃO sou o mestre, o NPC deve ser cinemático para evitar que a gravidade local
+            // lute contra o movimento recebido da rede.
+            _rb.isKinematic = !_isMaster;
+            
+            // Melhora a detecção de colisão se formos o Master (evita atravessar paredes)
+            if (!_isMaster)
+            {
+                _rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
+            }
+            else
+            {
+                _rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
+            }
+            
+            Debug.Log($"[NETWORK] {_networkId} kinematic set to {_rb.isKinematic}, collision: {_rb.collisionDetectionMode} (IsMaster: {_isMaster})");
         }
 
         private void Update()

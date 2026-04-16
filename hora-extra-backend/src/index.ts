@@ -7,7 +7,7 @@ import logger from './utils/Logger.js';
 
 const app = express();
 const httpServer = createServer(app);
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 
 // 1. Middlewares Globais
 app.use(express.json());
@@ -27,7 +27,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 // 2. Setup Sockets (UDP)
-const UDP_PORT = Number(process.env.UDP_PORT) || 3001;
+const UDP_PORT = Number(process.env.UDP_PORT) || 5001;
 const udpSocketManager = UdpSocketManager.initialize(UDP_PORT);
 logger.info(`UDP Socket inicializado na porta ${UDP_PORT}`, { module: 'UDP_SOCKET' });
 

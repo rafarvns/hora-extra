@@ -37,12 +37,18 @@ RUN apk add --no-cache openssl
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/package.json ./package.json
+COPY --from=build /app/prisma ./prisma
+COPY scripts ./scripts
 
-# Expõe a porta do backend
-EXPOSE 3000
+# Garante permissão de execução
+RUN chmod +x ./scripts/entrypoint.sh
+
+# Expõe as portas do backend (HTTP e UDP)
+EXPOSE 5000
+EXPOSE 5001/udp
 
 # Variáveis de ambiente padrão
 ENV NODE_ENV=production
 
-# Comando para rodar a aplicação
-CMD ["npm", "start"]
+# Comando para rodar a aplicação usando o entrypoint
+ENTRYPOINT ["sh", "./scripts/entrypoint.sh"]

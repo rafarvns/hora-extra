@@ -16,4 +16,5 @@ export interface INpcRegisterPayload {
     p: [number, number, number];
     r: number;
     name?: string;
+    isMaster?: boolean;
 }

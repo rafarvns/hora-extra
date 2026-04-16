@@ -37,6 +37,9 @@ namespace HoraExtra.Characters
         [SerializeField, Tooltip("Se ativado, o jogador só se move após receber o pacote do servidor (Authoritative).")]
         private bool _onlyMoveViaNetwork = true;
 
+        [SerializeField, Tooltip("Distância máxima permitida entre local e servidor antes de forçar um Snap (Reconciliação).")]
+        private float _reconciliationThreshold = 1.0f;
+
         private CharacterBase _characterBase;
         private CharacterController _characterController;
         private Vector3 _velocity;
@@ -66,23 +69,48 @@ namespace HoraExtra.Characters
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
 
-            // Registrar para receber o próprio movimento de volta do servidor (Efeito Eco para Autoridade)
+            // Registrar para receber o próprio movimento de volta do servidor (Reconciliação)
             SocketManager.Instance.On(NetworkEvents.PLAYER_MOVE, (data) => {
                 if (!_onlyMoveViaNetwork) return;
                 
                 string id = data["id"]?.ToString();
                 if (id == SocketManager.Instance.LocalPlayerId) {
-                    // Atualizar posição vinda do servidor
                     var pos = data["p"];
                     Vector3 serverPos = new Vector3((float)pos[0], (float)pos[1], (float)pos[2]);
                     
-                    // Teleportar/Mover para a posição validada pelo servidor
-                    // Desativamos temporariamente o controller para evitar conflitos de colisão durante o "set"
-                    _characterController.enabled = false;
-                    transform.position = serverPos;
-                    _characterController.enabled = true;
+                    if (Vector3.Distance(transform.position, serverPos) > _reconciliationThreshold)
+                    {
+                        Debug.Log($"[NETWORK] Reconciliação necessária: Diff {Vector3.Distance(transform.position, serverPos):F2}m. Snapping.");
+                        _characterController.enabled = false;
+                        transform.position = serverPos;
+                        _characterController.enabled = true;
+                    }
                 }
             });
+
+            // Inicializa última posição para evitar salto no primeiro frame
+            _lastSentPosition = transform.position;
+            _lastSentRotation = transform.eulerAngles.y;
+
+            // Tenta aterrar o player no início para evitar o bug de "flutuar" na cena
+            SnapToGround();
+        }
+
+        /// <summary>
+        /// Força o player a encostar no chão no início da execução.
+        /// Resolve o bug onde o CharacterController inicia em suspensão.
+        /// </summary>
+        private void SnapToGround()
+        {
+            if (Physics.Raycast(transform.position, Vector3.down, out RaycastHit hit, 5f))
+            {
+                _characterController.enabled = false;
+                // Ajusta a posição para o ponto de colisão + metade da altura do CharacterController 
+                // Considerar se o pivot do modelo está nos pés (Y=0 local) ou no centro.
+                transform.position = hit.point + Vector3.up * (_characterController.skinWidth + 0.1f);
+                _characterController.enabled = true;
+                Debug.Log($"[NETWORK] Player aterrado via Raycast em {hit.point}");
+            }
         }
 
         private void Update()

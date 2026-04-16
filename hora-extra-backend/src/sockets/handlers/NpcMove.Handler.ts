@@ -20,8 +20,10 @@ export class NpcMoveHandler implements ISocketHandler {
             return;
         }
 
+        // Log de debug para cada pacote (visível se LOG_LEVEL=debug)
+        logger.debug(`[NPC_MOVE_REQ] NPC '${data.id}' movendo para [${data.p.map(n => n.toFixed(2))}] do cliente ${session.id}`, { module: 'UDP_SOCKET' });
+
         // 3. Broadcast para todos na sala (Incluindo o emissor, pois ele só se move no retorno)
-        // Isso garante sincronização absoluta: o emissor só se move se o server processou.
         const payload = {
             id: data.id,
             p: data.p,
@@ -30,9 +32,12 @@ export class NpcMoveHandler implements ISocketHandler {
 
         server.broadcastToRoom(session.roomId, 'npc_move', payload);
         
-        // Log ocasional
-        if (session.movePacketCount % 100 === 0) {
-            logger.info(`[NPC_SYNC] Movimento do NPC '${data.id}' replicado na sala '${session.roomId}'`, { module: 'UDP_SOCKET' });
+        // Incrementar contador de pacotes
+        session.movePacketCount++;
+
+        // Log periódico para NPCs (mais frequente para facilitar debug de sync)
+        if (session.movePacketCount % 20 === 0) {
+            logger.info(`[NPC_SYNC] Replicando movimento do NPC '${data.id}' na sala '${session.roomId}' (Pos: ${data.p.map(n => n.toFixed(1))})`, { module: 'UDP_SOCKET' });
         }
     }
 }

@@ -1,6 +1,7 @@
 import dgram, { RemoteInfo, Socket as UdpSocket } from 'dgram';
 import authService from '../services/authService.js';
 import { SocketHandlerFactory } from './factories/SocketHandler.Factory.js';
+import { NpcRegisterHandler } from './handlers/NpcRegister.Handler.js';
 import logger from '../utils/Logger.js';
 
 interface PlayerSession {
@@ -24,7 +25,7 @@ export class UdpSocketManager {
     private server: UdpSocket;
     private sessions: Map<string, PlayerSession> = new Map(); // Key: "address:port"
 
-    private constructor(port: number = 3001) {
+    private constructor(port: number = 5001) {
         this.server = dgram.createSocket('udp4');
 
         this.server.on('error', (err) => {
@@ -47,7 +48,7 @@ export class UdpSocketManager {
         setInterval(() => this.cleanupSessions(), 10000);
     }
 
-    public static initialize(port: number = 3001): UdpSocketManager {
+    public static initialize(port: number = 5001): UdpSocketManager {
         if (!UdpSocketManager.instance) {
             UdpSocketManager.instance = new UdpSocketManager(port);
         }
@@ -141,6 +142,13 @@ export class UdpSocketManager {
             // AUTO-JOIN em sala de teste se for sessão de desenvolvimento
             roomId: (isDev && token === devToken) ? "dev-room" : undefined
         };
+        
+        // --- LOGICA DE RESET (Novo Plano) ---
+        if (data?.resetRoom && isDev && token === devToken) {
+            const roomIdToReset = session.roomId || "dev-room";
+            logger.info(`[UDP_SOCKET] Solicitado RESET da sala '${roomIdToReset}' pelo jogador ${playerId}`, { module: 'UDP_SOCKET' });
+            this.resetRoomState(roomIdToReset);
+        }
 
         this.sessions.set(sessionKey, session);
 
@@ -200,6 +208,25 @@ export class UdpSocketManager {
                 this.sessions.delete(key);
             }
         });
+    }
+
+    /**
+     * Limpa completamente o estado de uma sala (Sessões e NPCs).
+     */
+    private resetRoomState(roomId: string): void {
+        // 1. Limpar Sessões (Remover outros jogadores da memória)
+        let count = 0;
+        this.sessions.forEach((session, key) => {
+            if (session.roomId === roomId) {
+                this.sessions.delete(key);
+                count++;
+            }
+        });
+
+        // 2. Limpar NPCs
+        NpcRegisterHandler.clearRoomState(roomId);
+
+        logger.info(`[UDP_SOCKET] Sala '${roomId}' reiniciada. ${count} sessões removidas.`, { module: 'UDP_SOCKET' });
     }
 
     /**

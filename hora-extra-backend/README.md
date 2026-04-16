@@ -21,7 +21,7 @@ O servidor do jogo **Hora-Extra**, responsável pelo gerenciamento de partidas, 
    ```bash
    npm run dev
    ```
-3. O servidor estará rodando em um endereço definido (ex: `http://localhost:3000`).
+3. O servidor estará rodando em um endereço definido (ex: `http://localhost:5000`).
 
 ---
 
