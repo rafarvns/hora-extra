@@ -3,15 +3,30 @@ import { ISocketHandler } from '../types/SocketEvent.js';
 import { INpcRegisterPayload } from '../types/NpcMovePayload.js';
 import logger from '../../utils/Logger.js';
 
-// Mapa simples para rastrear quem é o mestre de cada NPC por sala
-// chave: roomId:npcId -> value: playerId
-const npcMasters = new Map<string, string>();
-
 /**
  * NpcRegisterHandler: Um cliente "registra" um NPC que existe localmente na sua cena.
  * O servidor decide se esse cliente será o "Master" (autoridade da IA) para esse NPC.
  */
 export class NpcRegisterHandler implements ISocketHandler {
+    // Mapa simples para rastrear quem é o mestre de cada NPC por sala
+    // chave: roomId:npcId -> value: playerId
+    private static npcMasters = new Map<string, string>();
+
+    /**
+     * Limpa todos os NPCs vinculados a uma sala.
+     */
+    public static clearRoomState(roomId: string): void {
+        const keysToRemove: string[] = [];
+        this.npcMasters.forEach((_, key) => {
+            if (key.startsWith(`${roomId}:`)) {
+                keysToRemove.push(key);
+            }
+        });
+
+        keysToRemove.forEach(k => this.npcMasters.delete(k));
+        logger.info(`[NPC_SYNC] Estado de NPCs limpo para a sala: ${roomId}`, { module: 'UDP_SOCKET' });
+    }
+
     public async handle(server: any, rinfo: RemoteInfo, data: INpcRegisterPayload): Promise<void> {
         if (!data || !data.id || !data.type) return;
 
@@ -21,12 +36,12 @@ export class NpcRegisterHandler implements ISocketHandler {
         const masterKey = `${session.roomId}:${data.id}`;
         
         // Se ainda não houver um mestre para este NPC na sala, este cliente assume
-        if (!npcMasters.has(masterKey)) {
-            npcMasters.set(masterKey, session.id);
+        if (!NpcRegisterHandler.npcMasters.has(masterKey)) {
+            NpcRegisterHandler.npcMasters.set(masterKey, session.id);
             logger.info(`[NPC_SYNC] Cliente ${session.id} atribuído como MASTER do NPC '${data.id}'`, { module: 'UDP_SOCKET' });
         }
 
-        const isMaster = npcMasters.get(masterKey) === session.id;
+        const isMaster = NpcRegisterHandler.npcMasters.get(masterKey) === session.id;
 
         // 1. Notificar o cliente se ele é o mestre
         server.sendTo(rinfo, 'npc_registered', {

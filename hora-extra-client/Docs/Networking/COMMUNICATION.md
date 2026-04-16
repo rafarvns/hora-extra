@@ -32,7 +32,7 @@ Cada datagrama deve conter um JSON no seguinte formato:
 
 | Evento | Payload | Descrição |
 | :--- | :--- | :--- |
-| `CONN` | `{ "token": string, "d": { "playerName": string } }` | Handshake inicial de autenticação. |
+| `CONN` | `{ "token": string, "d": { "playerName": string, "resetRoom?": boolean } }` | Handshake inicial de autenticação. `resetRoom` reinicia o estado da sala (apenas Dev). |
 | `join_room` | `{ "roomId": string, "playerName": string }` | Solicita entrada em uma sala. |
 | `player_move` | `{ "p": [x, y, z], "r": rotation }` | Envia posição e rotação Y do jogador local. |
 | `npc_register` | `{ "id": string, "type": string, "p": [x,y,z], "r": float }` | Registra um NPC/Boss na sala. |

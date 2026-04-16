@@ -99,7 +99,8 @@ public class SocketManager : MonoBehaviour
             e = "CONN",
             token = token,
             d = new {
-                playerName = "Player_" + UnityEngine.Random.Range(100, 999)
+                playerName = "Player_" + UnityEngine.Random.Range(100, 999),
+                resetRoom = UseTestToken // Sinaliza para o servidor resetar a sala se for modo teste
             }
         };
 
