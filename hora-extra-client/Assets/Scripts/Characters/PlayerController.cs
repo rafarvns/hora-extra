@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 namespace HoraExtra.Characters
 {
@@ -50,6 +51,9 @@ namespace HoraExtra.Characters
         private float _verticalRotation = 0f;
         private bool _canMove = true;
         private bool _isSprinting = false;
+
+        public float CurrentStamina => _playerStamina != null ? _playerStamina.CurrentStamina : 100f;
+        public float MaxStamina => _playerStamina != null ? _playerStamina.MaxStamina : 100f;
         
         // Controle de Rede
         private float _nextNetworkTick;
@@ -67,43 +71,8 @@ namespace HoraExtra.Characters
             {
                 _playerCamera = GetComponentInChildren<Camera>()?.transform;
             }
-
-            // Tenta encontrar o Slider do HUD se o PlayerStamina estiver sem referência
-            if (_playerStamina != null)
-            {
-                TryFindStaminaHUD();
-            }
         }
 
-        private void TryFindStaminaHUD()
-        {
-            // Busca o Canvas e o Slider conforme descrição do usuário
-            GameObject hudCanvas = GameObject.Find("HUD_Canvas");
-            if (hudCanvas != null)
-            {
-                // 1. Tenta encontrar Slider
-                Slider slider = hudCanvas.GetComponentInChildren<Slider>();
-                if (slider != null)
-                {
-                    _playerStamina.SetUI(slider);
-                    Debug.Log("[HUD] Slider de Stamina encontrado e vinculado.");
-                    return;
-                }
-
-                // 2. Tenta encontrar Image com fillAmount (comum para barras simples)
-                // Procuramos por uma imagem que tenha "Stamina" no nome dentro do HUD
-                Image[] images = hudCanvas.GetComponentsInChildren<Image>(true);
-                foreach (var img in images)
-                {
-                    if (img.gameObject.name.ToLower().Contains("stamina"))
-                    {
-                        _playerStamina.SetImage(img);
-                        Debug.Log($"[HUD] Imagem de Stamina ({img.gameObject.name}) encontrada e vinculada.");
-                        return;
-                    }
-                }
-            }
-        }
 
         private void Start()
         {

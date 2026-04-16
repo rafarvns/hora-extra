@@ -25,9 +25,23 @@ namespace HoraExtra.Characters
         public float MaxStamina => _maxStamina;
         public bool CanSprint => _currentStamina > 0;
 
+        /// <summary>
+        /// Retorna true se já houver alguma referência de UI vinculada.
+        /// </summary>
+        public bool HasUIReference => _staminaSlider != null || _staminaImage != null;
+
         private void Start()
         {
             _currentStamina = _maxStamina;
+            
+            // Forçar configuração correta da imagem se existir
+            if (_staminaImage != null)
+            {
+                _staminaImage.type = Image.Type.Filled;
+                _staminaImage.fillMethod = Image.FillMethod.Horizontal;
+                _staminaImage.fillOrigin = (int)Image.OriginHorizontal.Left; // Preenche da esquerda, então reduz da direita
+            }
+
             UpdateUI();
         }
 
@@ -52,10 +66,21 @@ namespace HoraExtra.Characters
         {
             if (_currentStamina > 0)
             {
+                float previousValue = _currentStamina;
                 _currentStamina -= _consumptionRate * Time.deltaTime;
                 _currentStamina = Mathf.Max(_currentStamina, 0);
                 _lastConsumptionTime = Time.time;
                 UpdateUI();
+
+                // Log esporádico para não inundar o console
+                if (Time.frameCount % 30 == 0)
+                {
+                    Debug.Log($"[STAMINA] Consumindo: {previousValue:F1} -> {_currentStamina:F1}");
+                }
+            }
+            else
+            {
+                if (Time.frameCount % 60 == 0) Debug.LogWarning("[STAMINA] Stamina ESGOTADA!");
             }
         }
 

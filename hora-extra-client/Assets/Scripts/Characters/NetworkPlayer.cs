@@ -18,6 +18,7 @@ namespace HoraExtra.Characters
         private Vector3 _targetPosition;
         private Quaternion _targetRotation;
         private string _playerId;
+        private bool _isSprinting;
 
         public void Initialize(string id, string playerName)
         {
@@ -36,6 +37,16 @@ namespace HoraExtra.Characters
         {
             _targetPosition = new Vector3(position[0], position[1], position[2]);
             _targetRotation = Quaternion.Euler(0, rotation, 0);
+        }
+
+        /// <summary>
+        /// Atualiza o estado de corrida vindo do servidor.
+        /// </summary>
+        public void UpdateSprintState(bool isSprinting)
+        {
+            _isSprinting = isSprinting;
+            // Aqui poderíamos disparar animações se houvesse um Animator:
+            // GetComponentInChildren<Animator>().SetBool("IsRunning", isSprinting);
         }
 
         private void Update()
