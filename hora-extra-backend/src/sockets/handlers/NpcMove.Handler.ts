@@ -30,9 +30,12 @@ export class NpcMoveHandler implements ISocketHandler {
 
         server.broadcastToRoom(session.roomId, 'npc_move', payload);
         
-        // Log ocasional
-        if (session.movePacketCount % 100 === 0) {
-            logger.info(`[NPC_SYNC] Movimento do NPC '${data.id}' replicado na sala '${session.roomId}'`, { module: 'UDP_SOCKET' });
+        // Incrementar contador de pacotes (opcional na sessão ou local)
+        session.movePacketCount++;
+
+        // Log ocasional para NPCs
+        if (session.movePacketCount % 50 === 0) {
+            logger.info(`[NPC_TRAFFIC] NPC '${data.id}' movendo para [${data.p.map(n => n.toFixed(1))}] na sala '${session.roomId}'`, { module: 'UDP_SOCKET' });
         }
     }
 }

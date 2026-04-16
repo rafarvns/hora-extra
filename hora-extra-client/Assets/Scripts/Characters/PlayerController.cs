@@ -78,8 +78,6 @@ namespace HoraExtra.Characters
                     var pos = data["p"];
                     Vector3 serverPos = new Vector3((float)pos[0], (float)pos[1], (float)pos[2]);
                     
-                    // Só aplicamos o Snap se o servidor discordar da nossa posição local por mais que o threshold.
-                    // Isso resolve o problema de "voar" no início do jogo devido ao delay do eco.
                     if (Vector3.Distance(transform.position, serverPos) > _reconciliationThreshold)
                     {
                         Debug.Log($"[NETWORK] Reconciliação necessária: Diff {Vector3.Distance(transform.position, serverPos):F2}m. Snapping.");
@@ -93,6 +91,26 @@ namespace HoraExtra.Characters
             // Inicializa última posição para evitar salto no primeiro frame
             _lastSentPosition = transform.position;
             _lastSentRotation = transform.eulerAngles.y;
+
+            // Tenta aterrar o player no início para evitar o bug de "flutuar" na cena
+            SnapToGround();
+        }
+
+        /// <summary>
+        /// Força o player a encostar no chão no início da execução.
+        /// Resolve o bug onde o CharacterController inicia em suspensão.
+        /// </summary>
+        private void SnapToGround()
+        {
+            if (Physics.Raycast(transform.position, Vector3.down, out RaycastHit hit, 5f))
+            {
+                _characterController.enabled = false;
+                // Ajusta a posição para o ponto de colisão + metade da altura do CharacterController 
+                // Considerar se o pivot do modelo está nos pés (Y=0 local) ou no centro.
+                transform.position = hit.point + Vector3.up * (_characterController.skinWidth + 0.1f);
+                _characterController.enabled = true;
+                Debug.Log($"[NETWORK] Player aterrado via Raycast em {hit.point}");
+            }
         }
 
         private void Update()
