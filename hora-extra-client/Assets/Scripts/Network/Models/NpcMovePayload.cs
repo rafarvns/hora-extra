@@ -24,5 +24,6 @@ namespace HoraExtra.Network.Models
         public float[] p;
         public float r;
         public string name;
+        public bool isMaster;
     }
 }

@@ -48,7 +48,7 @@ Cada datagrama deve conter um JSON no seguinte formato:
 | `room_joined` | `{ "roomId": string, "playerId": string }` | Confirmar entrada na sala. |
 | `player_move` | `{ "id": string, "p": [x, y, z], "r": number }` | Atualização de posição de outros jogadores. |
 | `npc_move` | `{ "id": string, "p": [x, y, z], "r": number }` | Atualização de posição de NPCs/Bosses. |
-| `npc_registered` | `{ "id": string, "type": string, "p": [x,y,z], "r": float }` | Notifica registro de NPC na sala. |
+| `npc_registered` | `{ "id": string, "type": string, "p": [x,y,z], "r": float, "isMaster": boolean }` | Notifica registro de NPC na sala e define autoridade. |
 | `player_joined` | `{ "id": string, "name": string }` | Notifica novo jogador na sala. |
 
 ---
