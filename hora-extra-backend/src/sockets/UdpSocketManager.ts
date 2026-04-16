@@ -24,7 +24,7 @@ export class UdpSocketManager {
     private server: UdpSocket;
     private sessions: Map<string, PlayerSession> = new Map(); // Key: "address:port"
 
-    private constructor(port: number = 3001) {
+    private constructor(port: number = 5001) {
         this.server = dgram.createSocket('udp4');
 
         this.server.on('error', (err) => {
@@ -47,7 +47,7 @@ export class UdpSocketManager {
         setInterval(() => this.cleanupSessions(), 10000);
     }
 
-    public static initialize(port: number = 3001): UdpSocketManager {
+    public static initialize(port: number = 5001): UdpSocketManager {
         if (!UdpSocketManager.instance) {
             UdpSocketManager.instance = new UdpSocketManager(port);
         }

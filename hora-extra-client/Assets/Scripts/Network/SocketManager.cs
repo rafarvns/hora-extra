@@ -19,7 +19,7 @@ public class SocketManager : MonoBehaviour
 
     [Header("Network Settings")]
     public string ServerIp = "127.0.0.1";
-    public int ServerPort = 3001;
+    public int ServerPort = 5001;
     public bool AutoConnect = true;
 
     [Header("Development & Testing")]

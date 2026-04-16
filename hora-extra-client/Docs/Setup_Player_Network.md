@@ -43,7 +43,7 @@ Para que o jogo se conecte ao servidor Node.js e sincronize o movimento:
 Certifique-se de que a cena possua o objeto de conexão global:
 1. Verifique na pasta `Assets/Scripts/Network/` o script `SocketManager.cs`.
 2. Adicione um GameObject na cena (ex: `[NetworkManager]`) e anexe o script `SocketManager`.
-3. Configure a URL no Inspector: `http://localhost:3000`.
+3. Configure a URL no Inspector: `http://localhost:5000` (API) e a Porta UDP: `5001`.
 
 ### Passo 2: Login e Entrada em Sala
 A sincronização só começa após o jogador entrar em uma sala:

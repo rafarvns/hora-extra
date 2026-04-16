@@ -38,8 +38,9 @@ COPY --from=build /app/dist ./dist
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/package.json ./package.json
 
-# Expõe a porta do backend
-EXPOSE 3000
+# Expõe as portas do backend (HTTP e UDP)
+EXPOSE 5000
+EXPOSE 5001/udp
 
 # Variáveis de ambiente padrão
 ENV NODE_ENV=production

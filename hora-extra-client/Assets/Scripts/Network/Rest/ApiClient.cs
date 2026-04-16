@@ -14,7 +14,7 @@ namespace HoraExtra.Network.Rest
     public static class ApiClient
     {
         // Altere para a URL correta conforme o ambiente
-        private const string BaseUrl = "http://localhost:3000/api";
+        private const string BaseUrl = "http://localhost:5000/api";
 
         /// <summary>
         /// Realiza uma requisição GET assíncrona.

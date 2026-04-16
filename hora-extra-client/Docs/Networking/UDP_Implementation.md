@@ -9,7 +9,7 @@ O Socket.IO, embora robusto para aplicações web tradicionais, apresentava inst
 
 ### **UdpSocketManager.ts**
 O servidor utiliza o módulo nativo `dgram` do Node.js.
-- **Porta**: 3001 (UDP).
+- **Porta**: 5001 (UDP).
 - **Gerenciamento de Sessão**: Como o UDP é connectionless, o servidor mantém um `Map` interno associando `IP+Porta` a um `PlayerId`.
 - **Autenticação**: O primeiro pacote deve ser o evento `CONN` com o token JWT.
 - **Heartbeat**: Sessões são removidas automaticamente após 30 segundos de inatividade.
