@@ -14,6 +14,9 @@ namespace HoraExtra.Characters
         [SerializeField, Tooltip("Velocidade de caminhada.")]
         private float _walkSpeed = 6.0f;
 
+        [SerializeField, Tooltip("Velocidade de corrida.")]
+        private float _runSpeed = 10.0f;
+
         [SerializeField, Tooltip("Força da gravidade.")]
         private float _gravity = -9.81f;
 
@@ -42,9 +45,11 @@ namespace HoraExtra.Characters
 
         private CharacterBase _characterBase;
         private CharacterController _characterController;
+        private PlayerStamina _playerStamina;
         private Vector3 _velocity;
         private float _verticalRotation = 0f;
         private bool _canMove = true;
+        private bool _isSprinting = false;
         
         // Controle de Rede
         private float _nextNetworkTick;
@@ -55,11 +60,48 @@ namespace HoraExtra.Characters
         {
             _characterController = GetComponent<CharacterController>();
             _characterBase = GetComponent<CharacterBase>();
+            _playerStamina = GetComponent<PlayerStamina>();
             
             // Inicializa a câmera se não for atribuída manualmente
             if (_playerCamera == null)
             {
                 _playerCamera = GetComponentInChildren<Camera>()?.transform;
+            }
+
+            // Tenta encontrar o Slider do HUD se o PlayerStamina estiver sem referência
+            if (_playerStamina != null)
+            {
+                TryFindStaminaHUD();
+            }
+        }
+
+        private void TryFindStaminaHUD()
+        {
+            // Busca o Canvas e o Slider conforme descrição do usuário
+            GameObject hudCanvas = GameObject.Find("HUD_Canvas");
+            if (hudCanvas != null)
+            {
+                // 1. Tenta encontrar Slider
+                Slider slider = hudCanvas.GetComponentInChildren<Slider>();
+                if (slider != null)
+                {
+                    _playerStamina.SetUI(slider);
+                    Debug.Log("[HUD] Slider de Stamina encontrado e vinculado.");
+                    return;
+                }
+
+                // 2. Tenta encontrar Image com fillAmount (comum para barras simples)
+                // Procuramos por uma imagem que tenha "Stamina" no nome dentro do HUD
+                Image[] images = hudCanvas.GetComponentsInChildren<Image>(true);
+                foreach (var img in images)
+                {
+                    if (img.gameObject.name.ToLower().Contains("stamina"))
+                    {
+                        _playerStamina.SetImage(img);
+                        Debug.Log($"[HUD] Imagem de Stamina ({img.gameObject.name}) encontrada e vinculada.");
+                        return;
+                    }
+                }
             }
         }
 
@@ -192,16 +234,37 @@ namespace HoraExtra.Characters
             _velocity.y += _gravity * Time.deltaTime;
 
             // 4. Aplica Movimento
+            float currentSpeed = _walkSpeed;
+            bool wasSprinting = _isSprinting;
+            
+            // Lógica de Corrida
+            if (Keyboard.current.shiftKey.isPressed && moveInput.magnitude > 0 && _playerStamina != null && _playerStamina.CanSprint)
+            {
+                currentSpeed = _runSpeed;
+                _playerStamina.ConsumeStamina();
+                _isSprinting = true;
+            }
+            else
+            {
+                _isSprinting = false;
+            }
+
+            // Notifica rede sobre mudança de estado de corrida
+            if (_isSprinting != wasSprinting)
+            {
+                SocketManager.Instance.Emit(NetworkEvents.PLAYER_SPRINT, new { s = _isSprinting });
+            }
+
             if (!_onlyMoveViaNetwork) {
                 // Movimento Livre Local (Single Player / Client Side Prediction Off)
-                _characterController.Move(direction * _walkSpeed * Time.deltaTime);
+                _characterController.Move(direction * currentSpeed * Time.deltaTime);
                 _characterController.Move(_velocity * Time.deltaTime);
             } else {
                 // Modo Autoridade de Rede: 
                 // Usamos o Move() para "predizer" a posição, resolver colisões e atualizar o isGrounded localmente.
                 // O HandleNetworkSync enviará esta posição resultante para o servidor, 
                 // que a validará e enviará de volta o "Snap" absoluto no evento PLAYER_MOVE.
-                _characterController.Move((direction * _walkSpeed + _velocity) * Time.deltaTime);
+                _characterController.Move((direction * currentSpeed + _velocity) * Time.deltaTime);
             }
         }
 
