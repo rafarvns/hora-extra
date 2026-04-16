@@ -33,8 +33,14 @@ Evite que o `SocketManager` se torne uma "God Class".
 - **Delta Updates**: No futuro, envie apenas as mudanças (deltas) de estado em vez do estado completo a cada tick.
 
 ## 8. Logs e Diagnósticos
-- Padronize logs com prefixos: `[SERVER]` para o Express, `[SOCKET]` para conexões e `[GAME]` para mensagens de lógica de jogo.
-- Implemente o endpoint `/health` para monitoramento do status básico do serviço.
+- **Logger Centralizado**: Use exclusivamente o `Logger` em `src/utils/Logger.ts` em vez de `console.log`.
+- **Níveis de Log**:
+    - `error`: Falhas críticas e exceções não tratadas.
+    - `warn`: Comportamentos inesperados, falhas de validação ou segurança (ex: token inválido).
+    - `info`: Eventos de ciclo de vida (startup, conexões, entrada em salas).
+    - `debug`: Informações detalhadas de processamento (apenas em desenvolvimento).
+- **Módulos**: Sempre forneça o campo `{ module: 'NOME' }` no metadata para facilitar a filtragem (Ex: `SERVER`, `SOCKET`, `HTTP`, `AUTH`, `GAME`).
+- **Endpoint de Saúde**: Mantenha o endpoint `/api/health` para monitoramento básico.
 
 ---
 *Este documento é uma Regra de Agente (Rule) e deve ser seguido em todas as implementações do backend.*

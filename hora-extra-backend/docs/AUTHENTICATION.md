@@ -127,4 +127,35 @@ socket.Connect();
 4.  **Dados**: Após autenticado, o ID do jogador fica disponível no lado do servidor em `socket.data.jogadorId`.
 
 ---
+
+## 🛠️ Sessões de Teste (Development Bypass)
+
+Para agilizar o desenvolvimento do frontend Unity, o backend suporta um **bypass de autenticação** quando executado em modo de desenvolvimento (`NODE_ENV=development`). Isso permite conectar ao socket sem precisar realizar o login REST previamente.
+
+### Como usar (Client Unity/C#)
+
+Configure o token de teste (definido no `.env` do servidor) no objeto de autenticação do socket:
+
+```csharp
+var options = new SocketIOOptions
+{
+    Auth = new Dictionary<string, string>
+    {
+        { "token", "horaextra_dev_test_token_2026" } // Valor padrão de desenvolvimento
+    }
+};
+
+socket = new SocketIOUnity(serverUrl, options);
+socket.Connect();
+```
+
+### Configurações no Servidor (`.env`):
+- `NODE_ENV`: Deve ser `development`.
+- `DEV_TEST_TOKEN`: A chave mestra que o cliente deve enviar.
+- `DEV_TEST_USER_ID`: O ID fictício que o servidor atribuirá a essa conexão (ex: `dev-test-player-id-001`).
+
+> [!WARNING]
+> Este recurso é desabilitado automaticamente se o servidor for iniciado em modo de produção por segurança.
+
+---
 *Em caso de dúvidas técnicas, consulte o time de programação.*

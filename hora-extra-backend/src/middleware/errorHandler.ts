@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { ApiError } from '../core/ApiError.js';
+import logger from '../utils/Logger.js';
 
 /**
  * Middleware central para tratamento de erros.
@@ -13,6 +14,12 @@ export const errorHandler = (
 ) => {
   // Se for um erro conhecido da nossa API
   if (err instanceof ApiError) {
+    logger.warn(`${err.message} (${err.statusCode})`, { 
+      module: 'API_ERROR', 
+      statusCode: err.statusCode,
+      url: req.url 
+    });
+    
     return res.status(err.statusCode).json({
       success: false,
       error: {
@@ -23,7 +30,12 @@ export const errorHandler = (
   }
 
   // Logs do erro para debugging no servidor
-  console.error(`[INTERNAL_ERROR] ${err.stack}`);
+  logger.error(`Erro interno não tratado: ${err.message}`, { 
+    module: 'INTERNAL_ERROR', 
+    stack: err.stack,
+    url: req.url,
+    method: req.method
+  });
 
   // Para erros desconhecidos, retornar 500 Generic Error
   return res.status(500).json({

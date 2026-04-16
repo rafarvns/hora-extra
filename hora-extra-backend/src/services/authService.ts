@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import logger from '../utils/Logger.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_for_dev_only';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '1d';
@@ -36,6 +37,10 @@ class AuthService {
     try {
       return jwt.verify(token, JWT_SECRET);
     } catch (error) {
+      logger.warn('Falha na verificação de token JWT', { 
+        module: 'AUTH', 
+        error: error instanceof Error ? error.message : error 
+      });
       return null;
     }
   }

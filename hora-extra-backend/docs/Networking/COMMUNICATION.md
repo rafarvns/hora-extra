@@ -56,7 +56,17 @@ Esta documentação define o protocolo de comunicação em tempo real entre o cl
 
 ---
 
-## 6. Boas Práticas (Co-op Profissional)
-1. **Interpolação de Snapshot**: O cliente Unity não deve "snappar" o jogador para a posição recebida, mas sim interpolar suavemente entre o último e o penúltimo estado recebido.
-2. **Timeout**: O cliente deve tentar reconectar automaticamente em caso de perda de sinal cardíaco (heartbeat).
-3. **Validação**: O servidor ignora pacotes com timestamps muito antigos ou velocidades impossíveis.
+---
+
+## 7. Teste Rápido (Somente Desenvolvimento)
+
+Para evitar o fluxo de registro/login durante o desenvolvimento das cenas da Unity, você pode usar a **Chave de Desenvolvimento** no handshake do socket.
+
+**Configuração do Handshake:**
+- Chave: `token`
+- Valor: `horaextra_dev_test_token_2026` (Verifique se o seu `.env` contém este valor).
+
+Ao usar esta chave, o servidor ignorará a validação JWT e autenticará você automaticamente com um ID de teste padrão.
+
+> [!IMPORTANT]
+> Certifique-se de que o servidor está rodando com `NODE_ENV=development`. Caso contrário, a conexão será recusada.

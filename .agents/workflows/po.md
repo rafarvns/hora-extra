@@ -1,44 +1,30 @@
 ---
-description: Workflow para auxiliar o Product Owner (PO) na gestão do projeto, criação de sprints, épicos e tarefas.
+description: Workflow para auxiliar o Product Owner (PO) na gestão do projeto, criação de sprints e tarefas.
 ---
 
-Este workflow define as etapas para que agentes auxiliem o PO na organização do backlog, planejamento de sprints e manutenção do Trello do projeto Hora-Extra.
+Este workflow assume que um plano de ação (histórias de usuário, épicos e backlog) já foi aprovado.
 
-## 1. Alinhamento com a Visão do Produto
-Antes de sugerir novas tarefas ou épicos, o agente deve:
-1. Ler o **Pitch** e o **GDD** em `documents/` para garantir que as sugestões estejam alinhadas com o core loop e o tema do jogo.
-2. Identificar a fase atual do projeto (ex: Protótipo de Mecânicas, Integração de Rede).
+## 1. Gestão do Backlog
+- Refine as tarefas aprovadas adicionando detalhes técnicos baseados no código real.
+- Remova ou arquive tarefas obsoletas e duplicadas.
+- Adicione etiquetas apropriadas (`Backend`, `Client`, `Arte`, `Bug`).
 
-## 2. Definição de Épicos e Histórias de Usuário
-Ao criar novos Épicos:
-1. **Épico**: Deve representar uma grande entrega de valor (ex: "Sistema de Inventário", "Sincronização de Movimento Multiplayer").
-2. **User Stories**: Devem seguir o formato: *"Como [Papel], eu quero [Ação] para que [Valor]"*.
-3. **Critérios de Aceite**: Devem ser claros e testáveis.
+## 2. Criação de Sprint
+- Agrupe tarefas em períodos de 1 a 2 semanas.
+- Documente o plano da sprint em um arquivo `sprint_<n>.md` temporário para revisão final antes do Trello.
+- Gere o checklist de tarefas para cada card no Trello.
 
-## 3. Planejamento de Sprint
-Ao auxiliar na criação de uma nova Sprint:
-1. Analisar o backlog atual em busca de dependências técnicas.
-2. Sugerir tarefas que caibam no período da sprint (ex: 1 semana).
-3. Documentar o plano da sprint em um arquivo `sprint_<n>.md` temporário ou formatado para o Trello.
+## 3. Template de Tarefa (DoD)
+Toda tarefa criada deve seguir:
+- **Título**: Curto e objetivo.
+- **Contexto**: Explicar o porquê da tarefa.
+- **Critérios de Aceite**: O que deve ser validado.
+- **Referências**: Arquivos ou sistemas impactados.
+- **Teste de Aceitação**: Como o PO ou QA valida a entrega.
 
-## 4. Gestão do Trello
-O projeto utiliza o Trello para acompanhamento visual. As tarefas devem ser formatadas para fácil importação ou cópia:
-- **Título**: Curto e acionável.
-- **Descrição**: Incluir Contexto, Requisitos e Definição de Pronto (DoD).
-- **Etiquetas**: Sugerir etiquetas como `Backend`, `Client`, `Arte`, `Bug`, `Documentação`.
+## 4. Trello e GitHub Issues
+- Sincronize o estado das ferramentas de gestão visual conforme as decisões tomadas.
+- [Link do Trello](https://trello.com/invite/b/699504957b787149b01c3b8d/ATTI3822b46621093641c29b7920fc0c59c2C682D9D8/pitch)
 
-## 5. Manutenção do Backlog
-Regularmente, o agente deve:
-1. Identificar tarefas obsoletas ou duplicadas.
-2. Refinar tarefas vagas adicionando detalhes técnicos baseados no estado atual do código.
-3. Sugerir prioridades com base no impacto no gameplay (MVP) e riscos técnicos.
-
-## 6. Template de Tarefa (DoD)
-Toda tarefa sugerida deve conter:
-- **[ ] Descrição Clara**: O que precisa ser feito.
-- **[ ] Critérios de Aceite**: Como saberemos que está pronto.
-- **[ ] Referência Técnica**: Arquivos ou sistemas impactados.
-- **[ ] Teste**: Como o PO ou QA pode validar a entrega.
-
----
-*Link do Trello: [Trello Hora-Extra](https://trello.com/invite/b/699504957b787149b01c3b8d/ATTI3822b46621093641c29b7920fc0c59c2C682D9D8/pitch)*
+## 5. Walkthrough
+Crie o artefato `walkthrough.md` com o resumo da organização do backlog e link para as novas tarefas.

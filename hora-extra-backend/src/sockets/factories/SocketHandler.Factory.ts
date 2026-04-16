@@ -1,6 +1,9 @@
 import { SocketHandlerConstructor, ISocketHandler } from '../types/SocketEvent.js';
 // Handlers (serão adicionados conforme implementados)
 import { JoinRoomHandler } from '../handlers/JoinRoom.Handler.js';
+import { PlayerMoveHandler } from '../handlers/PlayerMove.Handler.js';
+import { NpcMoveHandler } from '../handlers/NpcMove.Handler.js';
+import { NpcRegisterHandler } from '../handlers/NpcRegister.Handler.js';
 
 /**
  * SocketHandlerFactory: Mapeia nomes de eventos socket para suas implementações concretas (Handlers).
@@ -16,8 +19,9 @@ export class SocketHandlerFactory {
      */
     static {
         this.handlers.set('join_room', JoinRoomHandler);
-        // Adicionar novos handlers abaixo
-        // this.handlers.set('move_player', MovePlayerHandler);
+        this.handlers.set('player_move', PlayerMoveHandler);
+        this.handlers.set('npc_move_request', NpcMoveHandler);
+        this.handlers.set('npc_register', NpcRegisterHandler);
     }
 
     /**
