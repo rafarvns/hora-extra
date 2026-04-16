@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "nodemon",
     "clean": "node scripts/kill-ghosts.js",
-    "predev": "npm run clean",
+    "db:setup": "ts-node scripts/db-setup.ts",
+    "predev": "npm run clean && npm run db:setup",
     "build": "rimraf dist && tsc",
     "start": "node dist/index.js",
     "test": "vitest run",

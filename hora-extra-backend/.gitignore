@@ -16,5 +16,8 @@ yarn-error.log*
 
 # Project specific
 package-lock.json (if you want to force updates, but usually it's kept)
-# No, usually we KEEP package-lock.json in git.
-# So I'll remove it from the ignore.
+
+# Local Database (SQLite)
+*.db
+*.db-journal
+prisma/schema.prisma.bak
