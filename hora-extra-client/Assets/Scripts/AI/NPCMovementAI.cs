@@ -25,7 +25,7 @@ namespace HoraExtra.AI
         private void Awake()
         {
             _networkEntity = GetComponent<NetworkEntity>();
-            _animator = GetComponent<Animator>();
+            _animator = GetComponentInChildren<Animator>();
         }
 
         private void Update()

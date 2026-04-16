@@ -11,11 +11,6 @@ GameObject:
   - component: {fileID: 4916445468541740617}
   - component: {fileID: 970653795777720790}
   - component: {fileID: 1753214735787599598}
-  - component: {fileID: 3102106811504121987}
-  - component: {fileID: 168402528096812818}
-  - component: {fileID: 3517017306923689009}
-  - component: {fileID: 4423526808185304063}
-  - component: {fileID: 7158262184899741817}
   m_Layer: 0
   m_Name: Cube
   m_TagString: Untagged
@@ -101,7 +96,7 @@ BoxCollider:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1400072903331368858}
+  m_GameObject: {fileID: 2581705204386071287}
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -122,7 +117,7 @@ Rigidbody:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1400072903331368858}
+  m_GameObject: {fileID: 2581705204386071287}
   serializedVersion: 5
   m_Mass: 1
   m_LinearDamping: 0
@@ -149,7 +144,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1400072903331368858}
+  m_GameObject: {fileID: 2581705204386071287}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4738ad01bd01e5343939ef51112682ab, type: 3}
@@ -166,7 +161,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1400072903331368858}
+  m_GameObject: {fileID: 2581705204386071287}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8f8e2b73b8a601b4b87e2d39e8d26cab, type: 3}
@@ -181,7 +176,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1400072903331368858}
+  m_GameObject: {fileID: 2581705204386071287}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bbfa3965824159d4fa9ea387f55c9590, type: 3}
@@ -198,6 +193,11 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5571675052438821348}
+  - component: {fileID: 3102106811504121987}
+  - component: {fileID: 168402528096812818}
+  - component: {fileID: 3517017306923689009}
+  - component: {fileID: 4423526808185304063}
+  - component: {fileID: 7158262184899741817}
   m_Layer: 0
   m_Name: BasicNPC
   m_TagString: Untagged
