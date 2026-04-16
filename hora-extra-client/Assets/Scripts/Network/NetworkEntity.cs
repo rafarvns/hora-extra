@@ -116,7 +116,18 @@ namespace HoraExtra.Network
             // Se eu NÃO sou o mestre, o NPC deve ser cinemático para evitar que a gravidade local
             // lute contra o movimento recebido da rede.
             _rb.isKinematic = !_isMaster;
-            Debug.Log($"[NETWORK] {_networkId} kinematic set to {_rb.isKinematic} (IsMaster: {_isMaster})");
+            
+            // Melhora a detecção de colisão se formos o Master (evita atravessar paredes)
+            if (!_isMaster)
+            {
+                _rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
+            }
+            else
+            {
+                _rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
+            }
+            
+            Debug.Log($"[NETWORK] {_networkId} kinematic set to {_rb.isKinematic}, collision: {_rb.collisionDetectionMode} (IsMaster: {_isMaster})");
         }
 
         private void Update()

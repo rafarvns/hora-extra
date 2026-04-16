@@ -16,6 +16,15 @@ namespace HoraExtra.AI
         [SerializeField, Tooltip("Intervalo em segundos entre mudanças de direção.")]
         private float _moveInterval = 3f;
 
+        [SerializeField, Tooltip("Distância máxima do passo aleatório.")]
+        private float _maxStepDistance = 5f;
+
+        [SerializeField, Tooltip("Layer que contém obstáculos intransponíveis (Waredes, etc).")]
+        private LayerMask _obstacleMask;
+
+        [SerializeField, Tooltip("Folga de distância de colisão (evita encostar na parede).")]
+        private float _collisionBuffer = 0.5f;
+
         private NetworkEntity _networkEntity;
         private Animator _animator;
         private float _timer;
@@ -61,13 +70,39 @@ namespace HoraExtra.AI
         private void GenerateRandomStep()
         {
             // Escolhe uma direção aleatória num círculo
-            Vector2 randomDir = Random.insideUnitCircle * 5f;
+            Vector2 randomDir = Random.insideUnitCircle * _maxStepDistance;
             float randomRot = Random.Range(0f, 360f);
 
-            Vector3 targetPos = transform.position + new Vector3(randomDir.x, 0, randomDir.y);
+            Vector3 currentPos = transform.position;
+            Vector3 offset = new Vector3(randomDir.x, 0, randomDir.y);
+            Vector3 targetPos = currentPos + offset;
+
+            // --- MELHORIA: Detecção de Obstáculos ---
+            // Faz um Raycast do centro do NPC até o destino para evitar atravessar paredes
+            Vector3 rayStart = currentPos + Vector3.up * 0.5f; // Sobe um pouco o raio do chão
+            Vector3 direction = offset.normalized;
+            float distance = offset.magnitude;
+
+            if (Physics.Raycast(rayStart, direction, out RaycastHit hit, distance, _obstacleMask))
+            {
+                // Se atingir algo, o novo destino é um pouco ANTES do ponto de impacto
+                targetPos = hit.point - (direction * _collisionBuffer);
+                targetPos.y = currentPos.y; // Mantém a altura original
+                
+                Debug.Log($"[AI] NPC {_networkEntity.NetworkId} detectou obstáculo! Ajustando destino para: {targetPos}");
+            }
+            else
+            {
+                // Se não atingir parede, ainda verificamos se o destino Final é seguro (ex: não dentro de algo)
+                if (Physics.CheckSphere(targetPos + Vector3.up * 0.5f, 0.4f, _obstacleMask))
+                {
+                    Debug.Log($"[AI] NPC {_networkEntity.NetworkId} destino sorteado estava dentro de parede. Abortando passo.");
+                    return; 
+                }
+            }
 
             // Log de depuração para o Master
-            Debug.Log($"[AI] NPC {_networkEntity.NetworkId} sorteou novo destino: {targetPos}");
+            Debug.Log($"[AI] NPC {_networkEntity.NetworkId} solicitando movimento para: {targetPos}");
             
             _networkEntity.RequestMove(targetPos, randomRot);
         }
