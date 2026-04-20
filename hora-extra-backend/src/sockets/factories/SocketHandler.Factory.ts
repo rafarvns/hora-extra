@@ -5,6 +5,7 @@ import { PlayerMoveHandler } from '../handlers/PlayerMove.Handler.js';
 import { NpcMoveHandler } from '../handlers/NpcMove.Handler.js';
 import { NpcRegisterHandler } from '../handlers/NpcRegister.Handler.js';
 import { PlayerSprintHandler } from '../handlers/PlayerSprint.Handler.js';
+import { PingHandler } from '../handlers/Ping.Handler.js';
 
 /**
  * SocketHandlerFactory: Mapeia nomes de eventos socket para suas implementações concretas (Handlers).
@@ -24,6 +25,7 @@ export class SocketHandlerFactory {
         this.handlers.set('npc_move_request', NpcMoveHandler);
         this.handlers.set('npc_register', NpcRegisterHandler);
         this.handlers.set('player_sprint', PlayerSprintHandler);
+        this.handlers.set('ping', PingHandler);
     }
 
     /**

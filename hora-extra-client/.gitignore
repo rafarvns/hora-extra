@@ -42,3 +42,7 @@ sysinfo.txt
 # User Settings (to avoid conflicts in team)
 [Uu]serSettings/
 [Pp]rojectSettings/ProjectVersion.txt
+
+# TextMesh Pro
+[Aa]ssets/TextMesh Pro/
+[Aa]ssets/TextMesh Pro.meta

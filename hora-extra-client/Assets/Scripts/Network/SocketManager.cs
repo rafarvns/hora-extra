@@ -16,6 +16,8 @@ public class SocketManager : MonoBehaviour
 {
     public static SocketManager Instance { get; private set; }
     public string LocalPlayerId { get; private set; }
+    public bool IsConnected => _isConnected;
+    public float Latency { get; private set; }
 
     [Header("Network Settings")]
     public string ServerIp = "127.0.0.1";
@@ -29,6 +31,11 @@ public class SocketManager : MonoBehaviour
     private UdpClient _udpClient;
     private IPEndPoint _serverEndPoint;
     private bool _isConnected = false;
+    
+    private float _lastPingTime;
+    private bool _waitingForPong = false;
+    private const float HeartbeatInterval = 2f;
+    private float _heartbeatTimer = 0f;
 
     // Fila para processar eventos na Thread Principal do Unity
     private readonly Queue<Action> _mainThreadQueue = new Queue<Action>();
@@ -67,6 +74,24 @@ public class SocketManager : MonoBehaviour
                 _mainThreadQueue.Dequeue().Invoke();
             }
         }
+
+        // Heartbeat logic
+        if (_isConnected)
+        {
+            _heartbeatTimer += Time.deltaTime;
+            if (_heartbeatTimer >= HeartbeatInterval)
+            {
+                SendPing();
+                _heartbeatTimer = 0f;
+            }
+        }
+    }
+
+    private void SendPing()
+    {
+        _lastPingTime = Time.realtimeSinceStartup;
+        _waitingForPong = true;
+        Emit(NetworkEvents.PING, new { t = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() });
     }
 
     public void ConnectToServer()
@@ -153,6 +178,11 @@ public class SocketManager : MonoBehaviour
                 _receivedMovePackets++;
                 if (_receivedMovePackets % 50 == 0) Debug.Log($"[NETWORK] Recebendo movimento de {data["id"]}... ({_receivedMovePackets} total)");
                 TriggerEvent(eventName, data);
+            }
+            else if (eventName == NetworkEvents.PONG)
+            {
+                _waitingForPong = false;
+                Latency = (Time.realtimeSinceStartup - _lastPingTime) * 1000f; // Conversão para ms
             }
             else
             {
