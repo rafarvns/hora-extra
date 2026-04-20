@@ -1,0 +1,44 @@
+services:
+  # Banco de Dados MySQL
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: hora_extra_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - hora_extra_network
+
+  # Backend da Aplicação
+  app:
+    build: .
+    restart: always
+    env_file: .env
+    environment:
+      # URL do banco de dados (prioriza o que estiver no .env, ex: SQLite)
+      DATABASE_URL: ${DATABASE_URL:-mysql://user:password@db:3306/hora_extra_db}
+      USE_SQLITE: ${USE_SQLITE:-false}
+      PORT: ${PORT:-5000}
+      UDP_PORT: ${UDP_PORT:-5001}
+    ports:
+      - "${PORT:-5000}:${PORT:-5000}"
+      - "${UDP_PORT:-5001}:${UDP_PORT:-5001}/udp"
+    depends_on:
+      - db
+    networks:
+      - hora_extra_network
+
+# Redes para comunicação entre serviços
+networks:
+  hora_extra_network:
+    driver: bridge
+
+# Volumes para persistência de dados do MySQL
+volumes:
+  mysql_data:

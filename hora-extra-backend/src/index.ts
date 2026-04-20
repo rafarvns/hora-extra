@@ -1,27 +1,51 @@
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
+import { createServer } from 'http';
+import { UdpSocketManager } from './sockets/UdpSocketManager.js';
+import apiRouter from './api/routes/index.js';
+import { errorHandler } from './middleware/errorHandler.js';
+import logger from './utils/Logger.js';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const httpServer = createServer(app);
+const PORT = process.env.PORT || 5000;
 
-// Middleware
+// 1. Middlewares Globais
 app.use(express.json());
 
-// Health Check Endpoint
-app.get('/health', (req: Request, res: Response) => {
-  res.status(200).json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    service: 'hora-extra-backend'
+// Middleware simples para log de requisições HTTP
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const { method, url } = req;
+  const start = Date.now();
+
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    const { statusCode } = res;
+    logger.info(`${method} ${url} ${statusCode} - ${duration}ms`, { module: 'HTTP' });
   });
+
+  next();
 });
 
-// Root Endpoint (Quick check)
+// 2. Setup Sockets (UDP)
+const UDP_PORT = Number(process.env.UDP_PORT) || 5001;
+const udpSocketManager = UdpSocketManager.initialize(UDP_PORT);
+logger.info(`UDP Socket inicializado na porta ${UDP_PORT}`, { module: 'UDP_SOCKET' });
+
+// 3. Rotas da API REST (/api/v1/...)
+app.use('/api', apiRouter);
+
+// 4. Root (Quick check)
 app.get('/', (req: Request, res: Response) => {
-  res.send('Hora Extra Backend is running. Access /health for status.');
+  res.send('Hora Extra Backend is running. Use /api/health for status.');
 });
 
-app.listen(PORT, () => {
-  console.log(`[SERVER] Hora Extra Backend running on http://localhost:${PORT}`);
-  console.log(`[HEALTH] Check status at http://localhost:${PORT}/health`);
+// 5. Middleware de Tratamento de Erros (sempre ao final!)
+app.use(errorHandler);
+
+// Inicializar Servidor
+const HOST = '0.0.0.0'; // Escuta em todas as interfaces de rede locales
+httpServer.listen(Number(PORT), HOST, () => {
+  logger.info(`Hora Extra Backend rodando em http://${HOST}:${PORT}`, { module: 'SERVER' });
+  logger.info(`Verifique o status em http://localhost:${PORT}/api/health`, { module: 'HEALTH' });
 });
+

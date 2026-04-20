@@ -21,7 +21,7 @@ O servidor do jogo **Hora-Extra**, responsável pelo gerenciamento de partidas, 
    ```bash
    npm run dev
    ```
-3. O servidor estará rodando em um endereço definido (ex: `http://localhost:3000`).
+3. O servidor estará rodando em um endereço definido (ex: `http://localhost:5000`).
 
 ---
 
@@ -40,6 +40,28 @@ npm run build
 Depois, para iniciar o servidor em modo de produção:
 ```bash
 npm start
+```
+
+---
+
+## 🔐 Autenticação (JWT)
+
+O sistema de autenticação utiliza JSON Web Tokens (JWT) para proteger as rotas do backend.
+
+### Configuração
+1.  Renomeie o arquivo `.env.example` para `.env`.
+2.  Defina a variável `JWT_SECRET` com uma chave segura.
+
+### Endpoints (Base: `/api/auth`)
+| Método | Endpoint | Descrição |
+| :--- | :--- | :--- |
+| `POST` | `/register` | Registra um novo jogador (Requer: `nome`, `email`, `senha`) |
+| `POST` | `/login` | Realiza login e retorna o `token` (Requer: `email`, `senha`) |
+
+### Como usar o Token
+Para acessar rotas protegidas, inclua o token no header `Authorization`:
+```http
+Authorization: Bearer <SEU_TOKEN_AQUI>
 ```
 
 ---
