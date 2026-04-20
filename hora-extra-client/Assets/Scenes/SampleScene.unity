@@ -2888,7 +2888,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7e217994d5794d04d851da993cd96bc0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SocketManager
-  ServerIp: 192.168.10.151
+  ServerIp: 92.113.39.4
   ServerPort: 5001
   AutoConnect: 1
   UseTestToken: 1
