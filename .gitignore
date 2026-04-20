@@ -27,3 +27,8 @@ node_modules/
 .env.local
 .env.*.local
 *.blend1
+
+# TextMesh Pro (Unity)
+hora-extra-client/Assets/TextMesh Pro/
+hora-extra-client/Assets/TextMesh Pro.meta
+hora-extra-client/Build/
