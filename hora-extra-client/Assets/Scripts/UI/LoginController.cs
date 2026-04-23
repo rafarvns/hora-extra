@@ -53,9 +53,20 @@ namespace HoraExtra.UI
                 Debug.Log("[LoginController] Login bem-sucedido!");
                 
                 // Salva na sessão global
+                if (SessionManager.Instance == null)
+                {
+                    Debug.LogWarning("[LoginController] SessionManager não encontrado na cena. Criando um novo...");
+                    GameObject sessionObj = new GameObject("SessionManager");
+                    sessionObj.AddComponent<SessionManager>();
+                }
+
                 if (SessionManager.Instance != null)
                 {
                     SessionManager.Instance.SetSession(response.Data);
+                }
+                else
+                {
+                    Debug.LogError("[LoginController] CRÍTICO: Falha ao criar ou encontrar SessionManager!");
                 }
 
                 SceneManager.LoadScene(mainMenuSceneName);

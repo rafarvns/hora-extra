@@ -1,23 +1,20 @@
-# Gestão de Sessão (Unity Client)
-
-O sistema de sessão é responsável por persistir o estado do jogador logado e fornecer acesso global ao token de autenticação e dados do perfil.
-
 ## SessionManager (Singleton)
 
-O `SessionManager` é um script anexado a um GameObject persistente (`DontDestroyOnLoad`) que gerencia os dados da sessão.
+O `SessionManager` é um script persistente (`DontDestroyOnLoad`) que gerencia os dados da sessão. 
 
 ### Funcionalidades Principais
 
-1.  **Persistência**: O token JWT e o nome do jogador são salvos no `PlayerPrefs`, permitindo que a sessão seja recuperada ao reiniciar o jogo.
-2.  **Acesso Global**: Pode ser acessado de qualquer script via `HoraExtra.Network.SessionManager.Instance`.
-3.  **Estado do Login**: A propriedade `IsLoggedIn` indica se há um token válido em memória.
+1.  **Persistência**: O token JWT e o nome do jogador são salvos no `PlayerPrefs`.
+2.  **Auto-inicialização**: O sistema é capaz de se auto-instanciar caso não exista na cena no momento do login.
+3.  **Acesso Global**: Acessível via `HoraExtra.Network.SessionManager.Instance`.
+4.  **Sistema de Eventos**: Utiliza `OnSessionUpdated` para notificar componentes de UI (como o Menu Principal) sempre que o estado da sessão mudar.
 
 ### Como Usar
 
-#### Verificar se o jogador está logado:
+#### Se inscrever para atualizações de UI:
 ```csharp
-if (SessionManager.Instance != null && SessionManager.Instance.IsLoggedIn) {
-    Debug.Log("Jogador autenticado!");
+private void OnEnable() {
+    SessionManager.Instance.OnSessionUpdated += UpdateMyUI;
 }
 ```
 

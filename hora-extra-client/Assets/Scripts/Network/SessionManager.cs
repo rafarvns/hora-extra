@@ -20,14 +20,17 @@ namespace HoraExtra.Network
 
         private void Awake()
         {
+            Debug.Log("[SessionManager] Awake chamado.");
             if (Instance == null)
             {
                 Instance = this;
                 DontDestroyOnLoad(gameObject);
                 LoadSession();
+                Debug.Log("[SessionManager] Singleton inicializado e sessão carregada.");
             }
             else
             {
+                Debug.LogWarning("[SessionManager] Instância duplicada detectada e destruída.");
                 Destroy(gameObject);
             }
         }

@@ -38,13 +38,19 @@ namespace HoraExtra.UI
 
         private void OnEnable()
         {
+            Debug.Log("[MainMenuController] OnEnable chamado.");
             // Tenta atualizar imediatamente
             UpdateUIState();
 
             // Se inscreve para atualizações futuras
             if (HoraExtra.Network.SessionManager.Instance != null)
             {
+                Debug.Log("[MainMenuController] Se inscrevendo no evento OnSessionUpdated.");
                 HoraExtra.Network.SessionManager.Instance.OnSessionUpdated += UpdateUIState;
+            }
+            else
+            {
+                Debug.LogWarning("[MainMenuController] SessionManager.Instance está NULL no OnEnable!");
             }
         }
 
@@ -64,22 +70,29 @@ namespace HoraExtra.UI
             var session = HoraExtra.Network.SessionManager.Instance;
             bool isLoggedIn = session != null && session.IsLoggedIn;
 
+            Debug.Log($"[MainMenuController] UpdateUIState chamado. Logado: {isLoggedIn}");
+
             if (isLoggedIn)
             {
                 if (userNameText != null)
+                {
                     userNameText.text = session.CurrentPlayer.Nome;
+                    Debug.Log($"[MainMenuController] Nome do usuário setado para: {session.CurrentPlayer.Nome}");
+                }
                 
                 // Desativa os botões de login e cadastro individualmente
                 if (btnGoToLogin != null) btnGoToLogin.gameObject.SetActive(false);
                 if (btnGoToRegister != null) btnGoToRegister.gameObject.SetActive(false);
+                Debug.Log("[MainMenuController] Botões de Login/Registro desativados.");
             }
             else
             {
                 if (userNameText != null)
-                    userNameText.text = ""; // Limpa se não estiver logado
+                    userNameText.text = ""; 
                 
                 if (btnGoToLogin != null) btnGoToLogin.gameObject.SetActive(true);
                 if (btnGoToRegister != null) btnGoToRegister.gameObject.SetActive(true);
+                Debug.Log("[MainMenuController] Botões de Login/Registro ativados (Modo Deslogado).");
             }
         }
 
