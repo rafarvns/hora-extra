@@ -20,6 +20,9 @@ namespace HoraExtra.UI
         [SerializeField] private string loginSceneName = "LoginScene";
         [SerializeField] private string lobbySceneName = "SampleScene"; // Ajuste se houver uma cena específica de Lobby
 
+        [Header("User Info (Logged In State)")]
+        [SerializeField] private TMPro.TextMeshProUGUI userNameText;
+
         private void Awake()
         {
             // Vincula as funções aos botões
@@ -31,6 +34,38 @@ namespace HoraExtra.UI
 
             if (btnGoToLobby != null)
                 btnGoToLobby.onClick.AddListener(() => LoadScene(lobbySceneName));
+        }
+
+        private void Start()
+        {
+            UpdateUIState();
+        }
+
+        /**
+         * Atualiza a visibilidade dos botões e o texto de boas-vindas com base na sessão.
+         */
+        private void UpdateUIState()
+        {
+            var session = HoraExtra.Network.SessionManager.Instance;
+            bool isLoggedIn = session != null && session.IsLoggedIn;
+
+            if (isLoggedIn)
+            {
+                if (userNameText != null)
+                    userNameText.text = session.CurrentPlayer.Nome;
+                
+                // Desativa os botões de login e cadastro individualmente
+                if (btnGoToLogin != null) btnGoToLogin.gameObject.SetActive(false);
+                if (btnGoToRegister != null) btnGoToRegister.gameObject.SetActive(false);
+            }
+            else
+            {
+                if (userNameText != null)
+                    userNameText.text = ""; // Limpa se não estiver logado
+                
+                if (btnGoToLogin != null) btnGoToLogin.gameObject.SetActive(true);
+                if (btnGoToRegister != null) btnGoToRegister.gameObject.SetActive(true);
+            }
         }
 
         /**
