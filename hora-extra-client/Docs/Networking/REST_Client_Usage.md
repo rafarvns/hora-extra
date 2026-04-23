@@ -51,6 +51,28 @@ public class MyService {
 
 ---
 
-## 4. Exemplos Implementados
+## 4. Exemplo Completo: Autenticação e Sessão
+Para fluxos de autenticação, o padrão recomendado é usar um serviço para a chamada e o `SessionManager` para persistência:
+
+```csharp
+// 1. Chamada de Login
+var authService = new AuthService();
+var response = await authService.Login(email, senha);
+
+if (response.Success) {
+    // 2. Salva na sessão global para persistência entre cenas
+    SessionManager.Instance.SetSession(response.Data);
+    
+    // 3. Navega para a tela principal
+    SceneManager.LoadScene("MainMenuScene");
+}
+```
+
+---
+
+## 5. Exemplos Implementados
 - **HealthCheck**: Veja o arquivo `HealthService.cs` para um exemplo real de verificação de status.
-- **Autenticação (Cadastro/Login)**: Veja o arquivo `AuthService.cs` para um exemplo de integração com endpoints de segurança.
+- **Autenticação**: Veja o arquivo `AuthService.cs` para o contrato de cadastro e login.
+- **Sessão**: Veja `SessionManager.cs` para entender como os dados do jogador são mantidos.
+
+Consulte também a documentação específica de [Gestão de Sessão](SESSION_MANAGEMENT.md).

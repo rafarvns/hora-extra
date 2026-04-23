@@ -36,9 +36,24 @@ namespace HoraExtra.UI
                 btnGoToLobby.onClick.AddListener(() => LoadScene(lobbySceneName));
         }
 
-        private void Start()
+        private void OnEnable()
         {
+            // Tenta atualizar imediatamente
             UpdateUIState();
+
+            // Se inscreve para atualizações futuras
+            if (HoraExtra.Network.SessionManager.Instance != null)
+            {
+                HoraExtra.Network.SessionManager.Instance.OnSessionUpdated += UpdateUIState;
+            }
+        }
+
+        private void OnDisable()
+        {
+            if (HoraExtra.Network.SessionManager.Instance != null)
+            {
+                HoraExtra.Network.SessionManager.Instance.OnSessionUpdated -= UpdateUIState;
+            }
         }
 
         /**

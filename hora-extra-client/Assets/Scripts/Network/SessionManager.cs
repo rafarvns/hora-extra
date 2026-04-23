@@ -16,6 +16,8 @@ namespace HoraExtra.Network
 
         public bool IsLoggedIn => !string.IsNullOrEmpty(AuthToken);
 
+        public System.Action OnSessionUpdated;
+
         private void Awake()
         {
             if (Instance == null)
@@ -44,6 +46,7 @@ namespace HoraExtra.Network
             PlayerPrefs.Save();
             
             Debug.Log($"[SessionManager] Sessão definida para o jogador: {CurrentPlayer.Nome}");
+            OnSessionUpdated?.Invoke();
         }
 
         /**
@@ -72,6 +75,8 @@ namespace HoraExtra.Network
                 CurrentPlayer = new PlayerData { Nome = cachedName };
                 Debug.Log($"[SessionManager] Sessão recuperada: {cachedName}");
             }
+
+            OnSessionUpdated?.Invoke();
         }
     }
 }
