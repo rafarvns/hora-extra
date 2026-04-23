@@ -53,3 +53,4 @@ public class MyService {
 
 ## 4. Exemplos Implementados
 - **HealthCheck**: Veja o arquivo `HealthService.cs` para um exemplo real de verificação de status.
+- **Autenticação (Cadastro/Login)**: Veja o arquivo `AuthService.cs` para um exemplo de integração com endpoints de segurança.
