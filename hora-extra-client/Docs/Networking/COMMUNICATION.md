@@ -9,7 +9,23 @@ Esta documentação define o protocolo de comunicação em tempo real via UDP en
 - **Formato**: JSON (dentro do datagrama)
 - **Frequência de Tick (Sync)**: 20Hz (a cada 50ms)
 
-## 2. Fluxo de Conexão (Handshake)
+---
+
+## 2. API REST (HTTP)
+Além da comunicação em tempo real via UDP, o projeto utiliza uma API REST para operações de baixa frequência e persistência.
+
+- **Base URL**: `http://localhost:5000/api`
+- **Formato**: JSON
+
+### 2.1. Autenticação
+| Recurso | Método | Endpoint | Descrição |
+| :--- | :--- | :--- | :--- |
+| **Cadastro** | `POST` | `/auth/register` | Cria uma nova conta de jogador. |
+| **Login** | `POST` | `/auth/login` | Autentica e retorna o JWT. |
+
+---
+
+## 3. Fluxo de Conexão (Handshake)
 O UDP é connectionless, então implementamos um handshake manual:
 1. O cliente envia o evento `CONN` contendo o **Token JWT** e dados iniciais.
 2. O servidor valida o token. Se válido, cria uma sessão vinculada ao `IP:PORTA` do remetente.
@@ -53,7 +69,13 @@ Cada datagrama deve conter um JSON no seguinte formato:
 
 ---
 
-## 6. Boas Práticas (UDP Mode)
-1. **Unreliable**: Espere que alguns pacotes de movimento se percam. O cliente deve estar preparado para lacunas.
-2. **Heartbeat**: A sessão no servidor expira após 30 segundos sem pacotes. O cliente deve manter o envio de `ping` ou `move` constante.
-3. **Ordem**: Implementar um campo de `sequence` ou `timestamp` se a ordem dos pacotes se tornar um problema crítico.
+## 4. Exemplos Implementados
+- **HealthCheck**: Veja o arquivo `HealthService.cs` para um exemplo real de verificação de status.
+- **Autenticação**: Veja o arquivo `AuthService.cs` para exemplos de cadastro e login.
+
+---
+
+## 5. Boas Práticas
+1. **Async/Await**: SEMPRE utilize chamadas assíncronas para não travar a UI (Thread Principal) do Unity enquanto aguarda a rede.
+2. **Gerenciamento de Erros**: Sempre verifique o campo `Success` na resposta antes de tentar acessar os `Data`. Caso ocorra uma falha, o campo `Error` trará os detalhes.
+3. **Serialização**: As chaves do seu arquivo C# devem bater EXATAMENTE com as chaves JSON retornadas pelo backend, a menos que use o atributo `[JsonProperty("outra_chave")]`.
