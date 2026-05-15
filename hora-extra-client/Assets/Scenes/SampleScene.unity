@@ -3242,7 +3242,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SocketManager
   ServerIp: 127.0.0.1
   ServerPort: 5001
-  AutoConnect: 1
+  AutoConnect: 0
   UseTestToken: 0
   TestToken: horaextra_dev_test_token_2026
 --- !u!4 &1543083813

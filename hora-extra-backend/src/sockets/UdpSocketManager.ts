@@ -132,37 +132,57 @@ export class UdpSocketManager {
             playerId = decoded.id;
         }
 
+        // Determinar sala de auto-join
+        const isDevSession = isDev && devToken && token === devToken;
+        const isGuestSession = playerId.startsWith('guest-');
+
+        let autoJoinRoomId: string | undefined;
+        if (isDevSession) {
+            autoJoinRoomId = 'dev-room';
+        } else if (isGuestSession) {
+            autoJoinRoomId = 'guest-room';
+        }
+
+        // --- LAZY RESET para sala guest: se sala vazia, limpa estado de NPCs órfãos ---
+        if (isGuestSession && this.getRoomSessionCount('guest-room') === 0) {
+            logger.info(`[UDP_SOCKET] Sala guest-room vazia — executando lazy reset antes de ${playerId}`, { module: 'UDP_SOCKET' });
+            NpcRegisterHandler.clearRoomState('guest-room');
+        }
+
         // Criar ou atualizar sessão
         const session: PlayerSession = {
             id: playerId,
             address: rinfo.address,
             port: rinfo.port,
-            playerName: data?.playerName || (isDev && token === devToken ? "DevPlayer" : "Player"),
+            playerName: data?.playerName || (isDevSession ? 'DevPlayer' : 'Player'),
             lastSeen: Date.now(),
             movePacketCount: 0,
-            // AUTO-JOIN em sala de teste se for sessão de desenvolvimento
-            roomId: (isDev && token === devToken) ? "dev-room" : undefined
+            roomId: autoJoinRoomId,
         };
-        
-        // --- LOGICA DE RESET (Novo Plano) ---
-        if (data?.resetRoom && isDev && token === devToken) {
-            const roomIdToReset = session.roomId || "dev-room";
+
+        // --- LOGICA DE RESET para dev-room via campo resetRoom ---
+        if (data?.resetRoom && isDevSession) {
+            const roomIdToReset = session.roomId || 'dev-room';
             logger.info(`[UDP_SOCKET] Solicitado RESET da sala '${roomIdToReset}' pelo jogador ${playerId}`, { module: 'UDP_SOCKET' });
             this.resetRoomState(roomIdToReset);
         }
 
         this.sessions.set(sessionKey, session);
 
-        logger.info(`Sessão UDP iniciada: ${playerId} em ${sessionKey} ${session.roomId ? `(Auto-Join: ${session.roomId})` : ''}`, { module: 'UDP_SOCKET' });
+        const wasHost = isGuestSession && session.roomId === 'guest-room';
+        logger.info(
+            `Sessão UDP iniciada: ${playerId} em ${sessionKey}${session.roomId ? ` (Auto-Join: ${session.roomId})` : ''}${isGuestSession ? ` [guest, host=${wasHost}]` : ''}`,
+            { module: 'UDP_SOCKET' },
+        );
 
         this.sendTo(rinfo, 'CONN_SUCCESS', { id: playerId, sessionKey });
-        
+
         // Se for auto-join, confirmar para o cliente também
         if (session.roomId) {
             this.sendTo(rinfo, 'room_joined', {
                 roomId: session.roomId,
                 playerId: session.id,
-                message: "Auto-joined dev room."
+                message: isGuestSession ? 'Auto-joined guest-room.' : 'Auto-joined dev room.',
             });
         }
     }
@@ -199,14 +219,35 @@ export class UdpSocketManager {
         return this.sessions.get(`${rinfo.address}:${rinfo.port}`);
     }
 
+    /**
+     * Retorna o número de sessões ativas em uma sala.
+     */
+    public getRoomSessionCount(roomId: string): number {
+        let count = 0;
+        this.sessions.forEach(session => {
+            if (session.roomId === roomId) count++;
+        });
+        return count;
+    }
+
     private cleanupSessions(): void {
         const now = Date.now();
         const timeout = 30000; // 30 segundos de inatividade
+        const affectedRooms = new Set<string>();
 
         this.sessions.forEach((session, key) => {
             if (now - session.lastSeen > timeout) {
                 logger.info(`Sessão expirada: ${session.id} (${key})`, { module: 'UDP_SOCKET' });
+                if (session.roomId) affectedRooms.add(session.roomId);
                 this.sessions.delete(key);
+            }
+        });
+
+        // Para cada sala que perdeu sessões, verificar se ficou vazia
+        affectedRooms.forEach(roomId => {
+            if (roomId === 'guest-room' && this.getRoomSessionCount(roomId) === 0) {
+                logger.info(`[UDP_SOCKET] guest-room ficou vazia após cleanup — limpando estado de NPCs`, { module: 'UDP_SOCKET' });
+                NpcRegisterHandler.clearRoomState(roomId);
             }
         });
     }

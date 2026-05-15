@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using HoraExtra.Network;
 
 /**
  * SocketManager (UDP Version): Gerencia a conexão de rede usando UDP Datagram nativo.
@@ -18,6 +19,28 @@ public class SocketManager : MonoBehaviour
     public string LocalPlayerId { get; private set; }
     public bool IsConnected => _isConnected;
     public float Latency { get; private set; }
+
+    // Flag estático: impede AutoConnect quando o GO é criado via EnsureExists() em runtime.
+    private static bool _suppressAutoConnect = false;
+
+    /// <summary>
+    /// Garante que existe uma instância do SocketManager. Se nao existir na cena,
+    /// cria um GameObject em runtime. Usado pelo flow guest para tolerar cenas que
+    /// nao tem o GameObject pre-configurado no Inspector.
+    /// </summary>
+    public static SocketManager EnsureExists()
+    {
+        if (Instance == null)
+        {
+            Debug.Log("[NETWORK] SocketManager nao encontrado na cena — criando runtime.");
+            _suppressAutoConnect = true;
+            var go = new GameObject("SocketManager (auto-created)");
+            go.AddComponent<SocketManager>();
+            // Awake roda imediatamente no AddComponent; Instance ja esta setado aqui.
+            _suppressAutoConnect = false;
+        }
+        return Instance;
+    }
 
     [Header("Network Settings")]
     public string ServerIp = "127.0.0.1";
@@ -46,8 +69,22 @@ public class SocketManager : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            
-            // Inicializar o socket o mais cedo possível
+
+            // Modo guest: aguardar SetAuthTokenAndReconnect() — nao autoconectar com TestToken.
+            if (GuestSession.IsGuestMode)
+            {
+                Debug.Log("[NETWORK] Guest mode detectado — aguardando SetAuthTokenAndReconnect().");
+                return;
+            }
+
+            // Criado via EnsureExists(): nao autoconectar — o caller vai chamar SetAuthTokenAndReconnect.
+            if (_suppressAutoConnect)
+            {
+                Debug.Log("[NETWORK] AutoConnect suprimido (runtime create) — aguardando comando explicito.");
+                return;
+            }
+
+            // Inicializar o socket o mais cedo possivel
             if (AutoConnect)
             {
                 ConnectToServer();
@@ -256,6 +293,28 @@ public class SocketManager : MonoBehaviour
         {
             _mainThreadQueue.Enqueue(action);
         }
+    }
+
+    /// <summary>
+    /// Fecha a conexão atual (se houver), troca para o token informado e reconecta.
+    /// Deve ser chamado pelo controller de UI após GuestService.JoinAsGuest() retornar
+    /// com sucesso — ou após qualquer login real que precise substituir o token em runtime.
+    /// </summary>
+    public void SetAuthTokenAndReconnect(string token)
+    {
+        Debug.Log("[NETWORK] SetAuthTokenAndReconnect: encerrando conexão anterior e reconectando...");
+
+        if (_udpClient != null)
+        {
+            _udpClient.Close();
+            _udpClient = null;
+        }
+
+        _isConnected = false;
+        UseTestToken = false;
+        HoraExtra.Network.NetworkSettings.AuthToken = token;
+
+        ConnectToServer();
     }
 
     private void OnDestroy()
