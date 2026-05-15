@@ -13,8 +13,8 @@ namespace HoraExtra.Network.Rest
      */
     public static class ApiClient
     {
-        // Altere para a URL correta conforme o ambiente
-        private const string BaseUrl = "http://127.0.0.1:5000/api";
+        // URL base lida de BackendConfig — para mudar o host, edite BackendConfig.Host.
+        private static string BaseUrl => HoraExtra.Network.BackendConfig.ApiBaseUrl;
 
         /// <summary>
         /// Realiza uma requisição GET assíncrona.

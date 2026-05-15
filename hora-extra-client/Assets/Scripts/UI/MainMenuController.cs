@@ -1,6 +1,8 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using HoraExtra.Network;
+using HoraExtra.Network.Rest.Services;
 
 namespace HoraExtra.UI
 {
@@ -14,6 +16,7 @@ namespace HoraExtra.UI
         [SerializeField] private Button btnGoToRegister;
         [SerializeField] private Button btnGoToLogin;
         [SerializeField] private Button btnGoToLobby;
+        [SerializeField] private Button btnGuestPlay;
 
         [Header("Scene Names")]
         [SerializeField] private string registerSceneName = "CreateAccountScene";
@@ -34,6 +37,9 @@ namespace HoraExtra.UI
 
             if (btnGoToLobby != null)
                 btnGoToLobby.onClick.AddListener(() => LoadScene(lobbySceneName));
+            
+            if (btnGuestPlay != null)
+                btnGuestPlay.onClick.AddListener(OnGuestPlayClicked);
         }
 
         private void OnEnable()
@@ -118,6 +124,33 @@ namespace HoraExtra.UI
         {
             Debug.Log("[MainMenuController] Saindo do jogo...");
             Application.Quit();
+        }
+        
+        private async void OnGuestPlayClicked()
+        {
+            Debug.Log("[UI] Botão Guest Play clicado — solicitando JWT...");
+
+            var resp = await GuestService.JoinAsGuest();
+            if (resp == null || !resp.Success || resp.Data == null)
+            {
+                Debug.LogError($"[UI] Guest join falhou: {resp?.Error?.Message ?? "resposta nula"}");
+                return;
+            }
+
+            Debug.Log($"[UI] Guest concedido — id={resp.Data.GuestId}, room={resp.Data.RoomId}");
+
+            // Configura sessão antes do SocketManager conectar
+            NetworkSettings.AuthToken = resp.Data.Token;
+            GuestSession.IsGuestMode = true;
+            GuestSession.GuestRoomId = resp.Data.RoomId;
+
+            // Força reconexão UDP com o token guest
+            SocketManager.EnsureExists().SetAuthTokenAndReconnect(resp.Data.Token);
+            
+            RemotePlayerSpawner.EnsureExists();
+
+            // Carrega a cena de gameplay
+            LoadScene(lobbySceneName);
         }
     }
 }

@@ -4,6 +4,7 @@ import { UdpSocketManager } from './sockets/UdpSocketManager.js';
 import apiRouter from './api/routes/index.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import logger from './utils/Logger.js';
+import { seedGuestRoom } from './bootstrap/seedGuestRoom.js';
 
 const app = express();
 const httpServer = createServer(app);
@@ -44,8 +45,11 @@ app.use(errorHandler);
 
 // Inicializar Servidor
 const HOST = '0.0.0.0'; // Escuta em todas as interfaces de rede locales
-httpServer.listen(Number(PORT), HOST, () => {
+httpServer.listen(Number(PORT), HOST, async () => {
   logger.info(`Hora Extra Backend rodando em http://${HOST}:${PORT}`, { module: 'SERVER' });
   logger.info(`Verifique o status em http://localhost:${PORT}/api/health`, { module: 'HEALTH' });
+
+  // Garante que a sala dos guests existe (pra aparecer no lobby).
+  await seedGuestRoom();
 });
 
