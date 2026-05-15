@@ -48,7 +48,8 @@ GuestSession.GuestRoomId = "guest-room"
 NetworkSettings.AuthToken = token
         |
         v
-SocketManager.Instance.SetAuthTokenAndReconnect(token)
+SocketManager.EnsureExists().SetAuthTokenAndReconnect(token)
+  → Cria SocketManager em runtime se Instance == null (tolera cenas sem o GO)
   → Fecha UDP anterior (se houver)
   → UseTestToken = false
   → ConnectToServer()
@@ -125,7 +126,14 @@ private async void OnGuestPlayClicked()
     HoraExtra.Network.GuestSession.IsGuestMode = true;
     HoraExtra.Network.GuestSession.GuestRoomId = resp.Data.RoomId;
 
-    SocketManager.Instance.SetAuthTokenAndReconnect(resp.Data.Token);
+    // EnsureExists() cria o SocketManager em runtime se nao existir na cena —
+    // evita NullReferenceException em cenas sem o GameObject pre-configurado.
+    SocketManager.EnsureExists().SetAuthTokenAndReconnect(resp.Data.Token);
+
+    // Inicializa o spawner de jogadores remotos APOS o SocketManager existir.
+    // Ele assina PLAYER_JOINED/PLAYER_MOVE/PLAYER_DISCONNECTED e instancia
+    // Capsules coloridas (placeholder) ou o prefab atribuido no Inspector.
+    HoraExtra.Network.RemotePlayerSpawner.EnsureExists();
 
     UnityEngine.SceneManagement.SceneManager.LoadScene("SampleScene");
 }

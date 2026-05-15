@@ -161,8 +161,15 @@ private async void OnGuestPlayClicked()
     GuestSession.IsGuestMode = true;
     GuestSession.GuestRoomId = resp.Data.RoomId;
 
-    // Força reconexão UDP com o token guest
-    SocketManager.Instance.SetAuthTokenAndReconnect(resp.Data.Token);
+    // Força reconexão UDP com o token guest.
+    // EnsureExists() cria o SocketManager em runtime se ele não existir na cena —
+    // necessário quando a cena (ex.: MainMenuScene) não tem o GameObject pré-configurado.
+    SocketManager.EnsureExists().SetAuthTokenAndReconnect(resp.Data.Token);
+
+    // Inicializa o spawner de jogadores remotos (cria runtime se não houver na cena).
+    // Deve ser chamado APÓS SetAuthTokenAndReconnect para garantir que o SocketManager
+    // já existe quando o Start() do spawner assinar os eventos.
+    RemotePlayerSpawner.EnsureExists();
 
     // Carrega a cena de gameplay
     LoadScene(lobbySceneName);
@@ -281,6 +288,29 @@ No `.exe`:
 
 ✅ **2-player funcional. Entregue ao professor.**
 
+### 9.4 — Como funciona o spawn visual
+
+Quando você conecta como guest, o `RemotePlayerSpawner` (auto-criado via `EnsureExists()`)
+escuta os eventos `PLAYER_JOINED`, `PLAYER_MOVE` e `PLAYER_DISCONNECTED` do `SocketManager`.
+Para cada jogador remoto, instancia um GameObject visual:
+
+- Se **NÃO** houver prefab atribuído ao spawner: usa uma **Capsule colorida primitiva**
+  (cores rotativas: vermelho, azul, verde, amarelo, roxo) — funciona out-of-the-box sem
+  nenhuma configuração adicional.
+- Se você quiser usar seu próprio prefab: crie um GameObject `RemotePlayerSpawner`
+  na cena de gameplay (`SampleScene`), atribua um prefab no campo
+  `Remote Player Prefab` do Inspector. O `EnsureExists()` só cria em runtime se **não**
+  houver instância já presente na cena.
+
+O `NetworkPlayer.cs` (já existente em `Assets/Scripts/Characters/`) é adicionado
+automaticamente ao GameObject instanciado caso não esteja presente no prefab — esse
+script faz a interpolação suave via `Vector3.Lerp`/`Quaternion.Slerp` das posições
+recebidas pela rede.
+
+> O `RemotePlayerSpawner` também faz **lazy spawn**: se o `PLAYER_MOVE` de um jogador
+> remoto chegar antes do `PLAYER_JOINED` (ex.: você entrou depois deles), o spawner
+> cria o visual nesse momento automaticamente.
+
 ---
 
 ## Passo 10 — Teste do "lazy reset" (opcional, mas valida o algoritmo)
@@ -313,7 +343,9 @@ Demonstra que o servidor reseta a sala quando ela esvazia:
 | `[NETWORK] Conexão UDP Estabelecida! ID: dev-test-player` em vez de `guest-xxx` | Dev bypass ativo | Confirme que `NODE_ENV=development` e `Use Test Token = false` no Inspector. |
 | Cena de gameplay não tem players visíveis | Falta um `WorldController` que escute `player_joined` e instancie prefab | Fora do escopo desta feature — verifique com o dev do lobby. |
 | Erro de compilação `GuestSession not found` | `using HoraExtra.Network` faltando | Passo 4.1. |
-| Console mostra `[NETWORK] Guest mode detectado — aguardando SetAuthTokenAndReconnect()` mas trava | Você setou `IsGuestMode = true` mas não chamou `SetAuthTokenAndReconnect` | Confirme que o método `OnGuestPlayClicked` chama `SocketManager.Instance.SetAuthTokenAndReconnect(...)` (Passo 4.4). |
+| Console mostra `[NETWORK] Guest mode detectado — aguardando SetAuthTokenAndReconnect()` mas trava | Você setou `IsGuestMode = true` mas não chamou `SetAuthTokenAndReconnect` | Confirme que o método `OnGuestPlayClicked` chama `SocketManager.EnsureExists().SetAuthTokenAndReconnect(...)` (Passo 4.4). |
+| `NullReferenceException` em `MainMenuController.OnGuestPlayClicked()` na linha `SocketManager.Instance.SetAuthTokenAndReconnect(...)` | `SocketManager.Instance` é `null` — o GameObject `SocketManager` não existe na MainMenuScene | Substitua `SocketManager.Instance.SetAuthTokenAndReconnect(token)` por `SocketManager.EnsureExists().SetAuthTokenAndReconnect(token)` no `MainMenuController.cs`. O método `EnsureExists()` cria o GameObject em runtime automaticamente se ele não estiver na cena. |
+| Os 2 guests conectaram (logs OK no backend) mas não se veem na cena | `RemotePlayerSpawner` não foi inicializado | Confirme que `RemotePlayerSpawner.EnsureExists();` é chamado no `OnGuestPlayClicked` após o `SocketManager.EnsureExists().SetAuthTokenAndReconnect(...)` (Passo 4.4). |
 
 ---
 

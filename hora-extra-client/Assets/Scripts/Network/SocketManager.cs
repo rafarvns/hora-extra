@@ -20,6 +20,28 @@ public class SocketManager : MonoBehaviour
     public bool IsConnected => _isConnected;
     public float Latency { get; private set; }
 
+    // Flag estático: impede AutoConnect quando o GO é criado via EnsureExists() em runtime.
+    private static bool _suppressAutoConnect = false;
+
+    /// <summary>
+    /// Garante que existe uma instância do SocketManager. Se nao existir na cena,
+    /// cria um GameObject em runtime. Usado pelo flow guest para tolerar cenas que
+    /// nao tem o GameObject pre-configurado no Inspector.
+    /// </summary>
+    public static SocketManager EnsureExists()
+    {
+        if (Instance == null)
+        {
+            Debug.Log("[NETWORK] SocketManager nao encontrado na cena — criando runtime.");
+            _suppressAutoConnect = true;
+            var go = new GameObject("SocketManager (auto-created)");
+            go.AddComponent<SocketManager>();
+            // Awake roda imediatamente no AddComponent; Instance ja esta setado aqui.
+            _suppressAutoConnect = false;
+        }
+        return Instance;
+    }
+
     [Header("Network Settings")]
     public string ServerIp = "127.0.0.1";
     public int ServerPort = 5001;
@@ -48,14 +70,21 @@ public class SocketManager : MonoBehaviour
             Instance = this;
             DontDestroyOnLoad(gameObject);
 
-            // Modo guest: aguardar SetAuthTokenAndReconnect() — não autoconectar com TestToken.
+            // Modo guest: aguardar SetAuthTokenAndReconnect() — nao autoconectar com TestToken.
             if (GuestSession.IsGuestMode)
             {
                 Debug.Log("[NETWORK] Guest mode detectado — aguardando SetAuthTokenAndReconnect().");
                 return;
             }
 
-            // Inicializar o socket o mais cedo possível
+            // Criado via EnsureExists(): nao autoconectar — o caller vai chamar SetAuthTokenAndReconnect.
+            if (_suppressAutoConnect)
+            {
+                Debug.Log("[NETWORK] AutoConnect suprimido (runtime create) — aguardando comando explicito.");
+                return;
+            }
+
+            // Inicializar o socket o mais cedo possivel
             if (AutoConnect)
             {
                 ConnectToServer();
