@@ -1,0 +1,41 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//e/HolicRPG/holic-rpg-repositories/.claude/**)",
+      "Read(//e/HolicRPG/holic-rpg-repositories/.claude/agents/**)",
+      "Read(//e/HolicRPG/holic-rpg-repositories/.claude/skills/**)",
+      "Read(//e/HolicRPG/holic-rpg-repositories/.claude/commands/**)",
+      "Bash(npm install)",
+      "Bash(npm install *)",
+      "Bash(npm test)",
+      "Bash(npm test *)",
+      "Bash(npm run *)",
+      "Bash(npx vitest *)",
+      "Bash(npx tsc *)",
+      "Bash(npx prisma *)",
+      "Bash(cd hora-extra-backend && *)",
+      "Bash(cd hora-extra-client && *)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git ls-files*)",
+      "Bash(git -C * status*)",
+      "Bash(git -C * diff*)",
+      "Bash(git -C * log*)",
+      "Bash(git -C * ls-files*)",
+      "Bash(node *)",
+      "Bash(netstat -ano)",
+      "Bash(tasklist)",
+      "Bash(taskkill *)",
+      "Bash(echo *)"
+    ],
+    "deny": [
+      "Bash(npx prisma migrate reset*)",
+      "Bash(npm run db:migrate -- --reset*)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(rm -rf *)"
+    ]
+  }
+}

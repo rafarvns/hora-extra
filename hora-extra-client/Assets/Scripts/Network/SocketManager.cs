@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using HoraExtra.Network;
 
 /**
  * SocketManager (UDP Version): Gerencia a conexão de rede usando UDP Datagram nativo.
@@ -46,7 +47,14 @@ public class SocketManager : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            
+
+            // Modo guest: aguardar SetAuthTokenAndReconnect() — não autoconectar com TestToken.
+            if (GuestSession.IsGuestMode)
+            {
+                Debug.Log("[NETWORK] Guest mode detectado — aguardando SetAuthTokenAndReconnect().");
+                return;
+            }
+
             // Inicializar o socket o mais cedo possível
             if (AutoConnect)
             {
@@ -256,6 +264,28 @@ public class SocketManager : MonoBehaviour
         {
             _mainThreadQueue.Enqueue(action);
         }
+    }
+
+    /// <summary>
+    /// Fecha a conexão atual (se houver), troca para o token informado e reconecta.
+    /// Deve ser chamado pelo controller de UI após GuestService.JoinAsGuest() retornar
+    /// com sucesso — ou após qualquer login real que precise substituir o token em runtime.
+    /// </summary>
+    public void SetAuthTokenAndReconnect(string token)
+    {
+        Debug.Log("[NETWORK] SetAuthTokenAndReconnect: encerrando conexão anterior e reconectando...");
+
+        if (_udpClient != null)
+        {
+            _udpClient.Close();
+            _udpClient = null;
+        }
+
+        _isConnected = false;
+        UseTestToken = false;
+        HoraExtra.Network.NetworkSettings.AuthToken = token;
+
+        ConnectToServer();
     }
 
     private void OnDestroy()
