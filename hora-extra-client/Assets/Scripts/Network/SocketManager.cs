@@ -42,8 +42,8 @@ public class SocketManager : MonoBehaviour
         return Instance;
     }
 
-    [Header("Network Settings")]
-    public string ServerIp = "127.0.0.1";
+    [Header("Network Settings (sobrescritos por BackendConfig em runtime)")]
+    public string ServerIp = "92.113.39.4";
     public int ServerPort = 5001;
     public bool AutoConnect = true;
 
@@ -69,6 +69,12 @@ public class SocketManager : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
+
+            // Sincronizar com BackendConfig — fonte única de verdade para host/porta.
+            // Os campos [SerializeField] permanecem visíveis no Inspector para referência,
+            // mas o valor em runtime sempre vem de BackendConfig.
+            ServerIp = HoraExtra.Network.BackendConfig.Host;
+            ServerPort = HoraExtra.Network.BackendConfig.UdpPort;
 
             // Modo guest: aguardar SetAuthTokenAndReconnect() — nao autoconectar com TestToken.
             if (GuestSession.IsGuestMode)

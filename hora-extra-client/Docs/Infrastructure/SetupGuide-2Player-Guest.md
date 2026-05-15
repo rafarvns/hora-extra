@@ -7,6 +7,72 @@ Tempo estimado: 20–30 minutos (se você nunca abriu o projeto antes).
 
 ---
 
+## Passo 0 — Deploy remoto (opcional, se backend não estiver no localhost)
+
+Se você está rodando o backend em um servidor remoto (ex.: VPS, IP público como `92.113.39.4`)
+em vez de localmente, siga os sub-passos abaixo **antes** do Passo 1. Se estiver rodando local,
+pule direto para o Passo 1.
+
+### 0.1 — Apontar o cliente pro IP remoto
+
+Edite `Assets/Scripts/Network/BackendConfig.cs` e verifique/altere a linha:
+
+```csharp
+public static string Host = "127.0.0.1";
+```
+
+para o IP do seu servidor:
+
+```csharp
+public static string Host = "92.113.39.4";
+```
+
+Isso muda **simultaneamente** o REST (porta 5000) e o UDP (porta 5001) — sem tocar em
+`ApiClient.cs` ou `SocketManager.cs`.
+
+### 0.2 — Liberar HTTP no Unity Player Settings
+
+Por padrão, Unity 2022+ bloqueia HTTP para IPs não-loopback. Para liberar:
+
+1. `Edit → Project Settings... → Player`
+2. No grupo `Other Settings`, role até `Configuration`.
+3. Procure `Allow downloads over HTTP*`.
+4. Mude para `Always allowed`.
+5. (Opcional) Reabra o Unity ou faça Reimport All se os scripts não recarregarem.
+
+Sem isso, o erro `"Insecure connection not allowed"` aparece no Console após clicar
+"Jogar como Convidado".
+
+### 0.3 — Garantir portas abertas no servidor remoto
+
+No servidor, libere:
+- Porta **5000 (TCP)** — REST API.
+- Porta **5001 (UDP)** — sockets de gameplay.
+
+Em Linux com ufw:
+
+```bash
+sudo ufw allow 5000/tcp
+sudo ufw allow 5001/udp
+```
+
+Em cloud (AWS/GCP/Azure): editar Security Group / Firewall Rule no console web.
+
+### 0.4 — Testar conectividade antes de abrir o Unity
+
+Antes de tentar pelo Unity, teste via curl ou Postman da sua máquina:
+
+```bash
+curl -X POST http://92.113.39.4:5000/api/auth/guest
+```
+
+Deve retornar JSON com `{success: true, data: {token, guestId, roomId}}`. Se falhar:
+- Backend não está rodando no servidor remoto (verifique `npm run dev` no servidor).
+- Firewall do servidor está bloqueando a porta 5000.
+- Provedor de cloud bloqueando (Security Group / regra de entrada).
+
+---
+
 ## Sumário do que você vai fazer
 
 1. Subir o backend (Node.js).
@@ -346,6 +412,9 @@ Demonstra que o servidor reseta a sala quando ela esvazia:
 | Console mostra `[NETWORK] Guest mode detectado — aguardando SetAuthTokenAndReconnect()` mas trava | Você setou `IsGuestMode = true` mas não chamou `SetAuthTokenAndReconnect` | Confirme que o método `OnGuestPlayClicked` chama `SocketManager.EnsureExists().SetAuthTokenAndReconnect(...)` (Passo 4.4). |
 | `NullReferenceException` em `MainMenuController.OnGuestPlayClicked()` na linha `SocketManager.Instance.SetAuthTokenAndReconnect(...)` | `SocketManager.Instance` é `null` — o GameObject `SocketManager` não existe na MainMenuScene | Substitua `SocketManager.Instance.SetAuthTokenAndReconnect(token)` por `SocketManager.EnsureExists().SetAuthTokenAndReconnect(token)` no `MainMenuController.cs`. O método `EnsureExists()` cria o GameObject em runtime automaticamente se ele não estiver na cena. |
 | Os 2 guests conectaram (logs OK no backend) mas não se veem na cena | `RemotePlayerSpawner` não foi inicializado | Confirme que `RemotePlayerSpawner.EnsureExists();` é chamado no `OnGuestPlayClicked` após o `SocketManager.EnsureExists().SetAuthTokenAndReconnect(...)` (Passo 4.4). |
+| `Insecure connection not allowed` | Unity bloqueia HTTP para IPs não-loopback | Passo 0.2 — liberar HTTP em `Project Settings → Player → Allow downloads over HTTP → Always allowed`. |
+| `Cannot connect to destination host` (IP remoto) | Firewall do servidor bloqueando ou backend não rodando lá | Passo 0.3 — verificar firewall/security group. Testar com `curl` primeiro (Passo 0.4). |
+| `ApiClient` continua tentando `127.0.0.1` mesmo após editar `BackendConfig` | Cache de domain do Unity Editor | Reload Domain (`Ctrl+R` no Editor) ou reabrir a cena. |
 
 ---
 
