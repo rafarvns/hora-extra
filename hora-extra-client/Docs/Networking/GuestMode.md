@@ -182,3 +182,29 @@ E no terminal do backend (Winston):
 6. Mover um avatar — o outro deve ver o movimento via interpolação.
 
 Ver checklist completo em `hora-extra-backend/docs/Mechanics/GuestMode.md` §"Verificação manual".
+
+---
+
+## Deploy remoto
+
+Para apontar o cliente para um backend rodando em IP remoto (ex.: VPS):
+
+1. Edite `Assets/Scripts/Network/BackendConfig.cs`:
+   ```csharp
+   public static string Host = "<seu-ip>";   // ex.: "92.113.39.4"
+   ```
+   Isso muda **simultaneamente** o REST (porta `HttpPort`) e o UDP (porta `UdpPort`)
+   sem nenhuma outra alteração de código.
+
+2. Em `Project Settings → Player → Other Settings → Configuration →
+   Allow downloads over HTTP*` → `Always allowed`.
+   (Unity 2022+ bloqueia HTTP para IPs não-loopback por padrão.)
+
+3. Confirme que o servidor expõe:
+   - Porta **5000 (TCP)** — REST API.
+   - Porta **5001 (UDP)** — sockets de gameplay.
+
+4. Testar com `curl http://<ip>:5000/api/health` da máquina do cliente antes de
+   abrir o Unity — descarta problemas de firewall/backend antes de chegar no client.
+
+Detalhes operacionais em `Docs/Infrastructure/SetupGuide-2Player-Guest.md` §Passo 0.
