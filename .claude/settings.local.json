@@ -27,7 +27,8 @@
       "Bash(netstat -ano)",
       "Bash(tasklist)",
       "Bash(taskkill *)",
-      "Bash(echo *)"
+      "Bash(echo *)",
+      "Bash(git add *)"
     ],
     "deny": [
       "Bash(npx prisma migrate reset*)",
