@@ -2,6 +2,7 @@ import dgram, { RemoteInfo, Socket as UdpSocket } from 'dgram';
 import authService from '../services/authService.js';
 import { SocketHandlerFactory } from './factories/SocketHandler.Factory.js';
 import { NpcRegisterHandler } from './handlers/NpcRegister.Handler.js';
+import { ServiceFactory } from '../core/factories/Service.Factory.js';
 import logger from '../utils/Logger.js';
 
 interface PlayerSession {
@@ -253,10 +254,18 @@ export class UdpSocketManager {
     }
 
     /**
-     * Limpa completamente o estado de uma sala (Sessões e NPCs).
+     * Limpa completamente o estado de uma sala (Sessões, NPCs e Tasks).
      */
     private resetRoomState(roomId: string): void {
-        // 1. Limpar Sessões (Remover outros jogadores da memória)
+        // 1. Coletar playerIds da sala antes de limpar sessões
+        const playerIds: string[] = [];
+        this.sessions.forEach((session) => {
+            if (session.roomId === roomId) {
+                playerIds.push(session.id);
+            }
+        });
+
+        // 2. Limpar Sessões (Remover outros jogadores da memória)
         let count = 0;
         this.sessions.forEach((session, key) => {
             if (session.roomId === roomId) {
@@ -265,8 +274,12 @@ export class UdpSocketManager {
             }
         });
 
-        // 2. Limpar NPCs
+        // 3. Limpar NPCs
         NpcRegisterHandler.clearRoomState(roomId);
+
+        // 4. Limpar Tasks
+        const taskService = ServiceFactory.getTaskService();
+        taskService.clearRoom(playerIds);
 
         logger.info(`[UDP_SOCKET] Sala '${roomId}' reiniciada. ${count} sessões removidas.`, { module: 'UDP_SOCKET' });
     }

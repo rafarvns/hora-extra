@@ -63,6 +63,10 @@ Ver §7 — Guest Mode para o fluxo completo.
 | `npc_register`      | `{ id: string, type: string }`                                          | Registrar NPC presente na cena. Servidor decide mastership.        |
 | `npc_move_request`  | `{ id: string, p: number[], r: number }`                                | Master do NPC envia nova posição autoritativa.                     |
 | `ping`              | `{ timestamp: number }`                                                 | Mede latência RTT.                                                 |
+| `task_catalog_register` | `{ tasks: Array<{ id: string, description: string, type: string, targetCount: number }> }` | Registra o catálogo de tarefas disponíveis para a sala. Sobrescreve a pool anterior. `npcId` removido — catálogo é da sala, não vinculado a NPC. |
+| `task_assign_request`   | `{}` (sem campos)                                                   | Solicita ao servidor que sorteie e atribua N=3 tasks aleatórias ao jogador. `playerId` é obtido da sessão — não enviado no payload. |
+| `task_start_interaction` | `{ taskId: string }`                                               | Jogador inicia interação com objeto de task. Servidor valida posse e transição `pending → in_progress`. |
+| `task_complete_attempt`  | `{ taskId: string, success: boolean }`                             | Jogador reporta resultado do minigame QTE. Servidor determina status final autoritativamente. |
 
 ---
 
@@ -80,10 +84,25 @@ Ver §7 — Guest Mode para o fluxo completo.
 | `npc_move`          | `{ id: string, p: number[], r: number }`                                | Broadcast da posição autoritativa do NPC (emitido pelo master).    |
 | `pong`              | `{ timestamp: number }`                                                 | Resposta ao `ping` para cálculo de latência.                       |
 | `ERROR`             | `{ message: string }`                                                   | Erro genérico (ex.: pacote recebido sem sessão ativa).             |
+| `task_assigned`     | `{ playerId: string, tasks: AssignedTask[] }`                           | Broadcast para todos na sala com as tasks sorteadas para o jogador. `tasks[]` tem shape: `{ id, description, type, targetCount, currentProgress: 0, status: "pending" }`. |
+| `task_updated`      | `{ playerId: string, taskId: string, currentProgress: number, status: string }` | Broadcast para todos na sala quando o status de uma task muda (`in_progress`, `completed` ou `failed`). Construído pelo servidor — não reflete campos crus do cliente. |
 
 ---
 
 ## 5. Schemas de dados
+
+### AssignedTask (shape em `task_assigned`)
+
+```ts
+interface AssignedTask {
+    id: string;              // identificador da task (ex: "task-collect-docs")
+    description: string;     // descrição legível
+    type: string;            // categoria ("collect" | "deliver" | "repair" | "escort")
+    targetCount: number;     // quantidade alvo para conclusão
+    currentProgress: number; // sempre 0 na atribuição inicial
+    status: "pending" | "in_progress" | "completed" | "failed"; // sempre "pending" na atribuição inicial; "failed" é terminal
+}
+```
 
 ### PlayerSession (servidor, in-memory)
 

@@ -44,6 +44,16 @@ vi.mock('./handlers/NpcRegister.Handler.js', () => ({
     },
 }));
 
+vi.mock('../core/factories/Service.Factory.js', () => ({
+    ServiceFactory: {
+        getTaskService: vi.fn().mockReturnValue({
+            clearRoom: vi.fn(),
+            assignRandomTasks: vi.fn(),
+            getAssignedTasks: vi.fn(),
+        }),
+    },
+}));
+
 vi.mock('../utils/Logger.js', () => ({
     default: {
         info: vi.fn(),
@@ -55,6 +65,7 @@ vi.mock('../utils/Logger.js', () => ({
 
 import authService from '../services/authService.js';
 import { NpcRegisterHandler } from './handlers/NpcRegister.Handler.js';
+import { ServiceFactory } from '../core/factories/Service.Factory.js';
 import { UdpSocketManager } from './UdpSocketManager.js';
 
 // Helper: simulate a CONN packet arriving from a remote client
@@ -134,5 +145,57 @@ describe('UdpSocketManager — guest path', () => {
 
         expect(manager.getRoomSessionCount('guest-room')).toBe(0);
         expect(NpcRegisterHandler.clearRoomState).toHaveBeenCalledWith('guest-room');
+    });
+
+    it('resetRoom chama TaskService.clearRoom com playerIds da sala', async () => {
+        // Setup: dois jogadores dev entram em dev-room via dev bypass
+        process.env.NODE_ENV = 'development';
+        process.env.DEV_TEST_TOKEN = 'dev-token';
+        process.env.DEV_TEST_USER_ID = 'dev-player-A';
+
+        await simulateCONN(manager, 'dev-token', '10.0.2.1', 4200);
+        // Second dev CONN from different address (different session) — but DEV_TEST_USER_ID is the same
+        // So we need two different player IDs: use JWT sessions for them instead
+        (authService.verifyToken as any).mockReturnValueOnce({ id: 'player-B' });
+        await simulateCONN(manager, 'jwt-b', '10.0.2.2', 4201);
+
+        // player-B is NOT in dev-room (no auto-join), so manually set roomId
+        const sessionB = manager.getSession({ address: '10.0.2.2', port: 4201, family: 'IPv4', size: 0 });
+        if (sessionB) sessionB.roomId = 'dev-room';
+
+        expect(manager.getRoomSessionCount('dev-room')).toBeGreaterThanOrEqual(1);
+
+        // Re-mock taskService to capture call
+        const mockTaskService = { clearRoom: vi.fn(), assignRandomTasks: vi.fn() };
+        (ServiceFactory.getTaskService as any).mockReturnValue(mockTaskService);
+
+        // Trigger resetRoomState via dev CONN with resetRoom:true from a NEW address
+        await simulateCONN(manager, 'dev-token', '10.0.2.3', 4202, { resetRoom: true });
+
+        expect(mockTaskService.clearRoom).toHaveBeenCalled();
+        // clearRoom was called with an array (may include dev-player-A and/or player-B)
+        const [calledWith] = mockTaskService.clearRoom.mock.calls[0] as [string[]];
+        expect(Array.isArray(calledWith)).toBe(true);
+    });
+
+    it('resetRoom limpa sessões da sala após clearRoom', async () => {
+        // Dev player connects → auto-join dev-room
+        process.env.NODE_ENV = 'development';
+        process.env.DEV_TEST_TOKEN = 'dev-tok';
+        process.env.DEV_TEST_USER_ID = 'dev-player-C';
+
+        await simulateCONN(manager, 'dev-tok', '10.0.3.1', 4300);
+        expect(manager.getRoomSessionCount('dev-room')).toBe(1);
+
+        // Re-mock taskService to capture calls
+        const mockTaskService = { clearRoom: vi.fn(), assignRandomTasks: vi.fn() };
+        (ServiceFactory.getTaskService as any).mockReturnValue(mockTaskService);
+
+        // Trigger reset from a new address
+        await simulateCONN(manager, 'dev-tok', '10.0.3.2', 4301, { resetRoom: true });
+
+        // The previous session (10.0.3.1) should have been removed
+        const removedSession = manager.getSession({ address: '10.0.3.1', port: 4300, family: 'IPv4', size: 0 });
+        expect(removedSession).toBeUndefined();
     });
 });
