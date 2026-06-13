@@ -14,7 +14,7 @@ namespace HoraExtra.Network
     public static class BackendConfig
     {
         /// <summary>Host/IP do backend. Use "127.0.0.1" pra local ou IP público pra remoto.</summary>
-        public static string Host = "92.113.39.4";
+        public static string Host = "127.0.0.1";
 
         /// <summary>Porta HTTP REST do backend.</summary>
         public static int HttpPort = 5000;

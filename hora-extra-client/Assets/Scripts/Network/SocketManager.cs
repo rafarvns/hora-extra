@@ -42,10 +42,16 @@ public class SocketManager : MonoBehaviour
         return Instance;
     }
 
-    [Header("Network Settings (sobrescritos por BackendConfig em runtime)")]
-    public string ServerIp = "92.113.39.4";
-    public int ServerPort = 5001;
+    [Header("Network Settings")]
+    [Tooltip("Host e portas vêm de BackendConfig (fonte única de verdade). " +
+             "Para mudar o servidor, edite BackendConfig.cs — não há IP aqui no Inspector.")]
     public bool AutoConnect = true;
+
+    /// <summary>Host do backend — proxy de leitura para <see cref="BackendConfig.Host"/>.</summary>
+    public string ServerIp => BackendConfig.Host;
+
+    /// <summary>Porta UDP do backend — proxy de leitura para <see cref="BackendConfig.UdpPort"/>.</summary>
+    public int ServerPort => BackendConfig.UdpPort;
 
     [Header("Development & Testing")]
     public bool UseTestToken = true;
@@ -70,11 +76,7 @@ public class SocketManager : MonoBehaviour
             Instance = this;
             DontDestroyOnLoad(gameObject);
 
-            // Sincronizar com BackendConfig — fonte única de verdade para host/porta.
-            // Os campos [SerializeField] permanecem visíveis no Inspector para referência,
-            // mas o valor em runtime sempre vem de BackendConfig.
-            ServerIp = HoraExtra.Network.BackendConfig.Host;
-            ServerPort = HoraExtra.Network.BackendConfig.UdpPort;
+            // Host/porta vêm de BackendConfig (fonte única) via as propriedades ServerIp/ServerPort.
 
             // Modo guest: aguardar SetAuthTokenAndReconnect() — nao autoconectar com TestToken.
             if (GuestSession.IsGuestMode)
@@ -245,8 +247,16 @@ public class SocketManager : MonoBehaviour
     {
         if (!_eventHandlers.ContainsKey(eventName))
             _eventHandlers[eventName] = null;
-        
+
         _eventHandlers[eventName] += handler;
+    }
+
+    public void Off(string eventName, Action<JToken> handler)
+    {
+        if (_eventHandlers.ContainsKey(eventName))
+        {
+            _eventHandlers[eventName] -= handler;
+        }
     }
 
     private void TriggerEvent(string eventName, JToken data)

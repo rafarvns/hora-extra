@@ -23,6 +23,10 @@ public static class NetworkEvents
     public const string NPC_REGISTER = "npc_register";
     public const string NPC_MOVE_REQUEST = "npc_move_request";
     public const string PING = "ping";
+    public const string TASK_CATALOG_REGISTER = "task_catalog_register";
+    public const string TASK_ASSIGN_REQUEST = "task_assign_request";
+    public const string TASK_START_INTERACTION = "task_start_interaction";
+    public const string TASK_COMPLETE_ATTEMPT = "task_complete_attempt";
 
     // Servidor -> Cliente
     public const string CONNECTION_SUCCESS = "connection_success";
@@ -33,4 +37,6 @@ public static class NetworkEvents
     public const string NPC_REGISTERED = "npc_registered";
     public const string PLAYER_DISCONNECTED = "player_disconnected";
     public const string PONG = "pong";
+    public const string TASK_ASSIGNED = "task_assigned";
+    public const string TASK_UPDATED = "task_updated";
 }

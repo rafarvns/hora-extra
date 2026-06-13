@@ -1,5 +1,6 @@
 import authService from '../../services/authService.js';
 import guestService from '../../services/guestService.js';
+import taskService from '../../services/TaskService.js';
 import prisma from '../../database/prisma.js';
 import { PrismaClient } from '@prisma/client';
 
@@ -22,6 +23,13 @@ export class ServiceFactory {
      */
     public static getGuestService() {
         return guestService;
+    }
+
+    /**
+     * Retorna a instância singleton do TaskService.
+     */
+    public static getTaskService() {
+        return taskService;
     }
 
     /**
