@@ -148,6 +148,47 @@ export class TaskService {
     }
 
     /**
+     * Incrementa o progresso de uma task de coleta (ex: 'collect') em +1.
+     * Usado por objetos coletáveis (papéis) que somam progresso a cada interação,
+     * em vez do fluxo binário start → resolve do QTE.
+     *
+     * Transições:
+     *   - 'pending' → 'in_progress' automaticamente no primeiro incremento
+     *     (coletáveis não têm passo separado de task_start_interaction).
+     *   - cada chamada faz currentProgress += 1 (clampeado em targetCount).
+     *   - ao atingir targetCount → status 'completed'.
+     *
+     * Lança ApiError se: jogador sem tasks, taskId não encontrado, ou task já
+     * 'completed'/'failed' (transição inválida).
+     */
+    public incrementProgress(playerId: string, taskId: string): AssignedTask {
+        const playerTasks = this.assignments.get(playerId);
+        if (!playerTasks || playerTasks.length === 0) {
+            throw ApiError.badRequest(`Jogador '${playerId}' não tem tasks atribuídas`);
+        }
+        const task = playerTasks.find(t => t.id === taskId);
+        if (!task) {
+            throw ApiError.badRequest(`Task '${taskId}' não encontrada para jogador '${playerId}'`);
+        }
+        if (task.status !== 'pending' && task.status !== 'in_progress') {
+            throw ApiError.badRequest(`Transição inválida: task '${taskId}' está '${task.status}', esperado 'pending' ou 'in_progress'`);
+        }
+
+        if (task.status === 'pending') {
+            task.status = 'in_progress';
+        }
+
+        task.currentProgress += 1;
+        if (task.currentProgress >= task.targetCount) {
+            task.currentProgress = task.targetCount;
+            task.status = 'completed';
+        }
+
+        logger.info(`TaskService.incrementProgress: task '${taskId}' do jogador '${playerId}' → ${task.currentProgress}/${task.targetCount} (${task.status})`, { module: 'GAME' });
+        return task;
+    }
+
+    /**
      * Remove todas as entradas de atribuição dos playerIds fornecidos.
      * Chamado por UdpSocketManager.resetRoomState.
      */

@@ -30769,55 +30769,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: f96a99cbd9cd2614c8de1ec1b8f7d0b6, type: 3}
   m_PrefabInstance: {fileID: 2003300412}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &2014182090
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 2014182092}
-  - component: {fileID: 2014182091}
-  m_Layer: 0
-  m_Name: PaperMissionManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &2014182091
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2014182090}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2ce1c853c82b3bc48a90004743bbe378, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PaperMissionManager
-  totalPapers: 4
-  missionCounterText: {fileID: 730210169}
-  interactionText: {fileID: 859084577}
-  feedbackText: {fileID: 1173058810}
-  feedbackDuration: 2
---- !u!4 &2014182092
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2014182090}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &2012912460
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -32262,6 +32213,5 @@ SceneRoots:
   - {fileID: 2038050743}
   - {fileID: 2042479040}
   - {fileID: 1099677513}
-  - {fileID: 2014182092}
   - {fileID: 303445320}
   - {fileID: 1909265975}

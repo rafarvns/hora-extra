@@ -5,7 +5,8 @@
       "Bash(git add *)",
       "Bash(git commit *)",
       "Read(//c/Program Files/Unity/Hub/Editor//**)",
-      "Read(//c/Program Files/Unity/**)"
+      "Read(//c/Program Files/Unity/**)",
+      "Bash(npx vitest *)"
     ]
   }
 }
