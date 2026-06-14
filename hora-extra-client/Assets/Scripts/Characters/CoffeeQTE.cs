@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace HoraExtra.Characters
@@ -59,7 +60,7 @@ namespace HoraExtra.Characters
 
         [Header("Input")]
         [Tooltip("Tecla pressionada durante o QTE para tentar acertar.")]
-        [SerializeField] private KeyCode _qteKey = KeyCode.E;
+        [SerializeField] private Key _qteKey = Key.E;
 
         // === Estado privado ===
         private bool   _qteRunning  = false;
@@ -88,7 +89,7 @@ namespace HoraExtra.Characters
             UpdateProgressBar(normalizedTime);
 
             // Verificar input do jogador.
-            if (!_inputHandledThisRound && Input.GetKeyDown(_qteKey))
+            if (!_inputHandledThisRound && Keyboard.current != null && Keyboard.current[_qteKey].wasPressedThisFrame)
             {
                 _inputHandledThisRound = true;
                 HandleInput(normalizedTime);

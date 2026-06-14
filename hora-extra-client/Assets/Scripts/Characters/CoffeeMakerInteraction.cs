@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using HoraExtra.Network.Models;
 
 namespace HoraExtra.Characters
@@ -41,7 +42,7 @@ namespace HoraExtra.Characters
 
         [Header("Input")]
         [Tooltip("Tecla para iniciar a interação quando o jogador está próximo.")]
-        [SerializeField] private KeyCode _interactKey = KeyCode.E;
+        [SerializeField] private Key _interactKey = Key.E;
 
         // === Estado privado ===
         private bool _playerNearby  = false;
@@ -94,7 +95,7 @@ namespace HoraExtra.Characters
 
             if (!shouldShowPrompt) return;
 
-            if (Input.GetKeyDown(_interactKey))
+            if (Keyboard.current != null && Keyboard.current[_interactKey].wasPressedThisFrame)
             {
                 StartInteraction(task);
             }
