@@ -12,7 +12,9 @@
       "Bash(powershell -Command \"Get-Process -Id 40720 | Select-Object Id,ProcessName,Path | Format-List\")",
       "Bash(taskkill //F //PID 40720)",
       "Bash(awk ' *)",
-      "Bash(echo \"restore inserido \\(GO 254191290 existe\\): $\\(grep -c '^--- !u!1 &254191290$' /tmp/scene_final.unity\\)\")"
+      "Bash(echo \"restore inserido \\(GO 254191290 existe\\): $\\(grep -c '^--- !u!1 &254191290$' /tmp/scene_final.unity\\)\")",
+      "Read(//e/PUC/hora-extra/**)",
+      "Bash(cd *)"
     ]
   }
 }
