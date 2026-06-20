@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Newtonsoft.Json.Linq;
@@ -30,6 +31,15 @@ namespace HoraExtra.Characters
         [Header("Task Catalog — entradas iniciais da cena")]
         [Tooltip("Lista de tarefas que serão registradas no servidor ao conectar.")]
         [SerializeField] private List<TaskEntryData> _initialCatalog = new List<TaskEntryData>();
+
+        [Header("Auto-assign")]
+        [Tooltip("Se marcado, solicita automaticamente a atribuição de tasks (task_assign_request) " +
+                 "logo após o catálogo ser registrado no CONN_SUCCESS. Desmarque para disparar manualmente via RequestMyTasks().")]
+        [SerializeField] private bool _autoRequestTasksOnConnect = true;
+
+        [Tooltip("Atraso (s) entre registrar o catálogo e pedir as tasks. Garante que o servidor " +
+                 "processe task_catalog_register antes de task_assign_request (UDP não garante ordem).")]
+        [SerializeField] private float _autoRequestDelaySeconds = 0.5f;
 
         // === Estado privado ===
         private bool _catalogRegistered = false;
@@ -63,8 +73,9 @@ namespace HoraExtra.Characters
                 Instance = this;
                 DontDestroyOnLoad(gameObject);
 
-                // Catálogo inicial: garantir entrada da cafeteira caso não configurada no Inspector.
+                // Catálogo inicial: garantir entradas padrão caso não configuradas no Inspector.
                 EnsureCoffeeMakerEntry();
+                EnsurePaperCollectEntry();
             }
             else
             {
@@ -82,6 +93,15 @@ namespace HoraExtra.Characters
 
             // Assina broadcast de atualização de status de task.
             SocketManager.Instance?.On(NetworkEvents.TASK_UPDATED, OnTaskUpdatedReceived);
+
+            // Caso a conexão UDP já tenha sido estabelecida ANTES desta cena carregar
+            // (ex: modo guest conecta na cena de menu), o CONN_SUCCESS já disparou e
+            // não vai disparar de novo. Inicializa imediatamente para não perder o evento.
+            if (SocketManager.Instance != null && SocketManager.Instance.IsConnected && !_catalogRegistered)
+            {
+                Debug.Log("[GAMEPLAY] TaskSystemBridge — conexão já estabelecida no OnEnable, inicializando catálogo agora.");
+                HandleConnectionEstablished();
+            }
         }
 
         private void OnDisable()
@@ -128,6 +148,19 @@ namespace HoraExtra.Characters
         }
 
         /// <summary>
+        /// Reporta a coleta de +1 item de uma task incremental (ex: 'collect') ao servidor.
+        /// Shape enviado: { taskId: string }
+        /// O servidor soma +1 autoritativamente e decide as transições
+        /// pending → in_progress → completed (ver TaskService.incrementProgress no backend).
+        /// </summary>
+        public void SendProgress(string taskId)
+        {
+            var payload = new TaskProgressPayload { TaskId = taskId };
+            SocketManager.Instance.Emit(NetworkEvents.TASK_PROGRESS, payload);
+            Debug.Log($"[NETWORK] task_progress enviado — taskId={taskId}");
+        }
+
+        /// <summary>
         /// Retorna a lista de tasks atribuídas ao jogador local.
         /// Pode ser usada por CoffeeMakerInteraction para gate de proximidade.
         /// </summary>
@@ -159,9 +192,36 @@ namespace HoraExtra.Characters
         /// </summary>
         private void OnConnectionSuccess(JToken data)
         {
+            HandleConnectionEstablished();
+        }
+
+        /// <summary>
+        /// Registra o catálogo e (opcionalmente) solicita a atribuição de tasks.
+        /// Chamado tanto pelo evento CONN_SUCCESS quanto diretamente no OnEnable
+        /// quando a conexão já estava estabelecida antes desta cena carregar.
+        /// </summary>
+        private void HandleConnectionEstablished()
+        {
             _catalogRegistered = false;
             _myTasks.Clear();
             RegisterCatalog();
+
+            // Solicita a atribuição automática de tasks após o catálogo ser registrado.
+            // O delay garante que o servidor processe task_catalog_register antes do
+            // task_assign_request — assignRandomTasks lança erro se o catálogo da sala
+            // ainda não existir (ver TaskService.assignRandomTasks no backend).
+            if (_autoRequestTasksOnConnect)
+                StartCoroutine(RequestTasksAfterCatalog());
+        }
+
+        /// <summary>
+        /// Aguarda um curto intervalo após o registro do catálogo e então solicita
+        /// a atribuição aleatória de tasks ao servidor.
+        /// </summary>
+        private IEnumerator RequestTasksAfterCatalog()
+        {
+            yield return new WaitForSeconds(_autoRequestDelaySeconds);
+            RequestMyTasks();
         }
 
         /// <summary>
@@ -272,6 +332,36 @@ namespace HoraExtra.Characters
             if (string.IsNullOrEmpty(playerId)) return false;
             var localId = SocketManager.Instance?.LocalPlayerId;
             return localId == playerId;
+        }
+
+        /// <summary>
+        /// Tipo de task das coletas de papéis/documentos. Usado por MissionPaperCollectible
+        /// para localizar a task certa via FindMyTask.
+        /// </summary>
+        public const string PAPER_COLLECT_TYPE = "collect";
+
+        private const string PAPER_COLLECT_TASK_ID = "task-collect-papers-01";
+
+        /// <summary>
+        /// Garante que o catálogo inicial contém a entrada de coleta de documentos.
+        /// targetCount = 4 espelha a quantidade de papéis na cena (objetos com
+        /// MissionPaperCollectible). Ajuste aqui se mudar o número de coletáveis.
+        /// </summary>
+        private void EnsurePaperCollectEntry()
+        {
+            const int PAPER_COUNT = 4;
+            foreach (var entry in _initialCatalog)
+            {
+                if (entry.id == PAPER_COLLECT_TASK_ID) return;
+            }
+            _initialCatalog.Add(new TaskEntryData
+            {
+                id          = PAPER_COLLECT_TASK_ID,
+                description = "Colete os documentos",
+                type        = PAPER_COLLECT_TYPE,
+                targetCount = PAPER_COUNT
+            });
+            Debug.Log("[GAMEPLAY] TaskSystemBridge — entrada collect (documentos) adicionada ao catálogo inicial.");
         }
 
         /// <summary>

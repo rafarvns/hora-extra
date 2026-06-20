@@ -3,7 +3,18 @@
     "allow": [
       "Bash(git checkout *)",
       "Bash(git add *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Read(//c/Program Files/Unity/Hub/Editor//**)",
+      "Read(//c/Program Files/Unity/**)",
+      "Bash(npx vitest *)",
+      "Bash(netstat -ano)",
+      "Bash(tasklist //FI \"PID eq 40720\")",
+      "Bash(powershell -Command \"Get-Process -Id 40720 | Select-Object Id,ProcessName,Path | Format-List\")",
+      "Bash(taskkill //F //PID 40720)",
+      "Bash(awk ' *)",
+      "Bash(echo \"restore inserido \\(GO 254191290 existe\\): $\\(grep -c '^--- !u!1 &254191290$' /tmp/scene_final.unity\\)\")",
+      "Read(//e/PUC/hora-extra/**)",
+      "Bash(cd *)"
     ]
   }
 }

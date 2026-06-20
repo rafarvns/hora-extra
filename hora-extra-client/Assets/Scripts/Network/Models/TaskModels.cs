@@ -85,6 +85,18 @@ namespace HoraExtra.Network.Models
     }
 
     /// <summary>
+    /// Payload enviado ao servidor via task_progress (C→S).
+    /// Shape: { taskId: string }
+    /// Cada envio soma +1 no progresso de uma task incremental (ex: 'collect').
+    /// O servidor decide as transições pending → in_progress → completed.
+    /// </summary>
+    [Serializable]
+    public class TaskProgressPayload
+    {
+        [JsonProperty("taskId")] public string TaskId;
+    }
+
+    /// <summary>
     /// Payload recebido do servidor via task_updated (S→C broadcast).
     /// Shape: { playerId: string, taskId: string, currentProgress: number, status: string }
     /// Construído pelo servidor — não reflete campos crus do cliente.

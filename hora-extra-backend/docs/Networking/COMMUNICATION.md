@@ -67,6 +67,7 @@ Ver §7 — Guest Mode para o fluxo completo.
 | `task_assign_request`   | `{}` (sem campos)                                                   | Solicita ao servidor que sorteie e atribua N=3 tasks aleatórias ao jogador. `playerId` é obtido da sessão — não enviado no payload. |
 | `task_start_interaction` | `{ taskId: string }`                                               | Jogador inicia interação com objeto de task. Servidor valida posse e transição `pending → in_progress`. |
 | `task_complete_attempt`  | `{ taskId: string, success: boolean }`                             | Jogador reporta resultado do minigame QTE. Servidor determina status final autoritativamente. |
+| `task_progress`          | `{ taskId: string }`                                               | Jogador coletou +1 item de uma task incremental (ex: `collect`). Servidor soma +1, faz `pending → in_progress` no primeiro incremento e `completed` ao atingir `targetCount`. Nunca confia em contagem do cliente. |
 
 ---
 
@@ -85,7 +86,7 @@ Ver §7 — Guest Mode para o fluxo completo.
 | `pong`              | `{ timestamp: number }`                                                 | Resposta ao `ping` para cálculo de latência.                       |
 | `ERROR`             | `{ message: string }`                                                   | Erro genérico (ex.: pacote recebido sem sessão ativa).             |
 | `task_assigned`     | `{ playerId: string, tasks: AssignedTask[] }`                           | Broadcast para todos na sala com as tasks sorteadas para o jogador. `tasks[]` tem shape: `{ id, description, type, targetCount, currentProgress: 0, status: "pending" }`. |
-| `task_updated`      | `{ playerId: string, taskId: string, currentProgress: number, status: string }` | Broadcast para todos na sala quando o status de uma task muda (`in_progress`, `completed` ou `failed`). Construído pelo servidor — não reflete campos crus do cliente. |
+| `task_updated`      | `{ playerId: string, taskId: string, currentProgress: number, status: string }` | Broadcast para todos na sala quando o status **ou o progresso** de uma task muda (via `task_start_interaction`, `task_complete_attempt` ou cada `task_progress`). Status possíveis: `in_progress`, `completed`, `failed`. Construído pelo servidor — não reflete campos crus do cliente. |
 
 ---
 

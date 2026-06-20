@@ -34,7 +34,12 @@
       "WebFetch(domain:www.wiz.io)",
       "WebFetch(domain:www.stepsecurity.io)",
       "Bash(ls -la E:/PUC/hora-extra/.github/workflows)",
-      "Bash(ls -la E:/PUC/hora-extra/hora-extra-backend/.github)"
+      "Bash(ls -la E:/PUC/hora-extra/hora-extra-backend/.github)",
+      "Bash(npm -v)",
+      "Bash(npm ci *)",
+      "Bash(npm audit *)",
+      "Bash(ls docs/)",
+      "Bash(ls docs/Infrastructure)"
     ],
     "deny": [
       "Bash(npx prisma migrate reset*)",

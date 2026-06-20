@@ -18,7 +18,9 @@ The two workspaces are independent npm/Unity projects — there is no root `pack
 ### Commands
 
 ```bash
-npm install
+npm ci               # instalação reproduzível a partir do package-lock.json (preferir a npm install)
+npm install          # APENAS ao adicionar/atualizar uma dep de propósito; .npmrc fixa save-exact
+npm run install:safe # hardening: npm ci --ignore-scripts && prisma generate (ver docs/Infrastructure/SUPPLY-CHAIN.md)
 npm run dev          # nodemon + ts-node ESM loader; runs predev (clean + db:setup) first
 npm run build        # rimraf dist && tsc
 npm start            # node dist/index.js

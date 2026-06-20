@@ -260,3 +260,68 @@ describe('TaskService — resolveTask', () => {
         expect(() => service.resolveTask('p1', 'id-inexistente-999', true)).toThrow();
     });
 });
+
+// ────────────────────────────────────────────────────────────
+// TaskService — incrementProgress
+// ────────────────────────────────────────────────────────────
+describe('TaskService — incrementProgress', () => {
+    let service: TaskService;
+
+    /** Catálogo com uma única task de coleta de targetCount conhecido. */
+    function seedCollectTask(targetCount: number): { taskId: string } {
+        service.registerCatalog('r1', [
+            { id: 'collect-1', description: 'Colete os documentos', type: 'collect', targetCount },
+        ]);
+        service.assignRandomTasks('r1', 'p1');
+        return { taskId: 'collect-1' };
+    }
+
+    beforeEach(() => {
+        service = makeService();
+    });
+
+    it('primeiro incremento muda pending → in_progress e seta currentProgress=1', () => {
+        const { taskId } = seedCollectTask(3);
+
+        const result = service.incrementProgress('p1', taskId);
+
+        expect(result.status).toBe('in_progress');
+        expect(result.currentProgress).toBe(1);
+    });
+
+    it('incrementos sucessivos somam currentProgress mantendo in_progress até o alvo', () => {
+        const { taskId } = seedCollectTask(3);
+
+        service.incrementProgress('p1', taskId); // 1
+        const result = service.incrementProgress('p1', taskId); // 2
+
+        expect(result.currentProgress).toBe(2);
+        expect(result.status).toBe('in_progress');
+    });
+
+    it('ao atingir targetCount muda status → completed e clampeia currentProgress', () => {
+        const { taskId } = seedCollectTask(2);
+
+        service.incrementProgress('p1', taskId); // 1
+        const result = service.incrementProgress('p1', taskId); // 2 → completed
+
+        expect(result.currentProgress).toBe(2);
+        expect(result.status).toBe('completed');
+    });
+
+    it('lança ApiError se a task já está completed (transição inválida)', () => {
+        const { taskId } = seedCollectTask(1);
+        service.incrementProgress('p1', taskId); // 1 → completed
+
+        expect(() => service.incrementProgress('p1', taskId)).toThrow();
+    });
+
+    it('lança ApiError se jogador não tem tasks atribuídas', () => {
+        expect(() => service.incrementProgress('p-sem-tasks', 'collect-1')).toThrow();
+    });
+
+    it('lança ApiError se taskId não encontrado', () => {
+        seedCollectTask(3);
+        expect(() => service.incrementProgress('p1', 'id-inexistente-999')).toThrow();
+    });
+});

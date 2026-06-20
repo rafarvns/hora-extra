@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon",
+    "install:safe": "npm ci --ignore-scripts && npm run db:generate",
     "clean": "node scripts/kill-ghosts.js",
     "db:setup": "ts-node scripts/db-setup.ts",
     "predev": "npm run clean && npm run db:setup",

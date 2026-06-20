@@ -27,6 +27,7 @@ public static class NetworkEvents
     public const string TASK_ASSIGN_REQUEST = "task_assign_request";
     public const string TASK_START_INTERACTION = "task_start_interaction";
     public const string TASK_COMPLETE_ATTEMPT = "task_complete_attempt";
+    public const string TASK_PROGRESS = "task_progress";
 
     // Servidor -> Cliente
     public const string CONNECTION_SUCCESS = "connection_success";
