@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using HoraExtra.Characters;
 using HoraExtra.Network.Models;
+using HoraExtra.UI;
 
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
@@ -139,7 +140,20 @@ public class MissionPaperCollectible : MonoBehaviour
     {
         if (interactionText == null)
             return;
-        interactionText.text = interactionMessage;
+
+        // Monta uma mensagem descritiva com o progresso atual da coleta, caso haja
+        // uma task 'collect' ativa; senão cai na mensagem estática configurada.
+        string message = interactionMessage;
+        TaskSystemBridge bridge = TaskSystemBridge.Instance;
+        if (bridge != null)
+        {
+            AssignedTask task = bridge.FindMyTask(
+                TaskSystemBridge.PAPER_COLLECT_TYPE, "pending", "in_progress");
+            if (task != null)
+                message = TaskPresentation.GetActionPrompt(task);
+        }
+
+        interactionText.text = message;
         interactionText.gameObject.SetActive(true);
     }
 
