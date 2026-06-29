@@ -6,6 +6,11 @@ import { NpcMoveHandler } from '../handlers/NpcMove.Handler.js';
 import { NpcRegisterHandler } from '../handlers/NpcRegister.Handler.js';
 import { PlayerSprintHandler } from '../handlers/PlayerSprint.Handler.js';
 import { PingHandler } from '../handlers/Ping.Handler.js';
+import { TaskCatalogRegisterHandler } from '../handlers/TaskCatalogRegisterHandler.Handler.js';
+import { TaskAssignRequestHandler } from '../handlers/TaskAssignRequestHandler.Handler.js';
+import { TaskStartInteractionHandler } from '../handlers/TaskStartInteraction.Handler.js';
+import { TaskCompleteAttemptHandler } from '../handlers/TaskCompleteAttempt.Handler.js';
+import { TaskProgressHandler } from '../handlers/TaskProgress.Handler.js';
 
 /**
  * SocketHandlerFactory: Mapeia nomes de eventos socket para suas implementações concretas (Handlers).
@@ -26,6 +31,11 @@ export class SocketHandlerFactory {
         this.handlers.set('npc_register', NpcRegisterHandler);
         this.handlers.set('player_sprint', PlayerSprintHandler);
         this.handlers.set('ping', PingHandler);
+        this.handlers.set('task_catalog_register', TaskCatalogRegisterHandler);
+        this.handlers.set('task_assign_request', TaskAssignRequestHandler);
+        this.handlers.set('task_start_interaction', TaskStartInteractionHandler);
+        this.handlers.set('task_complete_attempt', TaskCompleteAttemptHandler);
+        this.handlers.set('task_progress', TaskProgressHandler);
     }
 
     /**

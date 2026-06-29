@@ -1,0 +1,4 @@
+interface:
+  display_name: "Hora Extra Workflows"
+  short_description: "Workflows Codex do projeto Hora-Extra"
+  default_prompt: "Use esta skill para planejar ou executar tarefas de backend, client Unity, integração backend-client ou Product Owner no projeto Hora-Extra."

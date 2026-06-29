@@ -50,6 +50,16 @@ Se preferir rodar apenas o banco no Docker e o código via `npm run dev`:
 
 ---
 
+## 4. Modo SQLite (Sem Dependências Externas)
+
+O projeto suporta um modo simplificado usando SQLite, ideal para testes rápidos sem necessidade de MySQL ou Docker.
+
+1. No seu `.env`, defina: `USE_SQLITE=true`.
+2. Certifique-se de que `DATABASE_URL` aponta para um arquivo local: `DATABASE_URL="file:./dev.db"`.
+3. Execute `npm run db:setup` para configurar o ambiente.
+
+---
+
 ## Estrutura de Tabelas Inicial
 A tabela **Player (`jogadores`)** possui:
 - `id`: UUID (chave primária)
