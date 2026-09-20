@@ -23,6 +23,10 @@ namespace HoraExtra.UI
         [SerializeField] private string loginSceneName = "LoginScene";
         [SerializeField] private string lobbySceneName = "SampleScene"; // Ajuste se houver uma cena específica de Lobby
 
+        [Tooltip("Cena de gameplay carregada direto ao entrar como convidado. O guest já é " +
+                 "auto-joinado na 'guest-room' pelo servidor, então não passa pelo lobby de salas.")]
+        [SerializeField] private string guestGameSceneName = "SCN_FirstFloor";
+
         [Header("User Info (Logged In State)")]
         [SerializeField] private TMPro.TextMeshProUGUI userNameText;
 
@@ -144,13 +148,21 @@ namespace HoraExtra.UI
             GuestSession.IsGuestMode = true;
             GuestSession.GuestRoomId = resp.Data.RoomId;
 
-            // Força reconexão UDP com o token guest
-            SocketManager.EnsureExists().SetAuthTokenAndReconnect(resp.Data.Token);
-            
+            // Objetos de rede criados ANTES do handshake: SCN_FirstFloor é uma cena de level
+            // sem objetos de netplay pré-configurados, e os três sobrevivem ao LoadScene via
+            // DontDestroyOnLoad. A ordem importa — o TaskSystemBridge precisa já estar
+            // inscrito em CONN_SUCCESS quando a resposta do servidor chegar, senão perderia
+            // o registro do catálogo (ele tem fallback por IsConnected, mas assim nem abre
+            // a janela de corrida).
+            SocketManager.EnsureExists();
             RemotePlayerSpawner.EnsureExists();
+            HoraExtra.Characters.TaskSystemBridge.EnsureExists();
 
-            // Carrega a cena de gameplay
-            LoadScene(lobbySceneName);
+            // Força reconexão UDP com o token guest
+            SocketManager.Instance.SetAuthTokenAndReconnect(resp.Data.Token);
+
+            // Carrega a cena de gameplay do convidado
+            LoadScene(guestGameSceneName);
         }
     }
 }

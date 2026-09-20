@@ -20,11 +20,45 @@ namespace HoraExtra.UI
         public const string TYPE_COFFEE_MAKER = "coffee_maker";
         public const string TYPE_COLLECT      = "collect";
 
+        // Tarefa 16 — Organizar a recepção (plano 0005). Cada bullet do documento de arte
+        // é uma entrada de catálogo própria, para o sorteio tratá-las como tarefas distintas.
+        public const string TYPE_COLLECT_PAPERS    = "collect_papers";
+        public const string TYPE_COLLECT_PENS      = "collect_pens";
+        public const string TYPE_COLLECT_MAGAZINES = "collect_magazines";
+
+        // Tarefa 18 — Limpar recepção e almoxarifado (plano 0006).
+        public const string TYPE_CLEAN_FLOOR = "clean_floor";
+
         // === Status (campo 'status' autoritativo do servidor) ===
         public const string STATUS_PENDING     = "pending";
         public const string STATUS_IN_PROGRESS = "in_progress";
         public const string STATUS_COMPLETED   = "completed";
         public const string STATUS_FAILED      = "failed";
+
+        /// <summary>
+        /// Resumo curto para a linha do checklist — sempre o rótulo do tipo, nunca a
+        /// descrição do catálogo.
+        ///
+        /// Separado do <see cref="GetTitle"/> de propósito: a descrição virou texto
+        /// instrucional longo, que não cabe numa linha de lista. O passo a passo completo
+        /// fica no <see cref="GetHowTo"/>, exibido só para a tarefa ativa.
+        /// </summary>
+        public static string GetSummary(AssignedTask task)
+        {
+            if (task == null) return string.Empty;
+
+            switch (task.Type)
+            {
+                case TYPE_COFFEE_MAKER:      return "Preparar o café";
+                case TYPE_COLLECT:           return "Coletar documentos";
+                case TYPE_COLLECT_PAPERS:    return "Organizar os papéis";
+                case TYPE_COLLECT_PENS:      return "Organizar as canetas";
+                case TYPE_COLLECT_MAGAZINES: return "Organizar as revistas";
+                case TYPE_CLEAN_FLOOR:       return "Limpar as manchas do chão";
+                default:
+                    return string.IsNullOrWhiteSpace(task.Description) ? "Tarefa" : task.Description;
+            }
+        }
 
         /// <summary>
         /// Título curto da tarefa para a lista de missões. Usa a descrição do catálogo
@@ -39,9 +73,13 @@ namespace HoraExtra.UI
 
             switch (task.Type)
             {
-                case TYPE_COFFEE_MAKER: return "Preparar o café";
-                case TYPE_COLLECT:      return "Coletar documentos";
-                default:                return "Tarefa";
+                case TYPE_COFFEE_MAKER:     return "Preparar o café";
+                case TYPE_COLLECT:          return "Coletar documentos";
+                case TYPE_COLLECT_PAPERS:   return "Organizar os papéis";
+                case TYPE_COLLECT_PENS:     return "Organizar as canetas";
+                case TYPE_COLLECT_MAGAZINES:return "Organizar as revistas";
+                case TYPE_CLEAN_FLOOR:      return "Limpar as manchas do chão";
+                default:                    return "Tarefa";
             }
         }
 
@@ -59,6 +97,24 @@ namespace HoraExtra.UI
                 case TYPE_COLLECT:
                     return $"Colete os {task.TargetCount} documentos espalhados pelo escritório " +
                            "(pressione E ao chegar perto de cada um).";
+                case TYPE_COLLECT_PAPERS:
+                    return $"Há {task.TargetCount} papéis espalhados pelo chão da recepção.\n" +
+                           "Aperte [E] para pegar — dá para juntar vários de uma vez.\n" +
+                           "Leve até a bandeja em cima da mesa e aperte [E] para guardar.\n" +
+                           "O losango dourado mostra onde entregar.";
+                case TYPE_COLLECT_PENS:
+                    return $"Há {task.TargetCount} canetas espalhadas pela recepção.\n" +
+                           "Aperte [E] para pegar e leve até o porta-canetas, em cima da mesa.\n" +
+                           "O losango dourado mostra onde entregar.";
+                case TYPE_COLLECT_MAGAZINES:
+                    return $"Há {task.TargetCount} revistas fora do lugar na recepção.\n" +
+                           "Aperte [E] para pegar e coloque-as de volta na mesa de centro.\n" +
+                           "O losango dourado mostra onde entregar.";
+                case TYPE_CLEAN_FLOOR:
+                    return $"Há {task.TargetCount} manchas de água e café pelo chão.\n" +
+                           "Primeiro pegue o rodo com [E] — ele fica perto da entrada.\n" +
+                           "Depois vá até cada mancha e SEGURE [E] até a barra encher.\n" +
+                           "O rodo continua na sua mão: dá para limpar todas sem voltar.";
                 default:
                     return "Aproxime-se do objetivo e pressione E para interagir.";
             }
@@ -91,6 +147,20 @@ namespace HoraExtra.UI
                 default:
                     return "Pressione E para interagir";
             }
+        }
+
+        /// <summary>
+        /// Prompt genérico de ENTREGA, exibido no recipiente (TaskDepositPoint) quando ele
+        /// não tem uma mensagem própria configurada no Inspector.
+        ///
+        /// Fallback de propósito: o texto específico de cada tarefa ("Aperte [E] para guardar
+        /// a caneta") é conteúdo de cena e entra nos planos 0005–0008. Aqui fica só o que
+        /// serve para qualquer entrega, com o progresso atual para o jogador se situar.
+        /// </summary>
+        public static string GetDeliveryPrompt(AssignedTask task)
+        {
+            if (task == null) return "Aperte [E] para guardar";
+            return $"Aperte [E] para guardar ({task.CurrentProgress}/{task.TargetCount})";
         }
 
         /// <summary>

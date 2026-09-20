@@ -27,6 +27,39 @@ namespace HoraExtra.Characters
         // === Singleton ===
         public static TaskSystemBridge Instance { get; private set; }
 
+        /// <summary>
+        /// Garante que existe uma instância do TaskSystemBridge. Se não existir na cena,
+        /// cria um GameObject em runtime com DontDestroyOnLoad.
+        ///
+        /// Mesmo padrão de <see cref="SocketManager.EnsureExists"/> e
+        /// <see cref="RemotePlayerSpawner.EnsureExists"/>: garante a ponte inscrita em
+        /// CONN_SUCCESS antes do handshake, mesmo quando chamada do menu.
+        ///
+        /// A instância criada aqui nasce **sem catálogo** — e é assim que deve ser. O
+        /// catálogo é autorado na cena de level; quando ela carrega, o TaskSystemBridge
+        /// dela entrega a lista via <see cref="AdoptCatalog"/> antes de se destruir.
+        /// Inventar um catálogo programático aqui fazia o servidor registrar tarefas que
+        /// não existem no mundo e ignorar as que existem.
+        ///
+        /// O SocketManager é garantido ANTES do AddComponent porque o OnEnable deste
+        /// componente assina CONN_SUCCESS / TASK_ASSIGNED / TASK_UPDATED via
+        /// SocketManager.Instance?.On(...) — com Instance nulo os `?.` viram no-op e a
+        /// ponte nunca receberia os eventos.
+        /// </summary>
+        public static TaskSystemBridge EnsureExists()
+        {
+            if (Instance == null)
+            {
+                SocketManager.EnsureExists();
+
+                Debug.Log("[GAMEPLAY] TaskSystemBridge não encontrado na cena — criando runtime.");
+                var go = new GameObject("TaskSystemBridge (auto-created)");
+                go.AddComponent<TaskSystemBridge>();
+                // Awake roda imediatamente no AddComponent; Instance já está setado aqui.
+            }
+            return Instance;
+        }
+
         // === Inspector ===
         [Header("Task Catalog — entradas iniciais da cena")]
         [Tooltip("Lista de tarefas que serão registradas no servidor ao conectar.")]
@@ -64,6 +97,26 @@ namespace HoraExtra.Characters
         /// </summary>
         public static event Action<string, AssignedTask> OnTaskUpdated;
 
+        /// <summary>
+        /// Disparado quando o servidor RECUSA um task_progress por regra de gameplay
+        /// (item desconhecido, destino errado, item já contabilizado...).
+        ///
+        /// É unicast: só chega para quem enviou o pacote recusado. Quem escuta deve
+        /// desfazer o efeito otimista — na prática, devolver o item para a mão do
+        /// jogador — e exibir Message.
+        /// </summary>
+        public static event Action<TaskRejectedPayload> OnTaskRejected;
+
+        /// <summary>
+        /// Enquanto true, a atribuição automática de tarefas fica retida mesmo depois do
+        /// catálogo registrado. Usado pela introdução da partida (ver <c>IntroMessage</c>)
+        /// para o jogador ler a mensagem antes de receber a primeira tarefa.
+        ///
+        /// É estática porque quem segura (um objeto da cena) e quem espera (a ponte, que
+        /// sobrevive entre cenas) não se conhecem.
+        /// </summary>
+        public static bool HoldTaskRequest { get; set; }
+
         // === Lifecycle ===
 
         private void Awake()
@@ -72,13 +125,19 @@ namespace HoraExtra.Characters
             {
                 Instance = this;
                 DontDestroyOnLoad(gameObject);
-
-                // Catálogo inicial: garantir entradas padrão caso não configuradas no Inspector.
-                EnsureCoffeeMakerEntry();
-                EnsurePaperCollectEntry();
             }
             else
             {
+                // Esta instância é da CENA e chegou depois de uma persistida (criada no menu
+                // por EnsureExists, que não tem catálogo configurado). Antes de morrer, ela
+                // entrega o catálogo autorado — que é a fonte da verdade do level.
+                //
+                // Sem isto, o catálogo da cena era silenciosamente descartado e o servidor
+                // ficava só com o que a instância do menu tivesse: nenhuma das tarefas da
+                // recepção existia, e os destinos nunca ativavam.
+                if (_initialCatalog != null && _initialCatalog.Count > 0)
+                    Instance.AdoptCatalog(_initialCatalog);
+
                 Destroy(gameObject);
             }
         }
@@ -93,6 +152,9 @@ namespace HoraExtra.Characters
 
             // Assina broadcast de atualização de status de task.
             SocketManager.Instance?.On(NetworkEvents.TASK_UPDATED, OnTaskUpdatedReceived);
+
+            // Assina recusa de gameplay (unicast ao remetente).
+            SocketManager.Instance?.On(NetworkEvents.TASK_REJECTED, OnTaskRejectedReceived);
 
             // Caso a conexão UDP já tenha sido estabelecida ANTES desta cena carregar
             // (ex: modo guest conecta na cena de menu), o CONN_SUCCESS já disparou e
@@ -109,6 +171,7 @@ namespace HoraExtra.Characters
             SocketManager.Instance?.Off(NetworkEvents.CONNECTION_SUCCESS, OnConnectionSuccess);
             SocketManager.Instance?.Off(NetworkEvents.TASK_ASSIGNED, OnTaskAssignedReceived);
             SocketManager.Instance?.Off(NetworkEvents.TASK_UPDATED, OnTaskUpdatedReceived);
+            SocketManager.Instance?.Off(NetworkEvents.TASK_REJECTED, OnTaskRejectedReceived);
         }
 
         // === Métodos públicos ===
@@ -118,6 +181,26 @@ namespace HoraExtra.Characters
         /// Payload é vazio ({}). O playerId é obtido da sessão no servidor.
         /// Deve ser chamado após a conexão estar estabelecida e o catálogo registrado.
         /// </summary>
+        /// <summary>
+        /// Substitui o catálogo desta instância pelo autorado na cena recém-carregada e
+        /// re-registra no servidor.
+        ///
+        /// Chamado pela instância da cena logo antes de se destruir (ver Awake). Se a conexão
+        /// já estiver de pé — o caso normal, porque o menu conecta antes de carregar o level —
+        /// registra na hora e pede as tarefas, já que o sorteio anterior (se houve) usou um
+        /// catálogo que não é o desta cena.
+        /// </summary>
+        public void AdoptCatalog(List<TaskEntryData> catalogoDaCena)
+        {
+            _initialCatalog = new List<TaskEntryData>(catalogoDaCena);
+            _catalogRegistered = false;
+
+            Debug.Log($"[GAMEPLAY] TaskSystemBridge — catálogo da cena adotado ({_initialCatalog.Count} entrada(s)).");
+
+            if (SocketManager.Instance != null && SocketManager.Instance.IsConnected)
+                HandleConnectionEstablished();
+        }
+
         public void RequestMyTasks()
         {
             SocketManager.Instance.Emit(NetworkEvents.TASK_ASSIGN_REQUEST, new { });
@@ -155,9 +238,31 @@ namespace HoraExtra.Characters
         /// </summary>
         public void SendProgress(string taskId)
         {
-            var payload = new TaskProgressPayload { TaskId = taskId };
+            SendProgress(taskId, null, null);
+        }
+
+        /// <summary>
+        /// Reporta a entrega de +1 item de uma task incremental, identificando QUAL item
+        /// foi entregue e ONDE.
+        /// Shape enviado: { taskId: string, itemId?: string, slotId?: string }
+        ///
+        /// Com itemId, o servidor valida que o item pertence à task, que o destino confere
+        /// (quando a entrada declara pairs) e que ele ainda não foi contabilizado. Em caso
+        /// de recusa, responde task_rejected em vez de task_updated — ver OnTaskRejected.
+        ///
+        /// itemId/slotId nulos são omitidos do JSON (NullValueHandling.Ignore no DTO), então
+        /// este overload é o mesmo pacote de antes quando chamado sem eles.
+        /// </summary>
+        public void SendProgress(string taskId, string itemId, string slotId)
+        {
+            var payload = new TaskProgressPayload
+            {
+                TaskId = taskId,
+                ItemId = string.IsNullOrEmpty(itemId) ? null : itemId,
+                SlotId = string.IsNullOrEmpty(slotId) ? null : slotId,
+            };
             SocketManager.Instance.Emit(NetworkEvents.TASK_PROGRESS, payload);
-            Debug.Log($"[NETWORK] task_progress enviado — taskId={taskId}");
+            Debug.Log($"[NETWORK] task_progress enviado — taskId={taskId} itemId={itemId ?? "-"} slotId={slotId ?? "-"}");
         }
 
         /// <summary>
@@ -210,7 +315,9 @@ namespace HoraExtra.Characters
             // O delay garante que o servidor processe task_catalog_register antes do
             // task_assign_request — assignRandomTasks lança erro se o catálogo da sala
             // ainda não existir (ver TaskService.assignRandomTasks no backend).
-            if (_autoRequestTasksOnConnect)
+            // Só pede tarefas se o catálogo foi de fato registrado; sem isso o servidor
+            // responderia "catálogo da sala está vazio".
+            if (_autoRequestTasksOnConnect && _catalogRegistered)
                 StartCoroutine(RequestTasksAfterCatalog());
         }
 
@@ -221,6 +328,12 @@ namespace HoraExtra.Characters
         private IEnumerator RequestTasksAfterCatalog()
         {
             yield return new WaitForSeconds(_autoRequestDelaySeconds);
+
+            // Segura enquanto a introducao estiver na tela. Sem trava (cena sem IntroMessage)
+            // o laco nao executa nenhuma iteracao e o comportamento e o de antes.
+            while (HoldTaskRequest)
+                yield return null;
+
             RequestMyTasks();
         }
 
@@ -253,10 +366,12 @@ namespace HoraExtra.Characters
                               $"currentProgress={task.CurrentProgress} status={task.Status}");
                 }
 
-                // Armazena tasks do jogador local.
+                // Armazena tasks do jogador local. MESCLA em vez de substituir: com a fila
+                // sequencial, o servidor reenvia task_assigned a cada nova tarefa liberada,
+                // e limpar aqui apagaria as já concluídas do HUD.
+                // A limpeza acontece uma vez só, no HandleConnectionEstablished.
                 if (IsLocalPlayer(payload.PlayerId))
                 {
-                    _myTasks.Clear();
                     foreach (var task in payload.Tasks)
                         _myTasks[task.Id] = task;
                 }
@@ -321,6 +436,34 @@ namespace HoraExtra.Characters
             }
         }
 
+        /// <summary>
+        /// Callback de task_rejected: o servidor recusou um task_progress deste cliente.
+        /// Repassa o motivo para quem enviou (tipicamente o TaskDepositPoint), que desfaz
+        /// o efeito otimista devolvendo o item à mão.
+        /// Chamado na main thread.
+        /// </summary>
+        private void OnTaskRejectedReceived(JToken data)
+        {
+            try
+            {
+                var payload = data.ToObject<TaskRejectedPayload>();
+                if (payload == null)
+                {
+                    Debug.LogWarning("[NETWORK] task_rejected — payload nulo após deserialização.");
+                    return;
+                }
+
+                Debug.Log($"[NETWORK] task_rejected — code={payload.Code} taskId={payload.TaskId} " +
+                          $"itemId={payload.ItemId ?? "-"} message=\"{payload.Message}\"");
+
+                OnTaskRejected?.Invoke(payload);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[NETWORK] Falha ao parsear task_rejected: {ex.Message} | raw: {data}");
+            }
+        }
+
         // === Métodos privados ===
 
         /// <summary>
@@ -335,61 +478,6 @@ namespace HoraExtra.Characters
         }
 
         /// <summary>
-        /// Tipo de task das coletas de papéis/documentos. Usado por MissionPaperCollectible
-        /// para localizar a task certa via FindMyTask.
-        /// </summary>
-        public const string PAPER_COLLECT_TYPE = "collect";
-
-        private const string PAPER_COLLECT_TASK_ID = "task-collect-papers-01";
-
-        /// <summary>
-        /// Garante que o catálogo inicial contém a entrada de coleta de documentos.
-        /// targetCount = 4 espelha a quantidade de papéis na cena (objetos com
-        /// MissionPaperCollectible). Ajuste aqui se mudar o número de coletáveis.
-        /// </summary>
-        private void EnsurePaperCollectEntry()
-        {
-            const int PAPER_COUNT = 4;
-            foreach (var entry in _initialCatalog)
-            {
-                if (entry.id == PAPER_COLLECT_TASK_ID) return;
-            }
-            _initialCatalog.Add(new TaskEntryData
-            {
-                id          = PAPER_COLLECT_TASK_ID,
-                description = "Colete os documentos",
-                type        = PAPER_COLLECT_TYPE,
-                targetCount = PAPER_COUNT
-            });
-            Debug.Log("[GAMEPLAY] TaskSystemBridge — entrada collect (documentos) adicionada ao catálogo inicial.");
-        }
-
-        /// <summary>
-        /// Garante que o catálogo inicial contém a entrada da cafeteira.
-        /// Adicionada programaticamente caso o Inspector não tenha sido configurado.
-        /// </summary>
-        private void EnsureCoffeeMakerEntry()
-        {
-            const string COFFEE_TASK_ID = "task-coffee-maker-01";
-            bool found = false;
-            foreach (var entry in _initialCatalog)
-            {
-                if (entry.id == COFFEE_TASK_ID) { found = true; break; }
-            }
-            if (!found)
-            {
-                _initialCatalog.Add(new TaskEntryData
-                {
-                    id          = COFFEE_TASK_ID,
-                    description = "Prepare o café",
-                    type        = "coffee_maker",
-                    targetCount = 3
-                });
-                Debug.Log("[GAMEPLAY] TaskSystemBridge — entrada coffee_maker adicionada ao catálogo inicial.");
-            }
-        }
-
-        /// <summary>
         /// Constrói e envia o pacote task_catalog_register com as entradas do catálogo inicial.
         /// Shape enviado: { tasks: [{ id, description, type, targetCount }] } — sem npcId.
         /// </summary>
@@ -401,6 +489,15 @@ namespace HoraExtra.Characters
                 return;
             }
 
+            // Instância criada pelo menu (EnsureExists) ainda não recebeu o catálogo da cena.
+            // Registrar uma lista vazia faria o servidor recusar o task_assign_request logo em
+            // seguida ("catálogo da sala está vazio"). Espera o AdoptCatalog.
+            if (_initialCatalog == null || _initialCatalog.Count == 0)
+            {
+                Debug.Log("[GAMEPLAY] TaskSystemBridge.RegisterCatalog — sem catálogo ainda; aguardando a cena de level.");
+                return;
+            }
+
             var tasks = new List<TaskEntry>();
             foreach (var entry in _initialCatalog)
             {
@@ -409,7 +506,11 @@ namespace HoraExtra.Characters
                     Id          = entry.id,
                     Description = entry.description,
                     Type        = entry.type,
-                    TargetCount = entry.targetCount
+                    TargetCount = entry.targetCount,
+                    // Listas vazias viram null para o NullValueHandling.Ignore omitir o campo:
+                    // um "items": [] na rede significaria "nenhum item é válido" e travaria a task.
+                    Items       = ToNullIfEmpty(entry.items),
+                    Pairs       = ToPairList(entry.pairs),
                 });
             }
 
@@ -419,6 +520,48 @@ namespace HoraExtra.Characters
 
             Debug.Log($"[NETWORK] task_catalog_register enviado — {tasks.Count} tarefa(s).");
         }
+
+        /// <summary>Devolve null para lista nula ou vazia, para o campo ser omitido do JSON.</summary>
+        private static List<string> ToNullIfEmpty(List<string> source)
+        {
+            return (source == null || source.Count == 0) ? null : new List<string>(source);
+        }
+
+        /// <summary>
+        /// Converte os pares do Inspector para o DTO de rede. Pares incompletos são
+        /// descartados aqui — o servidor também os filtra, mas errar cedo evita mandar
+        /// lixo na rede e deixa o aviso no Console de quem está autorando a cena.
+        /// </summary>
+        private static List<TaskItemPair> ToPairList(List<TaskPairData> source)
+        {
+            if (source == null || source.Count == 0) return null;
+
+            var result = new List<TaskItemPair>(source.Count);
+            foreach (var pair in source)
+            {
+                if (pair == null || string.IsNullOrWhiteSpace(pair.itemId) || string.IsNullOrWhiteSpace(pair.slotId))
+                {
+                    Debug.LogWarning("[GAMEPLAY] TaskSystemBridge — par item/slot incompleto no catálogo do Inspector, descartado.");
+                    continue;
+                }
+                result.Add(new TaskItemPair { ItemId = pair.itemId, SlotId = pair.slotId });
+            }
+            return result.Count > 0 ? result : null;
+        }
+    }
+
+    /// <summary>
+    /// Par item→destino no Inspector. Existe como classe própria porque Dictionary não
+    /// serializa no Inspector do Unity — o par precisa ser uma lista de objetos.
+    /// </summary>
+    [Serializable]
+    public class TaskPairData
+    {
+        [Tooltip("itemId do CarryableItem que conta progresso.")]
+        public string itemId;
+
+        [Tooltip("slotId do TaskDepositPoint onde este item DEVE ser entregue.")]
+        public string slotId;
     }
 
     /// <summary>
@@ -440,5 +583,13 @@ namespace HoraExtra.Characters
 
         [Tooltip("Quantidade alvo para conclusão da tarefa.")]
         public int targetCount;
+
+        [Tooltip("Opcional: itemIds que contam progresso nesta task. Vazio = qualquer entrega conta +1. " +
+                 "Os ids precisam bater EXATAMENTE com o campo _itemId dos CarryableItem na cena.")]
+        public List<string> items = new List<string>();
+
+        [Tooltip("Opcional: destino obrigatório por item. Use quando entregar no lugar errado " +
+                 "deve ser recusado (ex: encomenda na estante certa).")]
+        public List<TaskPairData> pairs = new List<TaskPairData>();
     }
 }
