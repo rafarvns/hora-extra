@@ -2,6 +2,23 @@
 
 > Origem: `Explicação das tarefas para essa entrega.pdf` — **Tarefa 18 — Limpar a recepção e o
 > almoxarifado**. **Depende do plano [0004](0004-infra-carregar-e-validar-itens.md)**.
+> Mapa completo das 18 tarefas: [README.md](README.md).
+>
+> **Atualização (lista-mestra `TAREFAS DOS JOGADORES.pdf`).** Uma divergência real e duas notas:
+>
+> 1. **Paredes.** A lista-mestra pede *"limpar a sujeira do chão **e das paredes**"*. O documento
+>    de entrega só descreve sujeiras de chão (manchas de café/água/pegada, chips, terra) — e a
+>    cena `SCN_FirstFloor.unity` hoje também só tem essas (`Liquido_Cafe`, `Liquido_Agua`,
+>    `Sujeira_Chips`, `Sujeira_Pegada`, `Sujeira_Terra`). **Sujeira de parede fica fora deste
+>    plano** por falta de asset; ver §8. Quando o asset existir, é entrada de catálogo + um
+>    `DirtSpot` a mais — nenhuma mudança de código, desde que o pano (`CleaningCloth.blend`, já
+>    no `arte/3D_Models/`) entre como terceira ferramenta ao lado de rodo e vassoura.
+> 2. **Cena.** Referências a `SCN_Main.unity` trocadas por **`SCN_FirstFloor.unity`** (é a que
+>    está no `EditorBuildSettings` e a que já contém as sujeiras).
+> 3. **Reuso.** O `DirtSpot` + hold-[E] definidos aqui são a base da Tarefa 13 (vazamento da
+>    cafeteira) — plano [0023](0023-tarefa-13-limpeza-de-vazamento-da-cafeteira.md). Lá a sujeira
+>    é **gerada em runtime** pelo servidor; manter `DirtSpot` configurável por Inspector e sem
+>    dependência de estado de cena é o que permite instanciá-lo por prefab depois.
 
 ## 1. Context
 
@@ -177,7 +194,7 @@ hora-extra-client/Assets/Scripts/Interactions/HoldToCleanTarget.cs   NEW
 hora-extra-client/Assets/Scripts/Interactions/PlayerCarrier.cs       MODIFY (CarriedTag, IsCarryingTag)
 hora-extra-client/Assets/Scripts/Characters/TaskSystemBridge.cs      MODIFY (EnsureCleaningEntries — 6 entradas com items)
 hora-extra-client/Assets/Scripts/UI/TaskPresentation.cs              MODIFY (6 TYPE_* + ramos)
-hora-extra-client/Assets/Scenes/SCN_Main.unity                       MODIFY (asset, Editor — sujeiras, ferramentas, bolinhas, lixo, markers)
+hora-extra-client/Assets/Scenes/SCN_FirstFloor.unity                       MODIFY (asset, Editor — sujeiras, ferramentas, bolinhas, lixo, markers)
 hora-extra-client/Assets/Prefab/PFB_Interactable_Rodo.prefab         NEW (asset, Editor — opcional se o rodo já existir solto na cena)
 hora-extra-client/Assets/Prefab/PFB_Interactable_Vassoura.prefab     NEW (asset, Editor — idem)
 ```
@@ -195,7 +212,7 @@ inventário server-side, mudança estrutural.
 
 ## 6. Manual verification steps (phase: client)
 
-Pré-condição: backend rodando, `SCN_Main.unity` aberta, `UseTestToken = true`, "Clear on Play".
+Pré-condição: backend rodando, `SCN_FirstFloor.unity` aberta, `UseTestToken = true`, "Clear on Play".
 Para isolar uma task específica, esvaziar temporariamente o `_initialCatalog` deixando só ela.
 
 ### 0. Conferência de contagem (fazer ANTES de testar)
@@ -306,5 +323,9 @@ Seguir os passos 0–13 da §6 em Play Mode.
 - Sujeiras reaparecerem depois de limpas.
 - Carregar duas ferramentas ao mesmo tempo (`PlayerCarrier` é single-slot por decisão do plano 0004).
 - Ver a ferramenta na mão de outro jogador (sem sincronização de carregamento nesta entrega).
-- Sujeiras dinâmicas geradas em runtime.
+- Sujeiras dinâmicas geradas em runtime — plano [0023](0023-tarefa-13-limpeza-de-vazamento-da-cafeteira.md)
+  (Tarefa 13), que reusa o `DirtSpot` daqui com spawn autoritativo do servidor.
+- **Sujeira de parede** (pedida pela lista-mestra `TAREFAS DOS JOGADORES.pdf`, ausente no
+  documento de entrega e na cena). Entra quando o asset existir: é uma entrada de catálogo +
+  `DirtSpot` com `_requiredTool = "Pano"`, sem código novo.
 - Recepção, almoxarifado e encomendas — planos 0005, 0007 e 0008.

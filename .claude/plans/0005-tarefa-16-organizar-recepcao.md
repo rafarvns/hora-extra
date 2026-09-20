@@ -2,7 +2,24 @@
 
 > Origem: `Explicação das tarefas para essa entrega.pdf` — **Tarefa 16 — Organizar a recepção**.
 > **Depende do plano [0004](0004-infra-carregar-e-validar-itens.md)** (carregar/entregar + `itemId`
-> no `task_progress`). Não iniciar antes dele.
+> no `task_progress`). Não iniciar antes dele. Mapa completo das 18 tarefas: [README.md](README.md).
+>
+> **Atualização (lista-mestra `TAREFAS DOS JOGADORES.pdf`).** A Tarefa 16 aparece lá em forma
+> genérica — *"objetos fora do lugar… pegar cada objeto e colocá-lo em sua posição correta"*. Os
+> quatro grupos concretos (papéis, canetas, revistas, latas), as contagens e os textos literais
+> abaixo continuam vindo do documento de entrega, que é a fonte mais específica. **Nenhuma
+> mudança de escopo.**
+>
+> Dois ajustes de rota vieram da revisão:
+>
+> 1. **Cena.** As referências a `SCN_Main.unity` foram trocadas por **`SCN_FirstFloor.unity`** —
+>    é ela que está no `EditorBuildSettings`, que já contém os props da recepção
+>    (`Caneta`, `Caneta2`, `Caneta3`, `Lata`…`Lata4`) e o `TaskSystemBridge`. `SCN_Main.unity`
+>    ficou como stub de 346 linhas.
+> 2. **Snap opcional.** A §8 diz que o item some ao ser guardado. Se a leitura literal da
+>    lista-mestra ("colocá-lo em sua posição correta") for exigida depois, a peça pronta é o
+>    `TaskPlacementSlot` do plano [0011](0011-infra-slot-de-posicionamento.md) — trocar
+>    `TaskDepositPoint` por ele nos 4 recipientes, sem mudar catálogo nem protocolo.
 
 ## 1. Context
 
@@ -100,7 +117,7 @@ public const string TYPE_COLLECT_CANS      = "collect_cans";
 O prompt de **pegar** ("Aperte [E] para pegar o papel") é configurado por item no
 `CarryableItem._pickupMessage`, não no `TaskPresentation` — o item do chão não conhece a task.
 
-#### Cena `SCN_Main.unity`
+#### Cena `SCN_FirstFloor.unity`
 
 13 itens recebem `CarryableItem`:
 
@@ -129,7 +146,7 @@ sozinho conforme a task do tipo estiver `pending`/`in_progress` (plano 0003).
 
 #### Remoção do coletável legado
 
-`MissionPaperCollectible.cs` é deletado. Antes de deletar, verificar em `SCN_Main.unity` quais
+`MissionPaperCollectible.cs` é deletado. Antes de deletar, verificar em `SCN_FirstFloor.unity` quais
 GameObjects o referenciam (são os mesmos 4 papéis) e trocar o componente por `CarryableItem`.
 `PaperPromptByDistance.cs` deve ser conferido no mesmo passo: se ele existe só para o prompt do
 papel legado, é substituído pelo `InteractionPrompt` do plano 0004; se tiver outro uso na cena,
@@ -150,7 +167,7 @@ hora-extra-client/Assets/Scripts/Characters/TaskSystemBridge.cs   MODIFY (remove
 hora-extra-client/Assets/Scripts/UI/TaskPresentation.cs           MODIFY (4 TYPE_*, ramos de GetTitle/GetHowTo/GetActionPrompt/GetStatusLabel)
 hora-extra-client/Assets/Scripts/UI/MissionPaperCollectible.cs    DELETE (substituído por CarryableItem + TaskDepositPoint)
 hora-extra-client/Assets/Scripts/UI/PaperPromptByDistance.cs      REVIEW (deletar se só servia ao papel legado)
-hora-extra-client/Assets/Scenes/SCN_Main.unity                    MODIFY (asset, Editor — 13 CarryableItem + 4 TaskDepositPoint + 4 WorldTaskMarker)
+hora-extra-client/Assets/Scenes/SCN_FirstFloor.unity                    MODIFY (asset, Editor — 13 CarryableItem + 4 TaskDepositPoint + 4 WorldTaskMarker)
 ```
 
 ## 5. TDD breakdown (phase: backend)
@@ -170,7 +187,7 @@ ciclo TDD — a regra `.agents/rules/backend-unit-tests.md` não abre exceção 
 
 ## 6. Manual verification steps (phase: client)
 
-Pré-condição: backend rodando (`npm run dev`), `SCN_Main.unity` aberta, `SocketManager.UseTestToken = true`,
+Pré-condição: backend rodando (`npm run dev`), `SCN_FirstFloor.unity` aberta, `SocketManager.UseTestToken = true`,
 Console com "Clear on Play". Como o servidor sorteia **3 de N** tasks, pode ser preciso reiniciar
 o Play Mode algumas vezes até receber a sub-tarefa desejada — alternativamente, esvaziar
 temporariamente o `_initialCatalog` deixando só a entrada em teste.

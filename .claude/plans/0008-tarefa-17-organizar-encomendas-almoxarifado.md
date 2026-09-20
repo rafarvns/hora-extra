@@ -3,6 +3,19 @@
 > Origem: `Explicação das tarefas para essa entrega.pdf` — **Tarefa 17 — Organizar encomendas no
 > almoxarifado**. **Depende do plano [0004](0004-infra-carregar-e-validar-itens.md)**; é a tarefa
 > mais dependente da validação por `pairs` introduzida lá.
+> Mapa completo das 18 tarefas: [README.md](README.md).
+>
+> **Atualização (lista-mestra `TAREFAS DOS JOGADORES.pdf`).** A lista-mestra confirma o desenho
+> deste plano e acrescenta o verbo *"verificar a etiqueta da encomenda"* como passo explícito —
+> que é exatamente o modo de inspeção por rotação já previsto na §3. **Sem mudança de escopo.**
+>
+> Duas notas de rota:
+>
+> 1. **Cena.** Referências a `SCN_Main.unity` trocadas por **`SCN_FirstFloor.unity`**.
+> 2. **Reuso da rotação.** O modo de inspeção nasce aqui e é o mesmo usado pela Tarefa 3 para ler
+>    a categoria de um documento — plano [0013](0013-tarefa-03-organizar-documentos.md). Mantê-lo
+>    como componente genérico sobre `PlayerCarrier` (e não como script de encomenda) é o que
+>    permite reusar sem copiar.
 
 ## 1. Context
 
@@ -143,7 +156,7 @@ esta task, mapear o `code` para um texto de jogo em vez da mensagem crua do serv
 Centralizar esse mapeamento em `TaskPresentation.GetRejectionMessage(string code, string fallback)`,
 com `fallback` = mensagem do servidor para códigos não mapeados.
 
-#### Cena `SCN_Main.unity`
+#### Cena `SCN_FirstFloor.unity`
 
 12 encomendas recebem `CarryableItem` + `InspectableCarriedItem`, todas com
 `_kind = "encomenda"`, `_isTool = false`,
@@ -193,7 +206,7 @@ hora-extra-client/Assets/Scripts/Interactions/InteractionInput.cs         MODIFY
 hora-extra-client/Assets/Scripts/Interactions/TaskDepositPoint.cs         MODIFY (usar TaskPresentation.GetRejectionMessage no feedback)
 hora-extra-client/Assets/Scripts/Characters/TaskSystemBridge.cs           MODIFY (EnsureParcelEntry — 1 entrada com 12 pairs)
 hora-extra-client/Assets/Scripts/UI/TaskPresentation.cs                   MODIFY (TYPE_SORT_PARCELS + ramos + GetRejectionMessage)
-hora-extra-client/Assets/Scenes/SCN_Main.unity                            MODIFY (asset, Editor — 12 encomendas + 7 destinos)
+hora-extra-client/Assets/Scenes/SCN_FirstFloor.unity                            MODIFY (asset, Editor — 12 encomendas + 7 destinos)
 ```
 
 ## 5. TDD breakdown (phase: backend)
@@ -209,7 +222,7 @@ Regressão obrigatória: `cd hora-extra-backend && npm test`.
 
 ## 6. Manual verification steps (phase: client)
 
-Pré-condição: backend rodando, `SCN_Main.unity` aberta, `UseTestToken = true`, "Clear on Play".
+Pré-condição: backend rodando, `SCN_FirstFloor.unity` aberta, `UseTestToken = true`, "Clear on Play".
 Para garantir o sorteio desta task, esvaziar temporariamente o `_initialCatalog` deixando só
 `task-almox-encomendas-01`.
 

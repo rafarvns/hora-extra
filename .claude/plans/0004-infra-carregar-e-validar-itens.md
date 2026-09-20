@@ -1,8 +1,22 @@
 # Plan 0004 — infra-carregar-e-validar-itens
 
-> **Plano-base da entrega.** Os planos 0005 (Tarefa 16), 0006 (Tarefa 18), 0007 (Tarefa 15)
-> e 0008 (Tarefa 17) — todos derivados de `Explicação das tarefas para essa entrega.pdf` —
-> dependem da infraestrutura definida aqui. Implementar este plano **primeiro**.
+> **Plano-base de toda a linha de tarefas.** Os planos 0005 (Tarefa 16), 0006 (Tarefa 18),
+> 0007 (Tarefa 15) e 0008 (Tarefa 17) — detalhados em `Explicação das tarefas para essa
+> entrega.pdf` — dependem da infraestrutura definida aqui. Implementar este plano **primeiro**.
+>
+> **Atualização (lista-mestra `TAREFAS DOS JOGADORES.pdf`).** As 18 tarefas de jogador estão
+> mapeadas em [README.md](README.md). Além dos quatro planos acima, o verbo *carregar → entregar*
+> definido aqui também é a base de **0011** (slot de posicionamento), **0013** (Tarefa 3),
+> **0016** (Tarefa 6), **0018** (Tarefa 8), **0019** (Tarefa 9), **0021** (Tarefa 11) e
+> **0022** (Tarefa 12) — 10 das 18 tarefas no total. Isso confirma a decisão de escopo desta
+> §3: `PlayerCarrier` single-slot, `CarryableItem`/`TaskDepositPoint` genéricos e validação de
+> item no servidor. Nada muda no conteúdo deste plano; o que muda é a expectativa de reuso.
+>
+> Os outros três eixos de infraestrutura — terminal de computador (**0009**), agenda/penalidades
+> (**0010**) e slot de posicionamento (**0011**) — **estendem** o que está aqui em vez de
+> substituir: `TaskRejectionCode` ganha códigos novos, o catálogo ganha campos opcionais novos, e
+> `task_rejected` continua sendo o canal único de recusa de gameplay. Ver "Protocolo acumulado"
+> no [README.md](README.md).
 
 ## 1. Context
 
@@ -174,7 +188,8 @@ de mundo. `Show(string message)` / `Hide()`. Elimina a duplicação de `ShowProm
   os assets **já têm box collider com is trigger ativado**). Em `Update`, com o jogador dentro
   do trigger e nada nas mãos, `InteractionInput.InteractPressed()` → `PlayerCarrier.TryPickup(this)`.
 
-**`PlayerCarrier.cs`** — componente no prefab `Player`. Segura **no máximo um** item por vez:
+**`PlayerCarrier.cs`** — componente no prefab `Player`. (Revisto na implementação: segura uma
+**pilha do mesmo tipo**, não um item só — ver §8.) Desenho original abaixo:
 - `[SerializeField] private Transform _handAnchor` — ponto de encaixe visual do item carregado.
 - `public CarryableItem Carried { get; }`, `public bool IsCarrying { get; }`.
 - `TryPickup(CarryableItem item)` — recusa (com log `[GAMEPLAY]`) se já está carregando; senão
@@ -285,7 +300,7 @@ hora-extra-client/Assets/Prefab/Player.prefab                               MODI
 
 ## 6. Manual verification steps (phase: client)
 
-Pré-condição: backend rodando (`npm run dev`), `SCN_Main.unity` aberta, `SocketManager.UseTestToken = true`,
+Pré-condição: backend rodando (`npm run dev`), `SCN_FirstFloor.unity` aberta, `SocketManager.UseTestToken = true`,
 Console com "Clear on Play". Para este plano-base, usar uma **cena de sanidade**: um
 `CarryableItem` (`_itemId="sanity-item-01"`, `_kind="papel"`) e um `TaskDepositPoint`
 (`_slotId="sanity-slot"`, `_acceptedKind="papel"`, `_taskType="collect"`), com a entrada de
@@ -368,12 +383,34 @@ Seguir os 9 passos da §6 em Play Mode.
 
 - Os assets, prefabs e entradas de catálogo das Tarefas 15/16/17/18 — cada um no seu plano
   (0005–0008). Este plano entrega só a mecânica e o protocolo.
-- Carregar **mais de um** item por vez (inventário). `PlayerCarrier` é single-slot por decisão
-  de escopo; se uma tarefa precisar de inventário, é outro plano.
+- ~~Carregar **mais de um** item por vez (inventário).~~ **Revisto na implementação.** O
+  single-slot foi testado em Play Mode e reprovado: recolher 4 papéis virava 4 viagens até o
+  recipiente. `PlayerCarrier` passou a carregar uma **pilha do mesmo tipo** (`_maxStack`,
+  padrão 6), com duas restrições que preservam a validação do servidor:
+  - não mistura categorias — com papel na mão, uma caneta é recusada;
+  - ferramenta (`IsTool`) ocupa a mão sozinha, então rodo/vassoura do plano 0006 não empilham.
+
+  A entrega da pilha é **sequencial**: o `TaskDepositPoint` envia um `task_progress` por item e
+  só manda o próximo quando o anterior é confirmado. O motivo é de protocolo — `task_updated`
+  não carrega `itemId` (o servidor não ecoa dado do cliente, ciclo 19), então com N pacotes em
+  voo não haveria como saber qual item cada confirmação liberou. Em rede local cada ida-e-volta
+  é de milissegundos. **Nada mudou no servidor**: a dedup por `itemId` continua sendo o que
+  garante que 4 papéis entregues de uma vez contem 4, e não mais.
+- Inventário de verdade (itens de tipos diferentes ao mesmo tempo, UI de seleção) — isso sim
+  segue fora de escopo.
 - Hold-to-interact (segurar [E]) — `InteractionInput.InteractHeld()` fica declarado aqui mas
   quem consome é o plano 0006.
 - Rotacionar o objeto carregado — plano 0008.
 - Destaque visual de slot vazio ("ficar chamativo") — plano 0007.
+- **Snap na posição exata do destino** (item continua visível no lugar certo em vez de sumir) —
+  plano 0011. `TaskDepositPoint.Consume()` aqui **desativa** o GameObject; o plano 0011 introduz
+  `TaskPlacementSlot`, que reposiciona em vez de desativar.
+- **Passos ordenados com valor esperado** (senha, arquivo, campo de formulário) — plano 0009. O
+  `task_progress` deste plano conta *itens*, não *etapas*; misturar os dois no mesmo evento foi
+  descartado para manter a semântica "+1 item" de `incrementProgress`.
+- **Prazo, agenda e penalidade** — plano 0010. Nada aqui tem noção de tempo.
+- **Interação simultânea de dois jogadores** no mesmo objeto — plano 0019. `PlayerCarrier` assume
+  um dono só.
 - Persistência em banco (Prisma): todo o estado de task segue in-memory.
 - Sincronizar o item carregado entre jogadores (outro player não vê o papel na mão do colega) —
   exigiria evento novo de estado de carregamento; fora do escopo desta entrega.

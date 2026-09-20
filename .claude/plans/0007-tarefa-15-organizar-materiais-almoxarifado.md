@@ -2,6 +2,25 @@
 
 > Origem: `Explicação das tarefas para essa entrega.pdf` — **Tarefa 15 — Organizar materiais do
 > almoxarifado**. **Depende do plano [0004](0004-infra-carregar-e-validar-itens.md)**.
+> Mapa completo das 18 tarefas: [README.md](README.md).
+>
+> **Atualização (lista-mestra `TAREFAS DOS JOGADORES.pdf`).** A lista-mestra descreve a Tarefa 15
+> por **categoria** — *"cada material possui uma categoria específica… cada prateleira aceita
+> apenas determinados tipos"* — enquanto este plano modela por **par item→slot** (`pairs`). Os
+> dois coincidem aqui porque cada categoria tem exatamente um destino; `pairs` é a forma mais
+> estrita e não precisa mudar. A modelagem por categoria propriamente dita (várias categorias,
+> vários destinos, gaveta com cadeado) aparece na Tarefa 3 — plano
+> [0013](0013-tarefa-03-organizar-documentos.md), que generaliza este mesmo campo.
+>
+> Duas notas de rota:
+>
+> 1. **Cena.** Referências a `SCN_Main.unity` trocadas por **`SCN_FirstFloor.unity`** (a que está
+>    no `EditorBuildSettings`, com `Props_Almoxarifado` e `Estrutura_Almoxarifado` já montados).
+> 2. **Reuso do destaque.** O componente de destaque de slot vazio ("ficar chamativo", pedido
+>    literal do documento) nasce **aqui** e é reusado pelo `TaskPlacementSlot` do plano
+>    [0011](0011-infra-slot-de-posicionamento.md). Mantê-lo como componente próprio, desacoplado
+>    do `TaskDepositPoint`, é o que torna esse reuso possível — não embutir a lógica de destaque
+>    dentro do destino.
 
 ## 1. Context
 
@@ -128,7 +147,7 @@ erros no cliente (não dá nem para abrir o prompt de guardar um toner na caixa 
 `WRONG_SLOT` do servidor é a rede de segurança — testado no passo 7 da §6 desligando
 temporariamente o filtro de `_kind`.
 
-#### Cena `SCN_Main.unity`
+#### Cena `SCN_FirstFloor.unity`
 
 8 itens recebem `CarryableItem` (`_isTool = false`):
 
@@ -165,7 +184,7 @@ hora-extra-backend/docs/Networking/COMMUNICATION.md    MODIFY (4 entradas com pa
 hora-extra-client/Assets/Scripts/Interactions/EmptySlotHighlight.cs   NEW
 hora-extra-client/Assets/Scripts/Characters/TaskSystemBridge.cs       MODIFY (EnsureStorageEntries — 4 entradas com pairs)
 hora-extra-client/Assets/Scripts/UI/TaskPresentation.cs               MODIFY (4 TYPE_* + ramos)
-hora-extra-client/Assets/Scenes/SCN_Main.unity                        MODIFY (asset, Editor — 8 CarryableItem + 4 destinos com highlight)
+hora-extra-client/Assets/Scenes/SCN_FirstFloor.unity                        MODIFY (asset, Editor — 8 CarryableItem + 4 destinos com highlight)
 hora-extra-client/Assets/Graphics/MAT_SlotHighlight.mat               NEW (asset, Editor — material do halo pulsante)
 ```
 
@@ -180,7 +199,7 @@ Regressão obrigatória: `cd hora-extra-backend && npm test`.
 
 ## 6. Manual verification steps (phase: client)
 
-Pré-condição: backend rodando, `SCN_Main.unity` aberta, `UseTestToken = true`, "Clear on Play".
+Pré-condição: backend rodando, `SCN_FirstFloor.unity` aberta, `UseTestToken = true`, "Clear on Play".
 Para isolar uma task, esvaziar temporariamente o `_initialCatalog` deixando só ela.
 
 ### 1. Catálogo com pairs
