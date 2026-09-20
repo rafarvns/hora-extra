@@ -16301,7 +16301,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.UI.MissionHud
   _missionCountText: {fileID: 700000017}
   _successMessageText: {fileID: 700000022}
-  _howToText: {fileID: 700000045}
+  _howToText: {fileID: 700000043}
   _counterPrefix: "Miss\xF5es: "
   _showTaskList: 1
   _successMessage: "Tarefa conclu\xEDda com sucesso!"
