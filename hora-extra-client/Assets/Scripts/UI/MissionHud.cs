@@ -31,6 +31,10 @@ namespace HoraExtra.UI
         [Tooltip("Prefixo do contador. O 'X/Y' é anexado ao final.")]
         [SerializeField] private string _counterPrefix = "Missões: ";
 
+        [Tooltip("Se marcado, lista cada missão ativa com seu progresso abaixo do contador " +
+                 "(ex: '• Colete os documentos — 2/4'). Desmarque para voltar ao contador simples.")]
+        [SerializeField] private bool _showTaskList = true;
+
         [Tooltip("Mensagem exibida ao concluir uma tarefa.")]
         [SerializeField] private string _successMessage = "Tarefa concluída com sucesso!";
 
@@ -86,7 +90,29 @@ namespace HoraExtra.UI
             foreach (AssignedTask t in tasks)
                 if (t.Status == STATUS_COMPLETED) completed++;
 
-            _missionCountText.text = $"{_counterPrefix}{completed}/{total}";
+            if (!_showTaskList)
+            {
+                _missionCountText.text = $"{_counterPrefix}{completed}/{total}";
+                return;
+            }
+
+            // Lista cada missão com o progresso autoritativo que veio do servidor. O texto
+            // vem todo do TaskPresentation — este HUD não inventa rótulo nem conta nada
+            // por conta própria.
+            var sb = new System.Text.StringBuilder();
+            sb.Append(_counterPrefix).Append(completed).Append('/').Append(total);
+
+            foreach (AssignedTask t in tasks)
+            {
+                bool feita = t.Status == STATUS_COMPLETED;
+                sb.AppendLine();
+                sb.Append(feita ? "  [x] " : "  [ ] ");
+                sb.Append(TaskPresentation.GetTitle(t));
+                sb.Append(" - ");
+                sb.Append(TaskPresentation.GetProgressLabel(t));
+            }
+
+            _missionCountText.text = sb.ToString();
         }
 
         private void ShowSuccessMessage()
