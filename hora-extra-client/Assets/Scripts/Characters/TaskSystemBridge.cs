@@ -94,6 +94,16 @@ namespace HoraExtra.Characters
         /// </summary>
         public static event Action<string, AssignedTask> OnTaskUpdated;
 
+        /// <summary>
+        /// Disparado quando o servidor RECUSA um task_progress por regra de gameplay
+        /// (item desconhecido, destino errado, item já contabilizado...).
+        ///
+        /// É unicast: só chega para quem enviou o pacote recusado. Quem escuta deve
+        /// desfazer o efeito otimista — na prática, devolver o item para a mão do
+        /// jogador — e exibir Message.
+        /// </summary>
+        public static event Action<TaskRejectedPayload> OnTaskRejected;
+
         // === Lifecycle ===
 
         private void Awake()
@@ -124,6 +134,9 @@ namespace HoraExtra.Characters
             // Assina broadcast de atualização de status de task.
             SocketManager.Instance?.On(NetworkEvents.TASK_UPDATED, OnTaskUpdatedReceived);
 
+            // Assina recusa de gameplay (unicast ao remetente).
+            SocketManager.Instance?.On(NetworkEvents.TASK_REJECTED, OnTaskRejectedReceived);
+
             // Caso a conexão UDP já tenha sido estabelecida ANTES desta cena carregar
             // (ex: modo guest conecta na cena de menu), o CONN_SUCCESS já disparou e
             // não vai disparar de novo. Inicializa imediatamente para não perder o evento.
@@ -139,6 +152,7 @@ namespace HoraExtra.Characters
             SocketManager.Instance?.Off(NetworkEvents.CONNECTION_SUCCESS, OnConnectionSuccess);
             SocketManager.Instance?.Off(NetworkEvents.TASK_ASSIGNED, OnTaskAssignedReceived);
             SocketManager.Instance?.Off(NetworkEvents.TASK_UPDATED, OnTaskUpdatedReceived);
+            SocketManager.Instance?.Off(NetworkEvents.TASK_REJECTED, OnTaskRejectedReceived);
         }
 
         // === Métodos públicos ===
@@ -185,9 +199,31 @@ namespace HoraExtra.Characters
         /// </summary>
         public void SendProgress(string taskId)
         {
-            var payload = new TaskProgressPayload { TaskId = taskId };
+            SendProgress(taskId, null, null);
+        }
+
+        /// <summary>
+        /// Reporta a entrega de +1 item de uma task incremental, identificando QUAL item
+        /// foi entregue e ONDE.
+        /// Shape enviado: { taskId: string, itemId?: string, slotId?: string }
+        ///
+        /// Com itemId, o servidor valida que o item pertence à task, que o destino confere
+        /// (quando a entrada declara pairs) e que ele ainda não foi contabilizado. Em caso
+        /// de recusa, responde task_rejected em vez de task_updated — ver OnTaskRejected.
+        ///
+        /// itemId/slotId nulos são omitidos do JSON (NullValueHandling.Ignore no DTO), então
+        /// este overload é o mesmo pacote de antes quando chamado sem eles.
+        /// </summary>
+        public void SendProgress(string taskId, string itemId, string slotId)
+        {
+            var payload = new TaskProgressPayload
+            {
+                TaskId = taskId,
+                ItemId = string.IsNullOrEmpty(itemId) ? null : itemId,
+                SlotId = string.IsNullOrEmpty(slotId) ? null : slotId,
+            };
             SocketManager.Instance.Emit(NetworkEvents.TASK_PROGRESS, payload);
-            Debug.Log($"[NETWORK] task_progress enviado — taskId={taskId}");
+            Debug.Log($"[NETWORK] task_progress enviado — taskId={taskId} itemId={itemId ?? "-"} slotId={slotId ?? "-"}");
         }
 
         /// <summary>
@@ -283,10 +319,12 @@ namespace HoraExtra.Characters
                               $"currentProgress={task.CurrentProgress} status={task.Status}");
                 }
 
-                // Armazena tasks do jogador local.
+                // Armazena tasks do jogador local. MESCLA em vez de substituir: com a fila
+                // sequencial, o servidor reenvia task_assigned a cada nova tarefa liberada,
+                // e limpar aqui apagaria as já concluídas do HUD.
+                // A limpeza acontece uma vez só, no HandleConnectionEstablished.
                 if (IsLocalPlayer(payload.PlayerId))
                 {
-                    _myTasks.Clear();
                     foreach (var task in payload.Tasks)
                         _myTasks[task.Id] = task;
                 }
@@ -348,6 +386,34 @@ namespace HoraExtra.Characters
             catch (Exception ex)
             {
                 Debug.LogError($"[NETWORK] Falha ao parsear task_updated: {ex.Message} | raw: {data}");
+            }
+        }
+
+        /// <summary>
+        /// Callback de task_rejected: o servidor recusou um task_progress deste cliente.
+        /// Repassa o motivo para quem enviou (tipicamente o TaskDepositPoint), que desfaz
+        /// o efeito otimista devolvendo o item à mão.
+        /// Chamado na main thread.
+        /// </summary>
+        private void OnTaskRejectedReceived(JToken data)
+        {
+            try
+            {
+                var payload = data.ToObject<TaskRejectedPayload>();
+                if (payload == null)
+                {
+                    Debug.LogWarning("[NETWORK] task_rejected — payload nulo após deserialização.");
+                    return;
+                }
+
+                Debug.Log($"[NETWORK] task_rejected — code={payload.Code} taskId={payload.TaskId} " +
+                          $"itemId={payload.ItemId ?? "-"} message=\"{payload.Message}\"");
+
+                OnTaskRejected?.Invoke(payload);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[NETWORK] Falha ao parsear task_rejected: {ex.Message} | raw: {data}");
             }
         }
 
@@ -439,7 +505,11 @@ namespace HoraExtra.Characters
                     Id          = entry.id,
                     Description = entry.description,
                     Type        = entry.type,
-                    TargetCount = entry.targetCount
+                    TargetCount = entry.targetCount,
+                    // Listas vazias viram null para o NullValueHandling.Ignore omitir o campo:
+                    // um "items": [] na rede significaria "nenhum item é válido" e travaria a task.
+                    Items       = ToNullIfEmpty(entry.items),
+                    Pairs       = ToPairList(entry.pairs),
                 });
             }
 
@@ -449,6 +519,48 @@ namespace HoraExtra.Characters
 
             Debug.Log($"[NETWORK] task_catalog_register enviado — {tasks.Count} tarefa(s).");
         }
+
+        /// <summary>Devolve null para lista nula ou vazia, para o campo ser omitido do JSON.</summary>
+        private static List<string> ToNullIfEmpty(List<string> source)
+        {
+            return (source == null || source.Count == 0) ? null : new List<string>(source);
+        }
+
+        /// <summary>
+        /// Converte os pares do Inspector para o DTO de rede. Pares incompletos são
+        /// descartados aqui — o servidor também os filtra, mas errar cedo evita mandar
+        /// lixo na rede e deixa o aviso no Console de quem está autorando a cena.
+        /// </summary>
+        private static List<TaskItemPair> ToPairList(List<TaskPairData> source)
+        {
+            if (source == null || source.Count == 0) return null;
+
+            var result = new List<TaskItemPair>(source.Count);
+            foreach (var pair in source)
+            {
+                if (pair == null || string.IsNullOrWhiteSpace(pair.itemId) || string.IsNullOrWhiteSpace(pair.slotId))
+                {
+                    Debug.LogWarning("[GAMEPLAY] TaskSystemBridge — par item/slot incompleto no catálogo do Inspector, descartado.");
+                    continue;
+                }
+                result.Add(new TaskItemPair { ItemId = pair.itemId, SlotId = pair.slotId });
+            }
+            return result.Count > 0 ? result : null;
+        }
+    }
+
+    /// <summary>
+    /// Par item→destino no Inspector. Existe como classe própria porque Dictionary não
+    /// serializa no Inspector do Unity — o par precisa ser uma lista de objetos.
+    /// </summary>
+    [Serializable]
+    public class TaskPairData
+    {
+        [Tooltip("itemId do CarryableItem que conta progresso.")]
+        public string itemId;
+
+        [Tooltip("slotId do TaskDepositPoint onde este item DEVE ser entregue.")]
+        public string slotId;
     }
 
     /// <summary>
@@ -470,5 +582,13 @@ namespace HoraExtra.Characters
 
         [Tooltip("Quantidade alvo para conclusão da tarefa.")]
         public int targetCount;
+
+        [Tooltip("Opcional: itemIds que contam progresso nesta task. Vazio = qualquer entrega conta +1. " +
+                 "Os ids precisam bater EXATAMENTE com o campo _itemId dos CarryableItem na cena.")]
+        public List<string> items = new List<string>();
+
+        [Tooltip("Opcional: destino obrigatório por item. Use quando entregar no lugar errado " +
+                 "deve ser recusado (ex: encomenda na estante certa).")]
+        public List<TaskPairData> pairs = new List<TaskPairData>();
     }
 }

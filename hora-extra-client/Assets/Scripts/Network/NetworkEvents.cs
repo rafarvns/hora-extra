@@ -40,4 +40,11 @@ public static class NetworkEvents
     public const string PONG = "pong";
     public const string TASK_ASSIGNED = "task_assigned";
     public const string TASK_UPDATED = "task_updated";
+
+    /// <summary>
+    /// Unicast ao remetente: o servidor recusou um task_progress por regra de gameplay
+    /// (item errado, destino errado, item repetido...). Diferente de ERROR, que sinaliza
+    /// pacote malformado. Payload: { taskId, code, message, itemId? }.
+    /// </summary>
+    public const string TASK_REJECTED = "task_rejected";
 }
