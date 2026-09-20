@@ -77,6 +77,23 @@ namespace HoraExtra.Interactions
         /// <summary>True enquanto há um task_progress aguardando resposta do servidor.</summary>
         private bool IsAwaitingServer => _pendingTaskId != null;
 
+        /// <summary>Categoria aceita por este destino. Lida pelo indicador visual.</summary>
+        public string AcceptedKind => _acceptedKind;
+
+        /// <summary>Tipo de task que este destino atende. Lido pelo indicador visual.</summary>
+        public string TaskType => _taskType;
+
+        /// <summary>
+        /// True quando este destino aceitaria o que o jogador está carregando AGORA —
+        /// independente de ele estar perto. É o que o indicador usa para se mostrar à
+        /// distância: perto já existe o prompt.
+        /// </summary>
+        public bool AguardandoItem(string kindNaMao)
+        {
+            if (string.IsNullOrEmpty(kindNaMao) || kindNaMao != _acceptedKind) return false;
+            return FindActiveTask() != null;
+        }
+
         private void Awake()
         {
             // Basta UM collider de gatilho; o asset pode ter também um collider sólido
@@ -124,10 +141,11 @@ namespace HoraExtra.Interactions
             var task = FindActiveTask();
             if (!CanDeliver(task))
             {
-                _prompt?.Hide(this);
+                ExplainWhyNot(task);
                 return;
             }
 
+            _ultimoMotivo = null;   // voltou a poder entregar: o próximo bloqueio loga de novo
             _prompt?.Show(this, BuildPromptMessage(task));
 
             if (InteractionInput.InteractPressed())
@@ -154,6 +172,54 @@ namespace HoraExtra.Interactions
             if (_carrierInRange == null || !_carrierInRange.IsCarrying) return false;
             return _carrierInRange.CarriedKind == _acceptedKind;
         }
+
+        /// <summary>
+        /// Diz ao jogador POR QUE a entrega não está disponível, em vez de só esconder o
+        /// prompt. Um destino mudo é indistinguível de um destino quebrado — e com a fila
+        /// sequencial o caso mais comum ("a tarefa ainda não é esta") é invisível.
+        ///
+        /// Loga uma vez por mudança de estado; em Update, logar sempre inundaria o Console.
+        /// </summary>
+        private void ExplainWhyNot(AssignedTask task)
+        {
+            string motivo;
+            bool mostrarNaTela;
+
+            if (_carrierInRange == null || !_carrierInRange.IsCarrying)
+            {
+                motivo = "mão vazia";
+                mostrarNaTela = false;                      // nada a dizer: ele não trouxe nada
+            }
+            else if (_carrierInRange.CarriedKind != _acceptedKind)
+            {
+                motivo = $"aqui só entra '{_acceptedKind}', e você carrega '{_carrierInRange.CarriedKind}'";
+                mostrarNaTela = true;
+            }
+            else if (task == null)
+            {
+                motivo = $"a tarefa '{_taskType}' não está ativa agora";
+                mostrarNaTela = true;
+            }
+            else
+            {
+                motivo = "condição desconhecida";
+                mostrarNaTela = true;
+            }
+
+            if (motivo != _ultimoMotivo)
+            {
+                _ultimoMotivo = motivo;
+                Debug.Log($"[GAMEPLAY] TaskDepositPoint '{_slotId}' — sem prompt: {motivo}.");
+            }
+
+            if (mostrarNaTela && task == null && _carrierInRange != null && _carrierInRange.IsCarrying
+                && _carrierInRange.CarriedKind == _acceptedKind)
+                _prompt?.Show(this, "Esta não é a tarefa atual");
+            else
+                _prompt?.Hide(this);
+        }
+
+        private string _ultimoMotivo;
 
         private string BuildPromptMessage(AssignedTask task)
         {

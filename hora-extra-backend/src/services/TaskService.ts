@@ -65,13 +65,12 @@ export interface AssignedTask {
     status: 'pending' | 'in_progress' | 'completed' | 'failed';
 }
 
-const TASK_ASSIGN_COUNT = 3;
-
 /**
  * TaskService: gerencia o catálogo de tarefas e atribuições por jogador (in-memory).
  *
  * O catálogo é organizado POR SALA: cada sala tem seu próprio conjunto de tasks.
- * `assignRandomTasks` sorteia N=3 tasks do catálogo DA SALA via Fisher-Yates.
+ * `assignRandomTasks` embaralha o catálogo DA SALA via Fisher-Yates e enfileira
+ * todas as tarefas, entregando UMA por vez conforme o jogador conclui.
  * Idempotência silenciosa: segunda solicitação do mesmo jogador retorna [].
  * Sem persistência — estado é resetado ao reiniciar o servidor.
  */
@@ -97,7 +96,7 @@ export class TaskService {
      *
      * O jogador recebe uma por vez: `assignRandomTasks` sorteia o lote, entrega a
      * primeira e guarda o resto aqui; `advanceQueue` libera a seguinte quando a atual
-     * termina. Evita o jogador encarar 3 tarefas simultâneas sem saber por onde começar.
+     * termina. Evita o jogador encarar várias tarefas simultâneas sem saber por onde começar.
      */
     private taskQueue = new Map<string, TaskEntry[]>();
 
@@ -127,9 +126,11 @@ export class TaskService {
     }
 
     /**
-     * Sorteia N tasks aleatórias do catálogo DA SALA e atribui ao jogador.
+     * Embaralha o catálogo DA SALA, atribui a primeira tarefa ao jogador e enfileira o
+     * restante (ver `advanceQueue`). Não há teto: a fila acompanha o tamanho do catálogo,
+     * então acrescentar uma tarefa nova ao catálogo já passa a valer.
+     *
      * Idempotente: se o jogador já tem tasks atribuídas, loga warn e retorna [].
-     * Se o catálogo da sala tiver menos de N tasks, atribui todas.
      * Lança ApiError se o catálogo da sala estiver vazio ou não existir.
      */
     public assignRandomTasks(roomId: string, playerId: string): AssignedTask[] {
@@ -144,12 +145,9 @@ export class TaskService {
             return [];
         }
 
-        const n = Math.min(TASK_ASSIGN_COUNT, roomCatalog.length);
-        const shuffled = this.fisherYates([...roomCatalog]);
-        const picked = shuffled.slice(0, n);
-
-        // Entrega só a primeira; o resto espera na fila (ver taskQueue).
-        const [primeira, ...resto] = picked;
+        // Sem teto fixo: a fila leva o catálogo INTEIRO da sala, embaralhado. Acrescentar
+        // uma tarefa nova ao catálogo passa a valer sozinho, sem tocar no servidor.
+        const [primeira, ...resto] = this.fisherYates([...roomCatalog]);
         const assigned = [this.toAssigned(primeira)];
 
         this.assignments.set(playerId, assigned);

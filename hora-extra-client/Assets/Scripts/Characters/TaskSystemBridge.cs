@@ -32,11 +32,14 @@ namespace HoraExtra.Characters
         /// cria um GameObject em runtime com DontDestroyOnLoad.
         ///
         /// Mesmo padrão de <see cref="SocketManager.EnsureExists"/> e
-        /// <see cref="RemotePlayerSpawner.EnsureExists"/>: permite que cenas de level
-        /// (ex: SCN_FirstFloor) funcionem sem precisar do GameObject pré-configurado no
-        /// Inspector. O catálogo inicial é preenchido programaticamente no Awake
-        /// (EnsureCoffeeMakerEntry / EnsurePaperCollectEntry), então a instância criada
-        /// em runtime registra o mesmo catálogo da versão configurada à mão.
+        /// <see cref="RemotePlayerSpawner.EnsureExists"/>: garante a ponte inscrita em
+        /// CONN_SUCCESS antes do handshake, mesmo quando chamada do menu.
+        ///
+        /// A instância criada aqui nasce **sem catálogo** — e é assim que deve ser. O
+        /// catálogo é autorado na cena de level; quando ela carrega, o TaskSystemBridge
+        /// dela entrega a lista via <see cref="AdoptCatalog"/> antes de se destruir.
+        /// Inventar um catálogo programático aqui fazia o servidor registrar tarefas que
+        /// não existem no mundo e ignorar as que existem.
         ///
         /// O SocketManager é garantido ANTES do AddComponent porque o OnEnable deste
         /// componente assina CONN_SUCCESS / TASK_ASSIGNED / TASK_UPDATED via
@@ -104,6 +107,16 @@ namespace HoraExtra.Characters
         /// </summary>
         public static event Action<TaskRejectedPayload> OnTaskRejected;
 
+        /// <summary>
+        /// Enquanto true, a atribuição automática de tarefas fica retida mesmo depois do
+        /// catálogo registrado. Usado pela introdução da partida (ver <c>IntroMessage</c>)
+        /// para o jogador ler a mensagem antes de receber a primeira tarefa.
+        ///
+        /// É estática porque quem segura (um objeto da cena) e quem espera (a ponte, que
+        /// sobrevive entre cenas) não se conhecem.
+        /// </summary>
+        public static bool HoldTaskRequest { get; set; }
+
         // === Lifecycle ===
 
         private void Awake()
@@ -112,13 +125,19 @@ namespace HoraExtra.Characters
             {
                 Instance = this;
                 DontDestroyOnLoad(gameObject);
-
-                // Catálogo inicial: garantir entradas padrão caso não configuradas no Inspector.
-                EnsureCoffeeMakerEntry();
-                EnsurePaperCollectEntry();
             }
             else
             {
+                // Esta instância é da CENA e chegou depois de uma persistida (criada no menu
+                // por EnsureExists, que não tem catálogo configurado). Antes de morrer, ela
+                // entrega o catálogo autorado — que é a fonte da verdade do level.
+                //
+                // Sem isto, o catálogo da cena era silenciosamente descartado e o servidor
+                // ficava só com o que a instância do menu tivesse: nenhuma das tarefas da
+                // recepção existia, e os destinos nunca ativavam.
+                if (_initialCatalog != null && _initialCatalog.Count > 0)
+                    Instance.AdoptCatalog(_initialCatalog);
+
                 Destroy(gameObject);
             }
         }
@@ -162,6 +181,26 @@ namespace HoraExtra.Characters
         /// Payload é vazio ({}). O playerId é obtido da sessão no servidor.
         /// Deve ser chamado após a conexão estar estabelecida e o catálogo registrado.
         /// </summary>
+        /// <summary>
+        /// Substitui o catálogo desta instância pelo autorado na cena recém-carregada e
+        /// re-registra no servidor.
+        ///
+        /// Chamado pela instância da cena logo antes de se destruir (ver Awake). Se a conexão
+        /// já estiver de pé — o caso normal, porque o menu conecta antes de carregar o level —
+        /// registra na hora e pede as tarefas, já que o sorteio anterior (se houve) usou um
+        /// catálogo que não é o desta cena.
+        /// </summary>
+        public void AdoptCatalog(List<TaskEntryData> catalogoDaCena)
+        {
+            _initialCatalog = new List<TaskEntryData>(catalogoDaCena);
+            _catalogRegistered = false;
+
+            Debug.Log($"[GAMEPLAY] TaskSystemBridge — catálogo da cena adotado ({_initialCatalog.Count} entrada(s)).");
+
+            if (SocketManager.Instance != null && SocketManager.Instance.IsConnected)
+                HandleConnectionEstablished();
+        }
+
         public void RequestMyTasks()
         {
             SocketManager.Instance.Emit(NetworkEvents.TASK_ASSIGN_REQUEST, new { });
@@ -276,7 +315,9 @@ namespace HoraExtra.Characters
             // O delay garante que o servidor processe task_catalog_register antes do
             // task_assign_request — assignRandomTasks lança erro se o catálogo da sala
             // ainda não existir (ver TaskService.assignRandomTasks no backend).
-            if (_autoRequestTasksOnConnect)
+            // Só pede tarefas se o catálogo foi de fato registrado; sem isso o servidor
+            // responderia "catálogo da sala está vazio".
+            if (_autoRequestTasksOnConnect && _catalogRegistered)
                 StartCoroutine(RequestTasksAfterCatalog());
         }
 
@@ -287,6 +328,12 @@ namespace HoraExtra.Characters
         private IEnumerator RequestTasksAfterCatalog()
         {
             yield return new WaitForSeconds(_autoRequestDelaySeconds);
+
+            // Segura enquanto a introducao estiver na tela. Sem trava (cena sem IntroMessage)
+            // o laco nao executa nenhuma iteracao e o comportamento e o de antes.
+            while (HoldTaskRequest)
+                yield return null;
+
             RequestMyTasks();
         }
 
@@ -431,61 +478,6 @@ namespace HoraExtra.Characters
         }
 
         /// <summary>
-        /// Tipo de task das coletas de papéis/documentos. Usado por MissionPaperCollectible
-        /// para localizar a task certa via FindMyTask.
-        /// </summary>
-        public const string PAPER_COLLECT_TYPE = "collect";
-
-        private const string PAPER_COLLECT_TASK_ID = "task-collect-papers-01";
-
-        /// <summary>
-        /// Garante que o catálogo inicial contém a entrada de coleta de documentos.
-        /// targetCount = 4 espelha a quantidade de papéis na cena (objetos com
-        /// MissionPaperCollectible). Ajuste aqui se mudar o número de coletáveis.
-        /// </summary>
-        private void EnsurePaperCollectEntry()
-        {
-            const int PAPER_COUNT = 4;
-            foreach (var entry in _initialCatalog)
-            {
-                if (entry.id == PAPER_COLLECT_TASK_ID) return;
-            }
-            _initialCatalog.Add(new TaskEntryData
-            {
-                id          = PAPER_COLLECT_TASK_ID,
-                description = "Colete os documentos",
-                type        = PAPER_COLLECT_TYPE,
-                targetCount = PAPER_COUNT
-            });
-            Debug.Log("[GAMEPLAY] TaskSystemBridge — entrada collect (documentos) adicionada ao catálogo inicial.");
-        }
-
-        /// <summary>
-        /// Garante que o catálogo inicial contém a entrada da cafeteira.
-        /// Adicionada programaticamente caso o Inspector não tenha sido configurado.
-        /// </summary>
-        private void EnsureCoffeeMakerEntry()
-        {
-            const string COFFEE_TASK_ID = "task-coffee-maker-01";
-            bool found = false;
-            foreach (var entry in _initialCatalog)
-            {
-                if (entry.id == COFFEE_TASK_ID) { found = true; break; }
-            }
-            if (!found)
-            {
-                _initialCatalog.Add(new TaskEntryData
-                {
-                    id          = COFFEE_TASK_ID,
-                    description = "Prepare o café",
-                    type        = "coffee_maker",
-                    targetCount = 3
-                });
-                Debug.Log("[GAMEPLAY] TaskSystemBridge — entrada coffee_maker adicionada ao catálogo inicial.");
-            }
-        }
-
-        /// <summary>
         /// Constrói e envia o pacote task_catalog_register com as entradas do catálogo inicial.
         /// Shape enviado: { tasks: [{ id, description, type, targetCount }] } — sem npcId.
         /// </summary>
@@ -494,6 +486,15 @@ namespace HoraExtra.Characters
             if (_catalogRegistered)
             {
                 Debug.Log("[GAMEPLAY] TaskSystemBridge.RegisterCatalog — catálogo já registrado, ignorando.");
+                return;
+            }
+
+            // Instância criada pelo menu (EnsureExists) ainda não recebeu o catálogo da cena.
+            // Registrar uma lista vazia faria o servidor recusar o task_assign_request logo em
+            // seguida ("catálogo da sala está vazio"). Espera o AdoptCatalog.
+            if (_initialCatalog == null || _initialCatalog.Count == 0)
+            {
+                Debug.Log("[GAMEPLAY] TaskSystemBridge.RegisterCatalog — sem catálogo ainda; aguardando a cena de level.");
                 return;
             }
 

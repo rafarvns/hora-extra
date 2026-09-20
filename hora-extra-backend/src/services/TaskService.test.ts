@@ -117,7 +117,7 @@ describe('TaskService', () => {
         expect(retrieved).toEqual(assigned);
     });
 
-    it('catálogo menor que TASK_ASSIGN_COUNT: entrega a primeira e enfileira o resto', () => {
+    it('entrega a primeira e enfileira o resto do catálogo', () => {
         // Registra catálogo com apenas 2 tasks (< 3)
         service.registerCatalog('r1', [
             { id: 'small-1', description: 'Pequena 1', type: 'collect', targetCount: 1 },
@@ -403,19 +403,21 @@ describe('TaskService — fila sequencial', () => {
         expect(todas.find(t => t.id === primeira.id)!.status).toBe('completed');
     });
 
-    it('a fila entrega no máximo o total configurado e depois seca', () => {
+    it('a fila entrega TODAS as tarefas do catálogo da sala, uma por vez', () => {
         seedMany(10);
         service.assignRandomTasks('r1', 'p1');
 
         let entregues = 1;
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 20; i++) {
             concluir('p1');
             const proxima = service.advanceQueue('p1');
             if (proxima === null) break;
             entregues++;
         }
 
-        expect(entregues).toBe(3);                    // TASK_ASSIGN_COUNT
+        // Sem teto fixo: a fila acompanha o tamanho do catálogo. Acrescentar uma tarefa
+        // nova ao catálogo passa a valer sem mexer no servidor.
+        expect(entregues).toBe(10);
         expect(service.advanceQueue('p1')).toBeNull(); // seca e continua seca
     });
 
@@ -423,11 +425,11 @@ describe('TaskService — fila sequencial', () => {
         seedMany(10);
         const vistos = new Set<string>();
         vistos.add(service.assignRandomTasks('r1', 'p1')[0].id);
-        for (let i = 0; i < 2; i++) {
+        for (let i = 0; i < 9; i++) {
             concluir('p1');
             vistos.add(service.advanceQueue('p1')!.id);
         }
-        expect(vistos.size).toBe(3);
+        expect(vistos.size).toBe(10);
     });
 
     it('catálogo menor que o total: a fila entrega só o que existe', () => {

@@ -1397,8 +1397,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.8000, y: 1.0667, z: 0.8000}
-  m_Center: {x: -0.00022514536, y: 0.4000, z: 0.0048084254}
+  m_Size: {x: 0.8, y: 1.0667, z: 0.8}
+  m_Center: {x: -0.00022514536, y: 0.4, z: 0.0048084254}
 --- !u!1001 &52703434
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1944,19 +1944,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3877025530316016204, guid: 38f068d20c4cae84ea6ce0135bff6c3a, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.9672162
+      value: 0.9878245
       objectReference: {fileID: 0}
     - target: {fileID: 3877025530316016204, guid: 38f068d20c4cae84ea6ce0135bff6c3a, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3877025530316016204, guid: 38f068d20c4cae84ea6ce0135bff6c3a, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.25395444
+      value: -0.15557238
       objectReference: {fileID: 0}
     - target: {fileID: 3877025530316016204, guid: 38f068d20c4cae84ea6ce0135bff6c3a, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3877025530316016204, guid: 38f068d20c4cae84ea6ce0135bff6c3a, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -1964,7 +1964,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3877025530316016204, guid: 38f068d20c4cae84ea6ce0135bff6c3a, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
-      value: 29.423
+      value: -17.9
       objectReference: {fileID: 0}
     - target: {fileID: 3877025530316016204, guid: 38f068d20c4cae84ea6ce0135bff6c3a, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
@@ -6109,6 +6109,12 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: ead0276d845545a4bbf0d75ff68cfd14, type: 3}
       insertIndex: -1
+      addedObject: {fileID: 777000002}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: ead0276d845545a4bbf0d75ff68cfd14, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 777000001}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: ead0276d845545a4bbf0d75ff68cfd14, type: 3}
+      insertIndex: -1
       addedObject: {fileID: 253907689}
   m_SourcePrefab: {fileID: 100100000, guid: ead0276d845545a4bbf0d75ff68cfd14, type: 3}
 --- !u!1 &253907688 stripped
@@ -6403,7 +6409,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 2f80d0a9d5f0e674eb0925cc8da86d78, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -14.045
+      value: -14.56
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 2f80d0a9d5f0e674eb0925cc8da86d78, type: 3}
       propertyPath: m_LocalPosition.y
@@ -6411,7 +6417,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 2f80d0a9d5f0e674eb0925cc8da86d78, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 4.882
+      value: 4.252
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 2f80d0a9d5f0e674eb0925cc8da86d78, type: 3}
       propertyPath: m_LocalRotation.w
@@ -6480,7 +6486,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 5.8252, y: 7.7670, z: 5.8252}
+  m_Size: {x: 5.8252, y: 7.767, z: 5.8252}
   m_Center: {x: 0, y: 2.9126, z: 0}
 --- !u!1001 &267230182
 PrefabInstance:
@@ -6778,15 +6784,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7992629985860295614, guid: 02858d4d16dfc874198537d11046e408, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.97183096
+      value: -0.0949769
       objectReference: {fileID: 0}
     - target: {fileID: 7992629985860295614, guid: 02858d4d16dfc874198537d11046e408, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7992629985860295614, guid: 02858d4d16dfc874198537d11046e408, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.23567916
+      value: 0.99547946
       objectReference: {fileID: 0}
     - target: {fileID: 7992629985860295614, guid: 02858d4d16dfc874198537d11046e408, type: 3}
       propertyPath: m_LocalRotation.z
@@ -6798,7 +6804,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7992629985860295614, guid: 02858d4d16dfc874198537d11046e408, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
-      value: 27.263
+      value: 190.9
       objectReference: {fileID: 0}
     - target: {fileID: 7992629985860295614, guid: 02858d4d16dfc874198537d11046e408, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
@@ -7282,7 +7288,7 @@ Transform:
   m_GameObject: {fileID: 308877622}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0.7071068, w: 0.7071068}
-  m_LocalPosition: {x: -10.983, y: 0.6733, z: -1.029}
+  m_LocalPosition: {x: -10.983, y: 0.156, z: -0.362}
   m_LocalScale: {x: 1.5, y: 1.5, z: 1.5}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -10290,6 +10296,7 @@ GameObject:
   - component: {fileID: 444118710}
   - component: {fileID: 444118709}
   - component: {fileID: 444118708}
+  - component: {fileID: 777000013}
   m_Layer: 0
   m_Name: Liquido_Agua3
   m_TagString: Rodo
@@ -10316,8 +10323,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 2.1333334, y: 1.4222226, z: 0.20000005}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 4.3333, y: 2.3704, z: 8.374}
+  m_Center: {x: 0, y: 0, z: 3.7683}
 --- !u!212 &444118709
 SpriteRenderer:
   serializedVersion: 2
@@ -13469,8 +13476,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.8000, y: 1.0667, z: 0.8000}
-  m_Center: {x: -0.00022514537, y: 0.4000, z: 0.004808426}
+  m_Size: {x: 0.8, y: 1.0667, z: 0.8}
+  m_Center: {x: -0.00022514537, y: 0.4, z: 0.004808426}
 --- !u!1001 &596606155
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -14773,7 +14780,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 5.8252, y: 7.7670, z: 5.8252}
+  m_Size: {x: 5.8252, y: 7.767, z: 5.8252}
   m_Center: {x: 6.13682e-11, y: 2.9126, z: -0.18905294}
 --- !u!4 &661713409 stripped
 Transform:
@@ -15793,14 +15800,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Characters.TaskSystemBridge
   _initialCatalog:
-  - id: task-coffee-maker-01
-    description: "Fa\xE7a o caf\xE9 da tarde"
-    type: coffee_maker
-    targetCount: 3
-    items: []
-    pairs: []
   - id: task-collect-papers-01
-    description: Organizar os papeis
+    description: "Colete os pap\xE9is e coloque no recipiente na mesa"
     type: collect_papers
     targetCount: 4
     items:
@@ -15824,6 +15825,18 @@ MonoBehaviour:
     items:
     - revista-01
     - revista-02
+    pairs: []
+  - id: task-limpar-chao-01
+    description: Limpe as manchas de agua e cafe do chao
+    type: clean_floor
+    targetCount: 6
+    items:
+    - mancha-agua-01
+    - mancha-agua-02
+    - mancha-agua-03
+    - mancha-agua-04
+    - mancha-cafe-01
+    - mancha-cafe-02
     pairs: []
   _autoRequestTasksOnConnect: 1
   _autoRequestDelaySeconds: 0.5
@@ -16288,7 +16301,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.UI.MissionHud
   _missionCountText: {fileID: 700000017}
   _successMessageText: {fileID: 700000022}
+  _howToText: {fileID: 700000045}
   _counterPrefix: "Miss\xF5es: "
+  _showTaskList: 1
   _successMessage: "Tarefa conclu\xEDda com sucesso!"
   _successMessageDuration: 2.5
 --- !u!1 &700000034
@@ -16520,7 +16535,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &700000043
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18757,6 +18772,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 118e4d4a1a08408439dde5df4b286cc5, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1722797872}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 118e4d4a1a08408439dde5df4b286cc5, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 775000001}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 118e4d4a1a08408439dde5df4b286cc5, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 775000002}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 118e4d4a1a08408439dde5df4b286cc5, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 776000003}
   m_SourcePrefab: {fileID: 100100000, guid: 118e4d4a1a08408439dde5df4b286cc5, type: 3}
 --- !u!1001 &751142009
 PrefabInstance:
@@ -19117,6 +19141,377 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
+--- !u!114 &771000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 700000053}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dbf8ff424349a8247bd7996d221397d5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.InteractionPrompt
+  _label: {fileID: 700000029}
+  _hiddenOnAwake: 1
+--- !u!114 &771000002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1182457969}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91c3e3a6c17a61744b1e2607dd1e3ef9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.CarryableItem
+  _itemId: papel-01
+  _kind: papel
+  _isTool: 0
+  _pickupMessage: Aperte [E] para pegar o papel
+  _prompt: {fileID: 771000001}
+  _pickupSound: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb3, type: 3}
+  _pickupVolume: 1
+--- !u!114 &771000003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1108840628}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91c3e3a6c17a61744b1e2607dd1e3ef9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.CarryableItem
+  _itemId: papel-02
+  _kind: papel
+  _isTool: 0
+  _pickupMessage: Aperte [E] para pegar o papel
+  _prompt: {fileID: 771000001}
+  _pickupSound: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb3, type: 3}
+  _pickupVolume: 1
+--- !u!114 &771000004
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 266494712}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91c3e3a6c17a61744b1e2607dd1e3ef9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.CarryableItem
+  _itemId: papel-03
+  _kind: papel
+  _isTool: 0
+  _pickupMessage: Aperte [E] para pegar o papel
+  _prompt: {fileID: 771000001}
+  _pickupSound: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb3, type: 3}
+  _pickupVolume: 1
+--- !u!114 &771000005
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 655640656}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91c3e3a6c17a61744b1e2607dd1e3ef9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.CarryableItem
+  _itemId: papel-04
+  _kind: papel
+  _isTool: 0
+  _pickupMessage: Aperte [E] para pegar o papel
+  _prompt: {fileID: 771000001}
+  _pickupSound: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb3, type: 3}
+  _pickupVolume: 1
+--- !u!114 &771000006
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1891267444}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ddd9a14725e16d439b47d9f5e939a28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.TaskDepositPoint
+  _slotId: slot-caixa-papeis
+  _acceptedKind: papel
+  _taskType: collect_papers
+  _promptMessage: Aperte [E] para guardar o papel
+  _prompt: {fileID: 771000001}
+  _rejectionMessageSeconds: 3
+  _depositSound: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb3, type: 3}
+  _depositVolume: 1
+--- !u!1 &772000101
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 772000102}
+  - component: {fileID: 772000103}
+  m_Layer: 0
+  m_Name: BackgroundMusic
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &772000102
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 772000101}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &772000103
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 772000101}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c39a7d1e5f8b4a24d9061e2a3c4b8f71, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Audio.BackgroundMusic
+  _clip: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb2, type: 3}
+  _volume: 0.5
+  _fadeInSeconds: 1.5
+--- !u!65 &773000001
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 308877622}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.8, y: 1.0667, z: 0.8}
+  m_Center: {x: 0, y: 0.4, z: 0}
+--- !u!114 &773000002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 308877622}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91c3e3a6c17a61744b1e2607dd1e3ef9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.CarryableItem
+  _itemId: caneta-01
+  _kind: caneta
+  _isTool: 0
+  _pickupMessage: Aperte [E] para pegar a caneta
+  _prompt: {fileID: 771000001}
+  _pickupSound: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb3, type: 3}
+  _pickupVolume: 1
+--- !u!65 &773000003
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 683878248}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.8, y: 1.0667, z: 0.8}
+  m_Center: {x: 0, y: 0.4, z: 0}
+--- !u!114 &773000004
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 683878248}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91c3e3a6c17a61744b1e2607dd1e3ef9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.CarryableItem
+  _itemId: caneta-02
+  _kind: caneta
+  _isTool: 0
+  _pickupMessage: Aperte [E] para pegar a caneta
+  _prompt: {fileID: 771000001}
+  _pickupSound: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb3, type: 3}
+  _pickupVolume: 1
+--- !u!114 &773000005
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 52311513}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91c3e3a6c17a61744b1e2607dd1e3ef9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.CarryableItem
+  _itemId: revista-01
+  _kind: revista
+  _isTool: 0
+  _pickupMessage: Aperte [E] para pegar a revista
+  _prompt: {fileID: 771000001}
+  _pickupSound: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb3, type: 3}
+  _pickupVolume: 1
+--- !u!114 &773000006
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 594970340}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91c3e3a6c17a61744b1e2607dd1e3ef9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.CarryableItem
+  _itemId: revista-02
+  _kind: revista
+  _isTool: 0
+  _pickupMessage: Aperte [E] para pegar a revista
+  _prompt: {fileID: 771000001}
+  _pickupSound: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb3, type: 3}
+  _pickupVolume: 1
+--- !u!1 &773000010 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 208974801609211804, guid: 0177ee00efab698438288ebb753747ce, type: 3}
+  m_PrefabInstance: {fileID: 1615324550}
+  m_PrefabAsset: {fileID: 0}
+--- !u!65 &773000011
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 773000010}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 3.5, y: 2, z: 3.5}
+  m_Center: {x: 0, y: -0.1, z: 0}
+--- !u!114 &773000012
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 773000010}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ddd9a14725e16d439b47d9f5e939a28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.TaskDepositPoint
+  _slotId: slot-porta-canetas
+  _acceptedKind: caneta
+  _taskType: collect_pens
+  _promptMessage: Aperte [E] para guardar a caneta
+  _prompt: {fileID: 771000001}
+  _rejectionMessageSeconds: 3
+  _depositSound: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb3, type: 3}
+  _depositVolume: 1
+--- !u!1 &774000001
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 774000002}
+  - component: {fileID: 774000003}
+  m_Layer: 0
+  m_Name: IntroMessage
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &774000002
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 774000001}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &774000003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 774000001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00d3d95ea7b1d384ea9ba1635b4323db, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.UI.IntroMessage
+  _message: "Organize o escrit\xF3rio antes que os funcion\xE1rios cheguem"
+  _label: {fileID: 0}
+  _fadeInSeconds: 0.6
+  _holdSeconds: 5
+  _fadeOutSeconds: 0.8
+  _holdTasksUntilDone: 1
 --- !u!1 &774872456 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: ee377737e0e4af845988a6fd0b6bec4c, type: 3}
@@ -19148,6 +19543,276 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.6547715, y: 1.4465343, z: 0.61092705}
   m_Center: {x: -0.0014012754, y: 0.69959253, z: -0.002804786}
+--- !u!65 &775000001
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1722797868}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 3.5, y: 2, z: 3.5}
+  m_Center: {x: 0, y: 0.6, z: 0}
+--- !u!114 &775000002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1722797868}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ddd9a14725e16d439b47d9f5e939a28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.TaskDepositPoint
+  _slotId: slot-mesa-revistas
+  _acceptedKind: revista
+  _taskType: collect_magazines
+  _promptMessage: Aperte [E] para colocar a revista na mesa
+  _prompt: {fileID: 771000001}
+  _rejectionMessageSeconds: 3
+  _depositSound: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb3, type: 3}
+  _depositVolume: 1
+--- !u!114 &776000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1891267444}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0701cc895c01c45429936418fcacea4f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.DepositHighlight
+  _altura: 0.7
+  _tamanho: 0.18
+  _amplitudeSobeDesce: 0.1
+  _velocidadeSobeDesce: 2
+  _velocidadeGiro: 90
+  _cor: {r: 1, g: 0.82, b: 0.15, a: 1}
+  _customVisual: {fileID: 0}
+--- !u!114 &776000002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 773000010}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0701cc895c01c45429936418fcacea4f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.DepositHighlight
+  _altura: 0.7
+  _tamanho: 0.18
+  _amplitudeSobeDesce: 0.1
+  _velocidadeSobeDesce: 2
+  _velocidadeGiro: 90
+  _cor: {r: 1, g: 0.82, b: 0.15, a: 1}
+  _customVisual: {fileID: 0}
+--- !u!114 &776000003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1722797868}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0701cc895c01c45429936418fcacea4f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.DepositHighlight
+  _altura: 0.7
+  _tamanho: 0.18
+  _amplitudeSobeDesce: 0.1
+  _velocidadeSobeDesce: 2
+  _velocidadeGiro: 90
+  _cor: {r: 1, g: 0.82, b: 0.15, a: 1}
+  _customVisual: {fileID: 0}
+--- !u!114 &777000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 253907688}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91c3e3a6c17a61744b1e2607dd1e3ef9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.CarryableItem
+  _itemId: ferramenta-rodo
+  _kind: rodo
+  _isTool: 1
+  _pickupMessage: Aperte [E] para pegar o rodo
+  _prompt: {fileID: 771000001}
+  _pickupSound: {fileID: 0}
+  _pickupVolume: 1
+--- !u!65 &777000002
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 253907688}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1.2, y: 1.6, z: 1.2}
+  m_Center: {x: 0, y: 0.6, z: 0}
+--- !u!114 &777000011
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 947215796}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d41f8a2b6c9e4f7a8b3d5e1c2a9f6b40, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.DirtSpot
+  _itemId: mancha-agua-01
+  _requiredKind: rodo
+  _taskType: clean_floor
+  _slotId: chao
+  _segundosParaLimpar: 1.8
+  _promptMessage: Segure [E] para limpar a agua
+  _promptSemFerramenta: Voce precisa do rodo para limpar isso
+  _prompt: {fileID: 771000001}
+  _somLimpeza: {fileID: 0}
+  _volume: 1
+--- !u!114 &777000012
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1159091065}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d41f8a2b6c9e4f7a8b3d5e1c2a9f6b40, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.DirtSpot
+  _itemId: mancha-agua-02
+  _requiredKind: rodo
+  _taskType: clean_floor
+  _slotId: chao
+  _segundosParaLimpar: 1.8
+  _promptMessage: Segure [E] para limpar a agua
+  _promptSemFerramenta: Voce precisa do rodo para limpar isso
+  _prompt: {fileID: 771000001}
+  _somLimpeza: {fileID: 0}
+  _volume: 1
+--- !u!114 &777000013
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 444118707}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d41f8a2b6c9e4f7a8b3d5e1c2a9f6b40, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.DirtSpot
+  _itemId: mancha-agua-03
+  _requiredKind: rodo
+  _taskType: clean_floor
+  _slotId: chao
+  _segundosParaLimpar: 1.8
+  _promptMessage: Segure [E] para limpar a agua
+  _promptSemFerramenta: Voce precisa do rodo para limpar isso
+  _prompt: {fileID: 771000001}
+  _somLimpeza: {fileID: 0}
+  _volume: 1
+--- !u!114 &777000014
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1421763634}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d41f8a2b6c9e4f7a8b3d5e1c2a9f6b40, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.DirtSpot
+  _itemId: mancha-agua-04
+  _requiredKind: rodo
+  _taskType: clean_floor
+  _slotId: chao
+  _segundosParaLimpar: 1.8
+  _promptMessage: Segure [E] para limpar a agua
+  _promptSemFerramenta: Voce precisa do rodo para limpar isso
+  _prompt: {fileID: 771000001}
+  _somLimpeza: {fileID: 0}
+  _volume: 1
+--- !u!114 &777000015
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1067435862}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d41f8a2b6c9e4f7a8b3d5e1c2a9f6b40, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.DirtSpot
+  _itemId: mancha-cafe-01
+  _requiredKind: rodo
+  _taskType: clean_floor
+  _slotId: chao
+  _segundosParaLimpar: 1.8
+  _promptMessage: Segure [E] para limpar o cafe
+  _promptSemFerramenta: Voce precisa do rodo para limpar isso
+  _prompt: {fileID: 771000001}
+  _somLimpeza: {fileID: 0}
+  _volume: 1
+--- !u!114 &777000016
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1921005587}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d41f8a2b6c9e4f7a8b3d5e1c2a9f6b40, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.DirtSpot
+  _itemId: mancha-cafe-02
+  _requiredKind: rodo
+  _taskType: clean_floor
+  _slotId: chao
+  _segundosParaLimpar: 1.8
+  _promptMessage: Segure [E] para limpar o cafe
+  _promptSemFerramenta: Voce precisa do rodo para limpar isso
+  _prompt: {fileID: 771000001}
+  _somLimpeza: {fileID: 0}
+  _volume: 1
 --- !u!1001 &779882962
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -22482,6 +23147,7 @@ GameObject:
   - component: {fileID: 947215799}
   - component: {fileID: 947215798}
   - component: {fileID: 947215797}
+  - component: {fileID: 777000011}
   m_Layer: 0
   m_Name: Liquido_Agua
   m_TagString: Rodo
@@ -22508,8 +23174,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 2.1333334, y: 1.4222226, z: 0.20000005}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 4.3333, y: 2.3704, z: 8.374}
+  m_Center: {x: 0, y: 0, z: 3.7683}
 --- !u!212 &947215798
 SpriteRenderer:
   serializedVersion: 2
@@ -25344,6 +26010,7 @@ GameObject:
   - component: {fileID: 1067435864}
   - component: {fileID: 1067435863}
   - component: {fileID: 1067435865}
+  - component: {fileID: 777000015}
   m_Layer: 0
   m_Name: Liquido_Cafe
   m_TagString: Rodo
@@ -25444,8 +26111,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 2.1333334, y: 1.4222226, z: 0.20000005}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 4.3333, y: 2.3704, z: 8.374}
+  m_Center: {x: 0, y: 0, z: 3.7683}
 --- !u!1001 &1067503636
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -26476,7 +27143,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 5.8252, y: 7.7670, z: 5.8252}
+  m_Size: {x: 5.8252, y: 7.767, z: 5.8252}
   m_Center: {x: 0, y: 2.9126, z: 0}
 --- !u!1 &1113946549 stripped
 GameObject:
@@ -28103,6 +28770,7 @@ GameObject:
   - component: {fileID: 1159091068}
   - component: {fileID: 1159091067}
   - component: {fileID: 1159091066}
+  - component: {fileID: 777000012}
   m_Layer: 0
   m_Name: Liquido_Agua2
   m_TagString: Rodo
@@ -28129,8 +28797,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 2.1333334, y: 1.4222226, z: 0.20000005}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 4.3333, y: 2.3704, z: 8.374}
+  m_Center: {x: 0, y: 0, z: 3.7683}
 --- !u!212 &1159091067
 SpriteRenderer:
   serializedVersion: 2
@@ -29055,7 +29723,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 5.8252, y: 7.7670, z: 5.8252}
+  m_Size: {x: 5.8252, y: 7.767, z: 5.8252}
   m_Center: {x: 0, y: 2.9126, z: 0}
 --- !u!1001 &1182950468
 PrefabInstance:
@@ -33210,6 +33878,7 @@ GameObject:
   - component: {fileID: 1421763637}
   - component: {fileID: 1421763636}
   - component: {fileID: 1421763635}
+  - component: {fileID: 777000014}
   m_Layer: 0
   m_Name: Liquido_Agua4
   m_TagString: Rodo
@@ -33236,8 +33905,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 2.1333334, y: 1.4222226, z: 0.20000005}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 4.3333, y: 2.3704, z: 8.374}
+  m_Center: {x: 0, y: 0, z: 3.7683}
 --- !u!212 &1421763636
 SpriteRenderer:
   serializedVersion: 2
@@ -37937,6 +38606,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 208974801609211804, guid: 0177ee00efab698438288ebb753747ce, type: 3}
       insertIndex: -1
       addedObject: {fileID: 773000012}
+    - targetCorrespondingSourceObject: {fileID: 208974801609211804, guid: 0177ee00efab698438288ebb753747ce, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 776000002}
   m_SourcePrefab: {fileID: 100100000, guid: 0177ee00efab698438288ebb753747ce, type: 3}
 --- !u!1001 &1616416340
 PrefabInstance:
@@ -42870,6 +43542,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 357065274687872603, guid: 68d14f4fae1c5ed43a13663b08c324ed, type: 3}
       insertIndex: -1
       addedObject: {fileID: 771000006}
+    - targetCorrespondingSourceObject: {fileID: 357065274687872603, guid: 68d14f4fae1c5ed43a13663b08c324ed, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 776000001}
   m_SourcePrefab: {fileID: 100100000, guid: 68d14f4fae1c5ed43a13663b08c324ed, type: 3}
 --- !u!1 &1891267444 stripped
 GameObject:
@@ -42895,8 +43570,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 2.5000, y: 2.5000, z: 2.5000}
-  m_Center: {x: 0.0491657, y: -0.1250, z: 0.0064583113}
+  m_Size: {x: 4.375, y: 2.5, z: 4.375}
+  m_Center: {x: 0.0491657, y: -0.125, z: 0.0064583113}
 --- !u!1001 &1892129601
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -43664,6 +44339,7 @@ GameObject:
   - component: {fileID: 1921005590}
   - component: {fileID: 1921005589}
   - component: {fileID: 1921005588}
+  - component: {fileID: 777000016}
   m_Layer: 0
   m_Name: Liquido_Cafe2
   m_TagString: Rodo
@@ -43690,8 +44366,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 2.1333334, y: 1.4222226, z: 0.20000005}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 4.3333, y: 2.3704, z: 8.374}
+  m_Center: {x: 0, y: 0, z: 3.7683}
 --- !u!212 &1921005589
 SpriteRenderer:
   serializedVersion: 2
@@ -45775,13 +46451,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 3413711846715311720, guid: 7695c0d2e92da0e4f8d08c7909230b47, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 773000021}
-    - targetCorrespondingSourceObject: {fileID: 3413711846715311720, guid: 7695c0d2e92da0e4f8d08c7909230b47, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 773000022}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 7695c0d2e92da0e4f8d08c7909230b47, type: 3}
 --- !u!1001 &1994663120
 PrefabInstance:
@@ -46049,7 +46719,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!136 &1998604850
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -49521,6 +50191,7 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
+  - {fileID: 774000002}
   - {fileID: 772000102}
   - {fileID: 768265984}
   - {fileID: 212937156}
@@ -49621,375 +50292,3 @@ SceneRoots:
   - {fileID: 700000052}
   - {fileID: 700000010}
   - {fileID: 700000049}
---- !u!114 &771000001
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 700000053}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dbf8ff424349a8247bd7996d221397d5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.InteractionPrompt
-  _label: {fileID: 700000029}
-  _hiddenOnAwake: 1
---- !u!114 &771000002
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1182457969}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 91c3e3a6c17a61744b1e2607dd1e3ef9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.CarryableItem
-  _itemId: papel-01
-  _kind: papel
-  _isTool: 0
-  _pickupMessage: Aperte [E] para pegar o papel
-  _prompt: {fileID: 771000001}
-  _pickupSound: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb3, type: 3}
-  _pickupVolume: 1
-
---- !u!114 &771000003
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1108840628}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 91c3e3a6c17a61744b1e2607dd1e3ef9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.CarryableItem
-  _itemId: papel-02
-  _kind: papel
-  _isTool: 0
-  _pickupMessage: Aperte [E] para pegar o papel
-  _prompt: {fileID: 771000001}
-  _pickupSound: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb3, type: 3}
-  _pickupVolume: 1
-
---- !u!114 &771000004
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 266494712}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 91c3e3a6c17a61744b1e2607dd1e3ef9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.CarryableItem
-  _itemId: papel-03
-  _kind: papel
-  _isTool: 0
-  _pickupMessage: Aperte [E] para pegar o papel
-  _prompt: {fileID: 771000001}
-  _pickupSound: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb3, type: 3}
-  _pickupVolume: 1
-
---- !u!114 &771000005
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 655640656}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 91c3e3a6c17a61744b1e2607dd1e3ef9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.CarryableItem
-  _itemId: papel-04
-  _kind: papel
-  _isTool: 0
-  _pickupMessage: Aperte [E] para pegar o papel
-  _prompt: {fileID: 771000001}
-  _pickupSound: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb3, type: 3}
-  _pickupVolume: 1
-
---- !u!114 &771000006
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1891267444}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8ddd9a14725e16d439b47d9f5e939a28, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.TaskDepositPoint
-  _slotId: slot-caixa-papeis
-  _acceptedKind: papel
-  _taskType: collect_papers
-  _promptMessage: Aperte [E] para guardar o papel
-  _prompt: {fileID: 771000001}
-  _rejectionMessageSeconds: 3
-  _depositSound: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb3, type: 3}
-  _depositVolume: 1
-
---- !u!1 &772000101
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 772000102}
-  - component: {fileID: 772000103}
-  m_Layer: 0
-  m_Name: BackgroundMusic
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &772000102
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 772000101}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &772000103
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 772000101}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c39a7d1e5f8b4a24d9061e2a3c4b8f71, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Audio.BackgroundMusic
-  _clip: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb2, type: 3}
-  _volume: 0.5
-  _fadeInSeconds: 1.5
---- !u!65 &773000001
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 308877622}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_ProvidesContacts: 0
-  m_IsTrigger: 1
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 0.8000, y: 1.0667, z: 0.8000}
-  m_Center: {x: 0, y: 0.4000, z: 0}
---- !u!114 &773000002
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 308877622}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 91c3e3a6c17a61744b1e2607dd1e3ef9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.CarryableItem
-  _itemId: caneta-01
-  _kind: caneta
-  _isTool: 0
-  _pickupMessage: Aperte [E] para pegar a caneta
-  _prompt: {fileID: 771000001}
-  _pickupSound: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb3, type: 3}
-  _pickupVolume: 1
---- !u!65 &773000003
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 683878248}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_ProvidesContacts: 0
-  m_IsTrigger: 1
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 0.8000, y: 1.0667, z: 0.8000}
-  m_Center: {x: 0, y: 0.4000, z: 0}
---- !u!114 &773000004
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 683878248}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 91c3e3a6c17a61744b1e2607dd1e3ef9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.CarryableItem
-  _itemId: caneta-02
-  _kind: caneta
-  _isTool: 0
-  _pickupMessage: Aperte [E] para pegar a caneta
-  _prompt: {fileID: 771000001}
-  _pickupSound: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb3, type: 3}
-  _pickupVolume: 1
---- !u!114 &773000005
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 52311513}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 91c3e3a6c17a61744b1e2607dd1e3ef9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.CarryableItem
-  _itemId: revista-01
-  _kind: revista
-  _isTool: 0
-  _pickupMessage: Aperte [E] para pegar a revista
-  _prompt: {fileID: 771000001}
-  _pickupSound: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb3, type: 3}
-  _pickupVolume: 1
---- !u!114 &773000006
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 594970340}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 91c3e3a6c17a61744b1e2607dd1e3ef9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.CarryableItem
-  _itemId: revista-02
-  _kind: revista
-  _isTool: 0
-  _pickupMessage: Aperte [E] para pegar a revista
-  _prompt: {fileID: 771000001}
-  _pickupSound: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb3, type: 3}
-  _pickupVolume: 1
---- !u!1 &773000010 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 208974801609211804, guid: 0177ee00efab698438288ebb753747ce, type: 3}
-  m_PrefabInstance: {fileID: 1615324550}
-  m_PrefabAsset: {fileID: 0}
---- !u!65 &773000011
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 773000010}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_ProvidesContacts: 0
-  m_IsTrigger: 1
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 2.0000, y: 2.0000, z: 2.0000}
-  m_Center: {x: 0, y: -0.1000, z: 0}
---- !u!114 &773000012
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 773000010}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8ddd9a14725e16d439b47d9f5e939a28, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.TaskDepositPoint
-  _slotId: slot-porta-canetas
-  _acceptedKind: caneta
-  _taskType: collect_pens
-  _promptMessage: Aperte [E] para guardar a caneta
-  _prompt: {fileID: 771000001}
-  _rejectionMessageSeconds: 3
-  _depositSound: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb3, type: 3}
-  _depositVolume: 1
---- !u!1 &773000020 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 3413711846715311720, guid: 7695c0d2e92da0e4f8d08c7909230b47, type: 3}
-  m_PrefabInstance: {fileID: 1992192660}
-  m_PrefabAsset: {fileID: 0}
---- !u!65 &773000021
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 773000020}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_ProvidesContacts: 0
-  m_IsTrigger: 1
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 3.3333, y: 3.3333, z: 3.3333}
-  m_Center: {x: 0, y: -0.1667, z: 0}
---- !u!114 &773000022
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 773000020}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8ddd9a14725e16d439b47d9f5e939a28, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.TaskDepositPoint
-  _slotId: slot-mesa-revistas
-  _acceptedKind: revista
-  _taskType: collect_magazines
-  _promptMessage: Aperte [E] para guardar a revista
-  _prompt: {fileID: 771000001}
-  _rejectionMessageSeconds: 3
-  _depositSound: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb3, type: 3}
-  _depositVolume: 1

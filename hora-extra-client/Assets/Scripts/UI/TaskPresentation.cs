@@ -26,11 +26,39 @@ namespace HoraExtra.UI
         public const string TYPE_COLLECT_PENS      = "collect_pens";
         public const string TYPE_COLLECT_MAGAZINES = "collect_magazines";
 
+        // Tarefa 18 — Limpar recepção e almoxarifado (plano 0006).
+        public const string TYPE_CLEAN_FLOOR = "clean_floor";
+
         // === Status (campo 'status' autoritativo do servidor) ===
         public const string STATUS_PENDING     = "pending";
         public const string STATUS_IN_PROGRESS = "in_progress";
         public const string STATUS_COMPLETED   = "completed";
         public const string STATUS_FAILED      = "failed";
+
+        /// <summary>
+        /// Resumo curto para a linha do checklist — sempre o rótulo do tipo, nunca a
+        /// descrição do catálogo.
+        ///
+        /// Separado do <see cref="GetTitle"/> de propósito: a descrição virou texto
+        /// instrucional longo, que não cabe numa linha de lista. O passo a passo completo
+        /// fica no <see cref="GetHowTo"/>, exibido só para a tarefa ativa.
+        /// </summary>
+        public static string GetSummary(AssignedTask task)
+        {
+            if (task == null) return string.Empty;
+
+            switch (task.Type)
+            {
+                case TYPE_COFFEE_MAKER:      return "Preparar o café";
+                case TYPE_COLLECT:           return "Coletar documentos";
+                case TYPE_COLLECT_PAPERS:    return "Organizar os papéis";
+                case TYPE_COLLECT_PENS:      return "Organizar as canetas";
+                case TYPE_COLLECT_MAGAZINES: return "Organizar as revistas";
+                case TYPE_CLEAN_FLOOR:       return "Limpar as manchas do chão";
+                default:
+                    return string.IsNullOrWhiteSpace(task.Description) ? "Tarefa" : task.Description;
+            }
+        }
 
         /// <summary>
         /// Título curto da tarefa para a lista de missões. Usa a descrição do catálogo
@@ -50,6 +78,7 @@ namespace HoraExtra.UI
                 case TYPE_COLLECT_PAPERS:   return "Organizar os papéis";
                 case TYPE_COLLECT_PENS:     return "Organizar as canetas";
                 case TYPE_COLLECT_MAGAZINES:return "Organizar as revistas";
+                case TYPE_CLEAN_FLOOR:      return "Limpar as manchas do chão";
                 default:                    return "Tarefa";
             }
         }
@@ -69,11 +98,23 @@ namespace HoraExtra.UI
                     return $"Colete os {task.TargetCount} documentos espalhados pelo escritório " +
                            "(pressione E ao chegar perto de cada um).";
                 case TYPE_COLLECT_PAPERS:
-                    return $"Pegue os {task.TargetCount} papéis espalhados pela recepção e guarde-os na caixa.";
+                    return $"Há {task.TargetCount} papéis espalhados pelo chão da recepção.\n" +
+                           "Aperte [E] para pegar — dá para juntar vários de uma vez.\n" +
+                           "Leve até a bandeja em cima da mesa e aperte [E] para guardar.\n" +
+                           "O losango dourado mostra onde entregar.";
                 case TYPE_COLLECT_PENS:
-                    return $"Pegue as {task.TargetCount} canetas espalhadas pela recepção e coloque-as no porta-canetas.";
+                    return $"Há {task.TargetCount} canetas espalhadas pela recepção.\n" +
+                           "Aperte [E] para pegar e leve até o porta-canetas, em cima da mesa.\n" +
+                           "O losango dourado mostra onde entregar.";
                 case TYPE_COLLECT_MAGAZINES:
-                    return $"Pegue as {task.TargetCount} revistas espalhadas pela recepção e coloque-as de volta na mesa.";
+                    return $"Há {task.TargetCount} revistas fora do lugar na recepção.\n" +
+                           "Aperte [E] para pegar e coloque-as de volta na mesa de centro.\n" +
+                           "O losango dourado mostra onde entregar.";
+                case TYPE_CLEAN_FLOOR:
+                    return $"Há {task.TargetCount} manchas de água e café pelo chão.\n" +
+                           "Primeiro pegue o rodo com [E] — ele fica perto da entrada.\n" +
+                           "Depois vá até cada mancha e SEGURE [E] até a barra encher.\n" +
+                           "O rodo continua na sua mão: dá para limpar todas sem voltar.";
                 default:
                     return "Aproxime-se do objetivo e pressione E para interagir.";
             }
