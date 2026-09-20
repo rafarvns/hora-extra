@@ -13,9 +13,10 @@ namespace HoraExtra.Network
     /// </summary>
     public static class BackendConfig
     {
-        /// <summary>Host/IP do backend. Use "127.0.0.1" pra local ou IP público pra remoto.</summary>
-        public static string Host = "92.113.39.4";
-        // public static string Host = "127.0.0.1";
+        /// <summary>Host/IP do backend. Use "127.0.0.1" pra local ou IP do servidor pra remoto.</summary>
+        public static string Host = "192.168.10.151"; // homelab (rede local)
+        // public static string Host = "127.0.0.1";   // backend rodando na própria máquina
+        // public static string Host = "92.113.39.4"; // VPS
 
         /// <summary>Porta HTTP REST do backend.</summary>
         public static int HttpPort = 5000;

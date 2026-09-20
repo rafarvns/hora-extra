@@ -249,6 +249,7 @@ MonoBehaviour:
   registerSceneName: CreateAccountScene
   loginSceneName: LoginScene
   lobbySceneName: LobbyScene
+  guestGameSceneName: SCN_FirstFloor
   userNameText: {fileID: 542838283}
 --- !u!1 &383352274
 GameObject:

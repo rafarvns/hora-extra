@@ -27,6 +27,36 @@ namespace HoraExtra.Characters
         // === Singleton ===
         public static TaskSystemBridge Instance { get; private set; }
 
+        /// <summary>
+        /// Garante que existe uma instância do TaskSystemBridge. Se não existir na cena,
+        /// cria um GameObject em runtime com DontDestroyOnLoad.
+        ///
+        /// Mesmo padrão de <see cref="SocketManager.EnsureExists"/> e
+        /// <see cref="RemotePlayerSpawner.EnsureExists"/>: permite que cenas de level
+        /// (ex: SCN_FirstFloor) funcionem sem precisar do GameObject pré-configurado no
+        /// Inspector. O catálogo inicial é preenchido programaticamente no Awake
+        /// (EnsureCoffeeMakerEntry / EnsurePaperCollectEntry), então a instância criada
+        /// em runtime registra o mesmo catálogo da versão configurada à mão.
+        ///
+        /// O SocketManager é garantido ANTES do AddComponent porque o OnEnable deste
+        /// componente assina CONN_SUCCESS / TASK_ASSIGNED / TASK_UPDATED via
+        /// SocketManager.Instance?.On(...) — com Instance nulo os `?.` viram no-op e a
+        /// ponte nunca receberia os eventos.
+        /// </summary>
+        public static TaskSystemBridge EnsureExists()
+        {
+            if (Instance == null)
+            {
+                SocketManager.EnsureExists();
+
+                Debug.Log("[GAMEPLAY] TaskSystemBridge não encontrado na cena — criando runtime.");
+                var go = new GameObject("TaskSystemBridge (auto-created)");
+                go.AddComponent<TaskSystemBridge>();
+                // Awake roda imediatamente no AddComponent; Instance já está setado aqui.
+            }
+            return Instance;
+        }
+
         // === Inspector ===
         [Header("Task Catalog — entradas iniciais da cena")]
         [Tooltip("Lista de tarefas que serão registradas no servidor ao conectar.")]
