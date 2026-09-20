@@ -12,6 +12,9 @@ EditorBuildSettings:
     path: Assets/Scenes/SampleScene.unity
     guid: 99c9720ab356a0642a771bea13969a05
   - enabled: 1
+    path: Assets/Scenes/SCN_FirstFloor.unity
+    guid: 01727306278620447ba14bb5da5a584b
+  - enabled: 1
     path: Assets/Scenes/Menu_Screens/LoginScene.unity
     guid: 2763847d1217a014d8a33ee539760694
   - enabled: 1
