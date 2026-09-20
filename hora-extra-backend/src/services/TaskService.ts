@@ -5,6 +5,12 @@ import { ApiError } from '../core/ApiError.js';
 // Types
 // ────────────────────────────────────────────────────────────
 
+/** Par item→destino exigido por tarefas de pareamento (ex: encomenda → estante correta). */
+export interface TaskItemPair {
+    itemId: string;
+    slotId: string;
+}
+
 /** Entrada do catálogo de tarefas (sem npcId — catálogo é da sala, não do NPC). */
 export interface TaskEntry {
     id: string;
@@ -12,6 +18,41 @@ export interface TaskEntry {
     type: string;
     targetCount: number;
     roomId: string;
+    /** itemIds que contam progresso nesta task. Ausente = contagem cega de +1. */
+    items?: string[];
+    /** Destino obrigatório por item. Ausente = qualquer destino é aceito. */
+    pairs?: TaskItemPair[];
+}
+
+/**
+ * Motivos pelos quais o servidor recusa um progresso de gameplay.
+ * Diferente de erro de protocolo (payload malformado), que responde ERROR genérico.
+ */
+export type TaskRejectionCode =
+    | 'NOT_ASSIGNED'      // jogador não tem a task
+    | 'INVALID_STATUS'    // task já completed/failed
+    | 'MISSING_ITEM'      // catálogo exige itemId e o payload não mandou
+    | 'UNKNOWN_ITEM'      // itemId não pertence a esta task
+    | 'WRONG_SLOT'        // par (itemId, slotId) não confere
+    | 'ALREADY_COUNTED';  // itemId já contabilizado nesta atribuição
+
+/**
+ * Recusa de gameplay tipada.
+ *
+ * Estende ApiError de propósito: os `catch (err: any)` que já existem nos handlers
+ * antigos continuam lendo `err.message` sem alteração; quem precisa do motivo
+ * estruturado lê `err.code`.
+ */
+export class TaskRejectionError extends ApiError {
+    public readonly code: TaskRejectionCode;
+
+    constructor(code: TaskRejectionCode, message: string) {
+        super(message, 400);
+        this.name = 'TaskRejectionError';
+        this.code = code;
+        // Necessário para `instanceof` sobreviver à transpilação, mesmo padrão do ApiError.
+        Object.setPrototypeOf(this, TaskRejectionError.prototype);
+    }
 }
 
 /** Tarefa atribuída a um jogador com estado de progresso. */
@@ -41,6 +82,25 @@ export class TaskService {
     /** assignments: playerId → AssignedTask[] */
     private assignments = new Map<string, AssignedTask[]>();
 
+    /**
+     * playerId → roomId da atribuição.
+     * incrementProgress só recebe playerId, mas o catálogo é POR SALA — este mapa é
+     * o que permite localizar a TaskEntry certa para validar items/pairs.
+     */
+    private assignedRoom = new Map<string, string>();
+
+    /** `${playerId}:${taskId}` → itemIds já contabilizados (deduplicação). */
+    private collectedItems = new Map<string, Set<string>>();
+
+    /**
+     * playerId → tarefas sorteadas que ainda NÃO foram atribuídas.
+     *
+     * O jogador recebe uma por vez: `assignRandomTasks` sorteia o lote, entrega a
+     * primeira e guarda o resto aqui; `advanceQueue` libera a seguinte quando a atual
+     * termina. Evita o jogador encarar 3 tarefas simultâneas sem saber por onde começar.
+     */
+    private taskQueue = new Map<string, TaskEntry[]>();
+
     // ──────────────────────────────────────────────
     // Public API
     // ──────────────────────────────────────────────
@@ -50,7 +110,17 @@ export class TaskService {
      * Chamado quando o cliente envia task_catalog_register.
      * As tarefas fornecidas não incluem npcId (campo removido nesta versão).
      */
-    public registerCatalog(roomId: string, tasks: Array<{ id: string; description: string; type: string; targetCount: number }>): void {
+    public registerCatalog(
+        roomId: string,
+        tasks: Array<{
+            id: string;
+            description: string;
+            type: string;
+            targetCount: number;
+            items?: string[];
+            pairs?: TaskItemPair[];
+        }>,
+    ): void {
         const entries: TaskEntry[] = tasks.map(t => ({ ...t, roomId }));
         this.catalog.set(roomId, entries);
         logger.info(`TaskService.registerCatalog: ${tasks.length} tarefas registradas para sala ${roomId}`, { module: 'GAME' });
@@ -78,19 +148,52 @@ export class TaskService {
         const shuffled = this.fisherYates([...roomCatalog]);
         const picked = shuffled.slice(0, n);
 
-        const assigned: AssignedTask[] = picked.map(entry => ({
+        // Entrega só a primeira; o resto espera na fila (ver taskQueue).
+        const [primeira, ...resto] = picked;
+        const assigned = [this.toAssigned(primeira)];
+
+        this.assignments.set(playerId, assigned);
+        this.assignedRoom.set(playerId, roomId);
+        this.taskQueue.set(playerId, resto);
+
+        logger.info(`TaskService: task '${primeira.id}' atribuída ao jogador '${playerId}' na sala '${roomId}' (${resto.length} na fila)`, { module: 'GAME' });
+        return assigned;
+    }
+
+    /**
+     * Libera a próxima tarefa da fila, se o jogador não tiver nenhuma aberta.
+     * Devolve null quando ainda há tarefa em andamento ou quando a fila secou.
+     *
+     * Chamado pelos handlers logo após uma conclusão, para que o jogador nunca fique
+     * sem o que fazer — e nunca com duas coisas ao mesmo tempo.
+     */
+    public advanceQueue(playerId: string): AssignedTask | null {
+        const atribuidas = this.assignments.get(playerId);
+        if (!atribuidas) return null;
+
+        const temAberta = atribuidas.some(t => t.status === 'pending' || t.status === 'in_progress');
+        if (temAberta) return null;
+
+        const fila = this.taskQueue.get(playerId);
+        if (!fila || fila.length === 0) return null;
+
+        const proxima = this.toAssigned(fila.shift()!);
+        atribuidas.push(proxima);
+
+        logger.info(`TaskService.advanceQueue: task '${proxima.id}' liberada para '${playerId}' (${fila.length} restantes na fila)`, { module: 'GAME' });
+        return proxima;
+    }
+
+    /** Converte uma entrada de catálogo na forma atribuída ao jogador. */
+    private toAssigned(entry: TaskEntry): AssignedTask {
+        return {
             id: entry.id,
             description: entry.description,
             type: entry.type,
             targetCount: entry.targetCount,
             currentProgress: 0,
             status: 'pending',
-        }));
-
-        this.assignments.set(playerId, assigned);
-
-        logger.info(`TaskService: ${n} tasks atribuídas ao jogador '${playerId}' na sala '${roomId}'`, { module: 'GAME' });
-        return assigned;
+        };
     }
 
     /**
@@ -158,20 +261,38 @@ export class TaskService {
      *   - cada chamada faz currentProgress += 1 (clampeado em targetCount).
      *   - ao atingir targetCount → status 'completed'.
      *
-     * Lança ApiError se: jogador sem tasks, taskId não encontrado, ou task já
-     * 'completed'/'failed' (transição inválida).
+     * Quando a entrada de catálogo declara `items` ou `pairs`, o incremento passa a
+     * exigir `itemId` e a validar pertencimento, pareamento e não-repetição. Entradas
+     * sem esses campos mantêm a contagem cega (retrocompatível).
+     *
+     * Lança TaskRejectionError (subclasse de ApiError) com o `code` correspondente.
      */
-    public incrementProgress(playerId: string, taskId: string): AssignedTask {
+    public incrementProgress(playerId: string, taskId: string, itemId?: string, slotId?: string): AssignedTask {
         const playerTasks = this.assignments.get(playerId);
         if (!playerTasks || playerTasks.length === 0) {
-            throw ApiError.badRequest(`Jogador '${playerId}' não tem tasks atribuídas`);
+            throw new TaskRejectionError('NOT_ASSIGNED', `Jogador '${playerId}' não tem tasks atribuídas`);
         }
         const task = playerTasks.find(t => t.id === taskId);
         if (!task) {
-            throw ApiError.badRequest(`Task '${taskId}' não encontrada para jogador '${playerId}'`);
+            throw new TaskRejectionError('NOT_ASSIGNED', `Task '${taskId}' não encontrada para jogador '${playerId}'`);
         }
         if (task.status !== 'pending' && task.status !== 'in_progress') {
-            throw ApiError.badRequest(`Transição inválida: task '${taskId}' está '${task.status}', esperado 'pending' ou 'in_progress'`);
+            throw new TaskRejectionError('INVALID_STATUS', `Transição inválida: task '${taskId}' está '${task.status}', esperado 'pending' ou 'in_progress'`);
+        }
+
+        // Validação de identidade do item — só para entradas que a declaram.
+        const entry = this.findEntry(playerId, taskId);
+        const collectedKey = `${playerId}:${taskId}`;
+        const declaresItems = !!(entry && (entry.items || entry.pairs));
+
+        if (declaresItems) {
+            this.validateItem(entry!, collectedKey, itemId, slotId);
+        }
+
+        if (itemId) {
+            const collected = this.collectedItems.get(collectedKey) ?? new Set<string>();
+            collected.add(itemId);
+            this.collectedItems.set(collectedKey, collected);
         }
 
         if (task.status === 'pending') {
@@ -194,7 +315,13 @@ export class TaskService {
      */
     public clearRoom(playerIds: string[]): void {
         for (const pid of playerIds) {
+            const tasks = this.assignments.get(pid) ?? [];
+            for (const task of tasks) {
+                this.collectedItems.delete(`${pid}:${task.id}`);
+            }
             this.assignments.delete(pid);
+            this.assignedRoom.delete(pid);
+            this.taskQueue.delete(pid);
         }
         logger.info(`TaskService.clearRoom: ${playerIds.length} atribuições removidas`, { module: 'GAME' });
     }
@@ -202,6 +329,41 @@ export class TaskService {
     // ──────────────────────────────────────────────
     // Private helpers
     // ──────────────────────────────────────────────
+
+    /** Localiza a entrada de catálogo da task, usando a sala em que o jogador foi atribuído. */
+    private findEntry(playerId: string, taskId: string): TaskEntry | undefined {
+        const roomId = this.assignedRoom.get(playerId);
+        if (!roomId) return undefined;
+        return this.catalog.get(roomId)?.find(e => e.id === taskId);
+    }
+
+    /**
+     * Valida itemId/slotId contra a entrada de catálogo. Lança TaskRejectionError na
+     * primeira violação. Chamado apenas quando a entrada declara `items` ou `pairs`.
+     */
+    private validateItem(entry: TaskEntry, collectedKey: string, itemId?: string, slotId?: string): void {
+        if (!itemId || itemId.trim() === '') {
+            throw new TaskRejectionError('MISSING_ITEM', `Task '${entry.id}' exige identificar o item entregue`);
+        }
+
+        if (entry.items && !entry.items.includes(itemId)) {
+            throw new TaskRejectionError('UNKNOWN_ITEM', `Item '${itemId}' não faz parte da task '${entry.id}'`);
+        }
+
+        if (entry.pairs) {
+            const pair = entry.pairs.find(p => p.itemId === itemId);
+            if (!pair) {
+                throw new TaskRejectionError('UNKNOWN_ITEM', `Item '${itemId}' não faz parte da task '${entry.id}'`);
+            }
+            if (pair.slotId !== slotId) {
+                throw new TaskRejectionError('WRONG_SLOT', `Item '${itemId}' não pertence a este lugar`);
+            }
+        }
+
+        if (this.collectedItems.get(collectedKey)?.has(itemId)) {
+            throw new TaskRejectionError('ALREADY_COUNTED', `Item '${itemId}' já foi contabilizado nesta tarefa`);
+        }
+    }
 
     /** Fisher-Yates in-place shuffle, returns the array for chaining. */
     private fisherYates<T>(arr: T[]): T[] {

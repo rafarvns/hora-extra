@@ -63,11 +63,11 @@ Ver §7 — Guest Mode para o fluxo completo.
 | `npc_register`      | `{ id: string, type: string }`                                          | Registrar NPC presente na cena. Servidor decide mastership.        |
 | `npc_move_request`  | `{ id: string, p: number[], r: number }`                                | Master do NPC envia nova posição autoritativa.                     |
 | `ping`              | `{ timestamp: number }`                                                 | Mede latência RTT.                                                 |
-| `task_catalog_register` | `{ tasks: Array<{ id: string, description: string, type: string, targetCount: number }> }` | Registra o catálogo de tarefas disponíveis para a sala. Sobrescreve a pool anterior. `npcId` removido — catálogo é da sala, não vinculado a NPC. |
-| `task_assign_request`   | `{}` (sem campos)                                                   | Solicita ao servidor que sorteie e atribua N=3 tasks aleatórias ao jogador. `playerId` é obtido da sessão — não enviado no payload. |
+| `task_catalog_register` | `{ tasks: TaskEntry[] }` — ver schema na §5 | Registra o catálogo de tarefas disponíveis para a sala. Sobrescreve a pool anterior. `npcId` removido — catálogo é da sala, não vinculado a NPC. Cada entrada aceita `items?` e `pairs?` (opcionais); campo malformado é descartado com `warn` e o resto do catálogo é registrado. |
+| `task_assign_request`   | `{}` (sem campos)                                                   | Solicita ao servidor que sorteie N=3 tasks para o jogador. `playerId` vem da sessão — não é enviado no payload. **A resposta traz apenas a PRIMEIRA**: as demais ficam numa fila e são liberadas uma a uma conforme o jogador conclui (ver §4, `task_assigned`). |
 | `task_start_interaction` | `{ taskId: string }`                                               | Jogador inicia interação com objeto de task. Servidor valida posse e transição `pending → in_progress`. |
 | `task_complete_attempt`  | `{ taskId: string, success: boolean }`                             | Jogador reporta resultado do minigame QTE. Servidor determina status final autoritativamente. |
-| `task_progress`          | `{ taskId: string }`                                               | Jogador coletou +1 item de uma task incremental (ex: `collect`). Servidor soma +1, faz `pending → in_progress` no primeiro incremento e `completed` ao atingir `targetCount`. Nunca confia em contagem do cliente. |
+| `task_progress`          | `{ taskId: string, itemId?: string, slotId?: string }`             | Jogador entregou +1 item de uma task incremental (ex: `collect`). Servidor soma +1, faz `pending → in_progress` no primeiro incremento e `completed` ao atingir `targetCount`. Nunca confia em contagem do cliente. `itemId` identifica **qual** item e `slotId` **onde** foi entregue; ambos são opcionais e só validados quando a entrada de catálogo declara `items`/`pairs`. Recusa de gameplay responde `task_rejected`; `itemId`/`slotId` de tipo errado respondem `ERROR` (falha de protocolo). |
 
 ---
 
@@ -85,12 +85,68 @@ Ver §7 — Guest Mode para o fluxo completo.
 | `npc_move`          | `{ id: string, p: number[], r: number }`                                | Broadcast da posição autoritativa do NPC (emitido pelo master).    |
 | `pong`              | `{ timestamp: number }`                                                 | Resposta ao `ping` para cálculo de latência.                       |
 | `ERROR`             | `{ message: string }`                                                   | Erro genérico (ex.: pacote recebido sem sessão ativa).             |
-| `task_assigned`     | `{ playerId: string, tasks: AssignedTask[] }`                           | Broadcast para todos na sala com as tasks sorteadas para o jogador. `tasks[]` tem shape: `{ id, description, type, targetCount, currentProgress: 0, status: "pending" }`. |
-| `task_updated`      | `{ playerId: string, taskId: string, currentProgress: number, status: string }` | Broadcast para todos na sala quando o status **ou o progresso** de uma task muda (via `task_start_interaction`, `task_complete_attempt` ou cada `task_progress`). Status possíveis: `in_progress`, `completed`, `failed`. Construído pelo servidor — não reflete campos crus do cliente. |
+| `task_assigned`     | `{ playerId: string, tasks: AssignedTask[] }`                           | Broadcast para a sala com a(s) task(s) atribuída(s) ao jogador. `tasks[]` tem shape: `{ id, description, type, targetCount, currentProgress: 0, status: "pending" }`.<br><br>**Fila sequencial:** o jogador recebe UMA tarefa por vez. Este evento é emitido (a) na resposta ao `task_assign_request` e (b) **de novo, a cada tarefa concluída**, com a próxima da fila — sempre com `tasks` de um único elemento. O cliente deve **mesclar** pelo `id`, nunca substituir a lista: substituir apaga o histórico das já concluídas. A fila seca após N=3 tarefas e nenhum evento novo é emitido. |
+| `task_updated`      | `{ playerId: string, taskId: string, currentProgress: number, status: string }` | Broadcast para todos na sala quando o status **ou o progresso** de uma task muda (via `task_start_interaction`, `task_complete_attempt` ou cada `task_progress`). Status possíveis: `in_progress`, `completed`, `failed`. Construído pelo servidor — não reflete campos crus do cliente. **Nunca** carrega `itemId`/`slotId`. |
+| `task_rejected`     | `{ taskId: string, code: TaskRejectionCode, message: string, itemId?: string }` | **Unicast ao remetente** (não broadcast): o servidor recusou um `task_progress` por regra de gameplay. `message` é texto em pt-BR pronto para exibir. `itemId` volta quando veio no pedido, para o cliente saber qual item devolver à mão. Ver `TaskRejectionCode` na §5. |
 
 ---
 
 ## 5. Schemas de dados
+
+### TaskEntry (shape em `task_catalog_register`)
+
+```ts
+interface TaskItemPair {
+    itemId: string;
+    slotId: string;
+}
+
+interface TaskEntry {
+    id: string;
+    description: string;
+    type: string;
+    targetCount: number;
+    items?: string[];        // itemIds que contam progresso nesta task
+    pairs?: TaskItemPair[];  // destino obrigatório por item (tarefas de pareamento)
+}
+```
+
+`items` e `pairs` são **opcionais e retrocompatíveis**: entrada que não declara nenhum dos dois
+mantém a contagem cega de +1 por `task_progress` (comportamento anterior ao plano 0004).
+
+Quando **um dos dois** está presente, `task_progress` passa a exigir `itemId`, e o servidor
+valida pertencimento, pareamento e não-repetição. Os dois podem coexistir na mesma entrada:
+`items` restringe quais itens contam e `pairs` amarra cada item ao seu destino.
+
+Validação de shape no registro (tolerante por desenho — catálogo recusado deixaria o jogador
+sem nenhuma tarefa):
+
+| Situação | Comportamento |
+| :------- | :------------ |
+| `items` não é array | campo descartado + `warn` |
+| `items` com elementos não-string | elementos inválidos filtrados + `warn` |
+| `pairs` com entrada sem `itemId` ou sem `slotId` | entrada filtrada + `warn` |
+| filtragem esvazia o campo | campo inteiro descartado + `warn` (lista vazia é indistinguível de ausente) |
+
+### TaskRejectionCode (campo `code` em `task_rejected`)
+
+```ts
+type TaskRejectionCode =
+    | 'NOT_ASSIGNED'      // jogador não tem a task (ou o taskId não é dele)
+    | 'INVALID_STATUS'    // task já completed/failed
+    | 'MISSING_ITEM'      // catálogo exige itemId e o payload não mandou
+    | 'UNKNOWN_ITEM'      // itemId não pertence a esta task
+    | 'WRONG_SLOT'        // par (itemId, slotId) não confere com o catálogo
+    | 'ALREADY_COUNTED';  // itemId já contabilizado nesta atribuição
+```
+
+Ordem de avaliação em `incrementProgress` (a primeira violação encerra):
+`NOT_ASSIGNED` → `INVALID_STATUS` → `MISSING_ITEM` → `UNKNOWN_ITEM` → `WRONG_SLOT` →
+`ALREADY_COUNTED`.
+
+**Recusa de gameplay ≠ falha de protocolo.** `task_rejected` significa "a regra do jogo não
+permitiu"; o cliente deve devolver o item à mão e mostrar `message`. `ERROR` significa "o pacote
+está malformado" e indica bug de cliente. Os dois usam canais distintos de propósito.
 
 ### AssignedTask (shape em `task_assigned`)
 

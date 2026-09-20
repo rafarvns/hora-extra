@@ -1,6 +1,7 @@
 import { RemoteInfo } from 'dgram';
 import { ISocketHandler } from '../types/SocketEvent.js';
 import { ServiceFactory } from '../../core/factories/Service.Factory.js';
+import { releaseNextTask } from './TaskProgress.Handler.js';
 import logger from '../../utils/Logger.js';
 
 /**
@@ -56,5 +57,8 @@ export class TaskCompleteAttemptHandler implements ISocketHandler {
         server.broadcastToRoom(session.roomId, 'task_updated', broadcastPayload);
 
         logger.info(`[UDP_SOCKET] task_updated: task '${task.id}' do jogador '${session.id}' → '${task.status}'`, { module: 'UDP_SOCKET' });
+
+        // Fila sequencial: o QTE também encerra tarefa, então também libera a próxima.
+        releaseNextTask(server, session, taskService);
     }
 }
