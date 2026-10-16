@@ -56,7 +56,7 @@ describe('TaskCompleteAttemptHandler', () => {
             status: 'completed',
             targetCount: 3,
         });
-        (ServiceFactory.getTaskService as any).mockReturnValue({ resolveTask: mockResolveTask });
+        (ServiceFactory.getTaskService as any).mockReturnValue({ resolveTask: mockResolveTask, advanceQueue: vi.fn().mockReturnValue(null) });
         mockServer.getSession.mockReturnValue({ id: 'player-99', roomId: 'room-2' });
 
         await handler.handle(mockServer as any, rinfo, { taskId: 'task-001', success: true });
@@ -71,7 +71,7 @@ describe('TaskCompleteAttemptHandler', () => {
             status: 'completed',
             targetCount: 3,
         });
-        (ServiceFactory.getTaskService as any).mockReturnValue({ resolveTask: mockResolveTask });
+        (ServiceFactory.getTaskService as any).mockReturnValue({ resolveTask: mockResolveTask, advanceQueue: vi.fn().mockReturnValue(null) });
         mockServer.getSession.mockReturnValue({ id: 'player-99', roomId: 'room-2' });
 
         await handler.handle(mockServer as any, rinfo, { taskId: 'task-001', success: true });
@@ -96,7 +96,7 @@ describe('TaskCompleteAttemptHandler', () => {
             status: 'failed',
             targetCount: 3,
         });
-        (ServiceFactory.getTaskService as any).mockReturnValue({ resolveTask: mockResolveTask });
+        (ServiceFactory.getTaskService as any).mockReturnValue({ resolveTask: mockResolveTask, advanceQueue: vi.fn().mockReturnValue(null) });
         mockServer.getSession.mockReturnValue({ id: 'player-99', roomId: 'room-2' });
 
         await handler.handle(mockServer as any, rinfo, { taskId: 'task-001', success: false });
@@ -118,7 +118,7 @@ describe('TaskCompleteAttemptHandler', () => {
         const mockResolveTask = vi.fn().mockImplementation(() => {
             throw new Error('Transição inválida: task não está in_progress');
         });
-        (ServiceFactory.getTaskService as any).mockReturnValue({ resolveTask: mockResolveTask });
+        (ServiceFactory.getTaskService as any).mockReturnValue({ resolveTask: mockResolveTask, advanceQueue: vi.fn().mockReturnValue(null) });
         mockServer.getSession.mockReturnValue({ id: 'player-99', roomId: 'room-2' });
 
         await handler.handle(mockServer as any, rinfo, { taskId: 'task-001', success: true });

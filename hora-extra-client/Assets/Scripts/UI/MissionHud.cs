@@ -27,9 +27,17 @@ namespace HoraExtra.UI
         [Tooltip("Texto temporário de conclusão. Começa oculto; aparece por alguns segundos ao completar uma task.")]
         [SerializeField] private Text _successMessageText;
 
+        [Tooltip("Texto com o passo a passo da tarefa ATIVA. Fica abaixo do checklist. " +
+                 "Se vazio, o passo a passo é anexado ao próprio contador.")]
+        [SerializeField] private Text _howToText;
+
         [Header("Settings")]
         [Tooltip("Prefixo do contador. O 'X/Y' é anexado ao final.")]
         [SerializeField] private string _counterPrefix = "Missões: ";
+
+        [Tooltip("Se marcado, lista cada missão ativa com seu progresso abaixo do contador " +
+                 "(ex: '• Colete os documentos — 2/4'). Desmarque para voltar ao contador simples.")]
+        [SerializeField] private bool _showTaskList = true;
 
         [Tooltip("Mensagem exibida ao concluir uma tarefa.")]
         [SerializeField] private string _successMessage = "Tarefa concluída com sucesso!";
@@ -86,7 +94,47 @@ namespace HoraExtra.UI
             foreach (AssignedTask t in tasks)
                 if (t.Status == STATUS_COMPLETED) completed++;
 
-            _missionCountText.text = $"{_counterPrefix}{completed}/{total}";
+            if (!_showTaskList)
+            {
+                _missionCountText.text = $"{_counterPrefix}{completed}/{total}";
+                return;
+            }
+
+            // Lista cada missão com o progresso autoritativo que veio do servidor. O texto
+            // vem todo do TaskPresentation — este HUD não inventa rótulo nem conta nada
+            // por conta própria.
+            var sb = new System.Text.StringBuilder();
+            sb.Append(_counterPrefix).Append(completed).Append('/').Append(total);
+
+            // Checklist: uma linha por tarefa, com resumo curto. A ativa leva ">" para ser
+            // achada de relance; o passo a passo dela vai no bloco de baixo.
+            AssignedTask ativa = null;
+            foreach (AssignedTask t in tasks)
+            {
+                bool feita = t.Status == STATUS_COMPLETED;
+                if (!feita && ativa == null) ativa = t;
+
+                sb.AppendLine();
+                sb.Append(feita ? "  [x] " : (ativa == t ? "  [>] " : "  [ ] "));
+                sb.Append(TaskPresentation.GetSummary(t));
+                sb.Append(" - ");
+                sb.Append(TaskPresentation.GetProgressLabel(t));
+            }
+
+            string comoFazer = ativa != null ? TaskPresentation.GetHowTo(ativa) : string.Empty;
+
+            if (_howToText != null)
+            {
+                _howToText.text = comoFazer;
+                _howToText.gameObject.SetActive(!string.IsNullOrEmpty(comoFazer));
+            }
+            else if (!string.IsNullOrEmpty(comoFazer))
+            {
+                // Sem Text dedicado, anexa ao contador para o passo a passo nao sumir.
+                sb.AppendLine().AppendLine().Append(comoFazer);
+            }
+
+            _missionCountText.text = sb.ToString();
         }
 
         private void ShowSuccessMessage()

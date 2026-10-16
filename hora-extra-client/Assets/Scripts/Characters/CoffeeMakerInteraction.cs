@@ -1,7 +1,9 @@
 using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 using HoraExtra.Network.Models;
+using HoraExtra.UI;
 
 namespace HoraExtra.Characters
 {
@@ -35,6 +37,9 @@ namespace HoraExtra.Characters
         [Header("UI")]
         [Tooltip("GameObject do canvas filho que exibe o prompt 'Pressione E'.")]
         [SerializeField] private GameObject _promptUI;
+
+        [Tooltip("Texto do prompt (dentro de _promptUI). Recebe a mensagem descritiva. Opcional.")]
+        [SerializeField] private Text _promptText;
 
         [Header("Components")]
         [Tooltip("Referência ao CoffeeQTE neste prefab.")]
@@ -84,6 +89,9 @@ namespace HoraExtra.Characters
             // Verificar gate de task antes de mostrar prompt.
             var task = GetEligibleTask();
             bool shouldShowPrompt = (task != null);
+
+            if (shouldShowPrompt && _promptText != null)
+                _promptText.text = TaskPresentation.GetActionPrompt(task);
 
             if (_promptUI != null && _promptUI.activeSelf != shouldShowPrompt)
             {

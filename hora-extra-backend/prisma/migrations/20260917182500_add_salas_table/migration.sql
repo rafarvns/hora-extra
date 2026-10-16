@@ -1,0 +1,13 @@
+-- CreateTable
+CREATE TABLE `salas` (
+    `id` VARCHAR(191) NOT NULL,
+    `nome` VARCHAR(191) NOT NULL,
+    `hostId` VARCHAR(191) NOT NULL,
+    `playerCount` INTEGER NOT NULL DEFAULT 0,
+    `maxPlayers` INTEGER NOT NULL DEFAULT 4,
+    `status` VARCHAR(191) NOT NULL DEFAULT 'OPEN',
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

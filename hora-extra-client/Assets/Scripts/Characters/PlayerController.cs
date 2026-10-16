@@ -80,8 +80,12 @@ namespace HoraExtra.Characters
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
 
-            // Registrar para receber o próprio movimento de volta do servidor (Reconciliação)
-            SocketManager.Instance.On(NetworkEvents.PLAYER_MOVE, (data) => {
+            // Registrar para receber o próprio movimento de volta do servidor (Reconciliação).
+            // EnsureExists (e não Instance) porque cenas de level como SCN_FirstFloor não têm
+            // o GameObject do SocketManager pré-configurado: no fluxo normal ele já veio do
+            // menu via DontDestroyOnLoad, mas abrir a cena direto no Editor deixaria Instance
+            // nulo e esta linha lançaria NullReferenceException antes do jogador andar.
+            SocketManager.EnsureExists().On(NetworkEvents.PLAYER_MOVE, (data) => {
                 if (!_onlyMoveViaNetwork) return;
                 
                 string id = data["id"]?.ToString();
