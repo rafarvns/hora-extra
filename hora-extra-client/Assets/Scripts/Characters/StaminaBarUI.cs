@@ -34,11 +34,27 @@ namespace HoraExtra.Characters
 
         private void FindLocalPlayer()
         {
-            _playerController = FindObjectOfType<PlayerController>();
+            _playerController = FindFirstObjectByType<PlayerController>();
             if (_playerController != null)
             {
                 Debug.Log("[UI] StaminaBarUI: PlayerController encontrado e vinculado.");
             }
+        }
+
+        /// <summary>
+        /// Esconde a barra legada (trilho + preenchimento) e para de atualizar. Chamado pela
+        /// HUD nova (<c>HudRoot</c>), que tem a própria barra de fôlego.
+        /// </summary>
+        public void HideLegacyVisuals()
+        {
+            if (_staminaFill != null)
+            {
+                var trilho = _staminaFill.parent;
+                bool trilhoEhSoDaBarra = trilho != null && trilho.GetComponentInParent<Canvas>() != null
+                                         && trilho.GetComponent<Canvas>() == null && trilho.childCount == 1;
+                (trilhoEhSoDaBarra ? trilho.gameObject : _staminaFill.gameObject).SetActive(false);
+            }
+            enabled = false;
         }
 
         private void Update()

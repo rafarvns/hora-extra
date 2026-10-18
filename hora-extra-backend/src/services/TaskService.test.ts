@@ -117,6 +117,17 @@ describe('TaskService', () => {
         expect(retrieved).toEqual(assigned);
     });
 
+    it('a primeira entrada do catálogo (ordem de autoria) é sempre a primeira task atribuída, mesmo com o resto embaralhado', () => {
+        // Várias salas/jogadores distintos para não depender de sorte do Fisher-Yates:
+        // se o pin falhar, pelo menos uma das 10 rodadas cairia com t1 fora da primeira posição.
+        for (let i = 0; i < 10; i++) {
+            const roomId = `pin-room-${i}`;
+            seedCatalog(service, roomId);
+            const result = service.assignRandomTasks(roomId, `pin-player-${i}`);
+            expect(result[0].id).toBe('t1');
+        }
+    });
+
     it('entrega a primeira e enfileira o resto do catálogo', () => {
         // Registra catálogo com apenas 2 tasks (< 3)
         service.registerCatalog('r1', [
@@ -649,5 +660,45 @@ describe('TaskService — incrementProgress com items/pairs', () => {
         const result = service.incrementProgress('p1', taskId, 'papel-01');
 
         expect(result.currentProgress).toBe(1);
+    });
+});
+
+// ────────────────────────────────────────────────────────────
+// TaskService — getTotalTaskCount (alimenta "Tarefa X de N" na HUD)
+// ────────────────────────────────────────────────────────────
+describe('TaskService — getTotalTaskCount', () => {
+    let service: TaskService;
+
+    beforeEach(() => {
+        service = makeService();
+        seedCatalog(service);
+    });
+
+    it('jogador sem atribuição tem total 0', () => {
+        expect(service.getTotalTaskCount('ninguem')).toBe(0);
+    });
+
+    it('total = atribuídas + fila, logo após o sorteio', () => {
+        service.assignRandomTasks('r1', 'p1');
+
+        expect(service.getTotalTaskCount('p1')).toBe(5);
+    });
+
+    it('total não muda conforme a fila avança', () => {
+        service.assignRandomTasks('r1', 'p1');
+        const primeira = service.getAssignedTasks('r1', 'p1')[0];
+        service.startTask('p1', primeira.id);
+        service.resolveTask('p1', primeira.id, true);
+        service.advanceQueue('p1');
+
+        expect(service.getAssignedTasks('r1', 'p1')).toHaveLength(2);
+        expect(service.getTotalTaskCount('p1')).toBe(5);
+    });
+
+    it('clearRoom zera o total', () => {
+        service.assignRandomTasks('r1', 'p1');
+        service.clearRoom(['p1']);
+
+        expect(service.getTotalTaskCount('p1')).toBe(0);
     });
 });

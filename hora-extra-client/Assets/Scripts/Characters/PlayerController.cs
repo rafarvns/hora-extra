@@ -21,6 +21,9 @@ namespace HoraExtra.Characters
         [SerializeField, Tooltip("Força da gravidade.")]
         private float _gravity = -9.81f;
 
+        [SerializeField, Tooltip("Velocidade vertical aplicada ao pular.")]
+        private float _jumpSpeed = 5f;
+
         [Header("Configurações de Câmera (Mouse Look)")]
         [SerializeField, Tooltip("Referência para a câmera filha.")]
         private Transform _playerCamera;
@@ -200,9 +203,15 @@ namespace HoraExtra.Characters
             // 3. Processamento de Gravidade
             // Resetamos a velocidade vertical se estiver no chão
             if (_characterController.isGrounded && _velocity.y < 0) {
-                _velocity.y = -2f; 
+                _velocity.y = -2f;
             }
-            
+
+            // Pulo: só decola se estiver no chão.
+            if (_characterController.isGrounded && Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
+            {
+                _velocity.y = _jumpSpeed;
+            }
+
             // Aplica aceleração da gravidade
             _velocity.y += _gravity * Time.deltaTime;
 
@@ -249,7 +258,8 @@ namespace HoraExtra.Characters
             if (Mouse.current == null) return;
 
             // Delta do mouse
-            Vector2 mouseDelta = Mouse.current.delta.ReadValue() * _lookSensitivity;
+            // Multiplicador do jogador (menu → Configurações) sobre o valor ajustado no prefab.
+            Vector2 mouseDelta = Mouse.current.delta.ReadValue() * _lookSensitivity * HoraExtra.Settings.GameSettings.MouseSensitivity;
 
             // Rotação Vertical (Pitch - Câmera)
             _verticalRotation -= mouseDelta.y;
@@ -258,6 +268,21 @@ namespace HoraExtra.Characters
 
             // Rotação Horizontal (Yaw - Corpo)
             transform.Rotate(Vector3.up * mouseDelta.x);
+        }
+
+        /// <summary>
+        /// Reposiciona o player de forma segura (ex: transição de elevador entre cenas).
+        /// Zera a velocidade acumulada para não herdar queda/impulso do estado anterior.
+        /// </summary>
+        public void Teleport(Vector3 position, float? yawDegrees = null)
+        {
+            _characterController.enabled = false;
+            transform.position = position;
+            if (yawDegrees.HasValue) transform.rotation = Quaternion.Euler(0, yawDegrees.Value, 0);
+            _velocity = Vector3.zero;
+            _lastSentPosition = position;
+            _lastSentRotation = transform.eulerAngles.y;
+            _characterController.enabled = true;
         }
 
         /// <summary>

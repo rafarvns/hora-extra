@@ -30,6 +30,9 @@ namespace HoraExtra.Audio
 
         private AudioSource _source;
 
+        /// <summary>Volume do Inspector × preferência de música do jogador.</summary>
+        private float TargetVolume => _volume * HoraExtra.Settings.GameSettings.MusicVolume;
+
         private void Awake()
         {
             _source = GetComponent<AudioSource>();
@@ -53,11 +56,20 @@ namespace HoraExtra.Audio
             }
 
             _source.Play();
+            HoraExtra.Settings.GameSettings.OnChanged += ApplyVolume;
 
             if (_fadeInSeconds > 0f)
                 StartCoroutine(FadeIn());
             else
-                _source.volume = _volume;
+                _source.volume = TargetVolume;
+        }
+
+        /// <summary>Reaplica o volume quando o jogador mexe no slider (corta o fade, se houver).</summary>
+        private void ApplyVolume()
+        {
+            if (_source == null) return;
+            StopAllCoroutines();
+            _source.volume = TargetVolume;
         }
 
         private void OnDisable()
@@ -65,6 +77,7 @@ namespace HoraExtra.Audio
             // Sem isto, uma coroutine de fade pendente volta a subir o volume se o objeto
             // for reativado no meio da transição de cena.
             StopAllCoroutines();
+            HoraExtra.Settings.GameSettings.OnChanged -= ApplyVolume;
             if (_source != null)
                 _source.Stop();
         }
@@ -75,10 +88,10 @@ namespace HoraExtra.Audio
             while (t < _fadeInSeconds)
             {
                 t += Time.unscaledDeltaTime;   // unscaled: um menu com timeScale 0 ainda faz o fade
-                _source.volume = Mathf.Lerp(0f, _volume, t / _fadeInSeconds);
+                _source.volume = Mathf.Lerp(0f, TargetVolume, t / _fadeInSeconds);
                 yield return null;
             }
-            _source.volume = _volume;
+            _source.volume = TargetVolume;
         }
     }
 }

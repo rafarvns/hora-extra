@@ -185,6 +185,7 @@ export class UdpSocketManager {
                 playerId: session.id,
                 message: isGuestSession ? 'Auto-joined guest-room.' : 'Auto-joined dev room.',
             });
+            this.broadcastRoster(session.roomId);
         }
     }
 
@@ -231,6 +232,29 @@ export class UdpSocketManager {
         return count;
     }
 
+    /**
+     * Lista de jogadores de uma sala, no formato compacto do evento room_roster.
+     */
+    public getRoomRoster(roomId: string): Array<{ id: string; n: string }> {
+        const roster: Array<{ id: string; n: string }> = [];
+        this.sessions.forEach(session => {
+            if (session.roomId === roomId) {
+                roster.push({ id: session.id, n: session.playerName ?? session.id });
+            }
+        });
+        return roster;
+    }
+
+    /**
+     * Envia o roster atual para todos da sala (room_roster). Chamado sempre que a
+     * composição muda: entrada (CONN auto-join / join_room) e saída (expiração).
+     */
+    public broadcastRoster(roomId: string): void {
+        const roster = this.getRoomRoster(roomId);
+        if (roster.length === 0) return;
+        this.broadcastToRoom(roomId, 'room_roster', { p: roster });
+    }
+
     private cleanupSessions(): void {
         const now = Date.now();
         const timeout = 30000; // 30 segundos de inatividade
@@ -249,7 +273,10 @@ export class UdpSocketManager {
             if (roomId === 'guest-room' && this.getRoomSessionCount(roomId) === 0) {
                 logger.info(`[UDP_SOCKET] guest-room ficou vazia após cleanup — limpando estado de NPCs`, { module: 'UDP_SOCKET' });
                 NpcRegisterHandler.clearRoomState(roomId);
+                ServiceFactory.getShiftClockService().resetRoom(roomId);
+                return;
             }
+            this.broadcastRoster(roomId);
         });
     }
 
@@ -280,6 +307,9 @@ export class UdpSocketManager {
         // 4. Limpar Tasks
         const taskService = ServiceFactory.getTaskService();
         taskService.clearRoom(playerIds);
+
+        // 5. Reiniciar o relógio do expediente
+        ServiceFactory.getShiftClockService().resetRoom(roomId);
 
         logger.info(`[UDP_SOCKET] Sala '${roomId}' reiniciada. ${count} sessões removidas.`, { module: 'UDP_SOCKET' });
     }
