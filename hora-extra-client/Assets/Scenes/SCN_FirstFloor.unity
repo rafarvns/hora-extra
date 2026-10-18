@@ -16133,7 +16133,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Characters.TaskSystemBridge
   _initialCatalog:
   - id: task-throw-trash-01
-    description: Arremesse os papeis de lixo na lixeira
+    description: "(2\xBA andar) Arremesse os papeis de lixo na lixeira"
     type: throw_trash_papers
     targetCount: 10
     items:
@@ -16149,7 +16149,7 @@ MonoBehaviour:
     - papel-lixo-10
     pairs: []
   - id: task-collect-papers-01
-    description: "Colete os pap\xE9is e coloque no recipiente na mesa"
+    description: "(1\xBA andar) Colete os pap\xE9is e coloque no recipiente na mesa"
     type: collect_papers
     targetCount: 4
     items:
@@ -16159,7 +16159,7 @@ MonoBehaviour:
     - papel-04
     pairs: []
   - id: task-collect-pens-01
-    description: Organizar as canetas
+    description: "(1\xBA andar) Organizar as canetas"
     type: collect_pens
     targetCount: 2
     items:
@@ -16167,7 +16167,7 @@ MonoBehaviour:
     - caneta-02
     pairs: []
   - id: task-collect-magazines-01
-    description: Organizar as revistas
+    description: "(1\xBA andar) Organizar as revistas"
     type: collect_magazines
     targetCount: 2
     items:
@@ -16175,7 +16175,7 @@ MonoBehaviour:
     - revista-02
     pairs: []
   - id: task-limpar-chao-01
-    description: Limpe as manchas de agua e cafe do chao
+    description: "(1\xBA andar) Limpe as manchas de agua e cafe do chao"
     type: clean_floor
     targetCount: 6
     items:
