@@ -16055,6 +16055,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Characters.TaskSystemBridge
   _initialCatalog:
+  - id: task-throw-trash-01
+    description: Arremesse os papeis de lixo na lixeira
+    type: throw_trash_papers
+    targetCount: 10
+    items:
+    - papel-lixo-01
+    - papel-lixo-02
+    - papel-lixo-03
+    - papel-lixo-04
+    - papel-lixo-05
+    - papel-lixo-06
+    - papel-lixo-07
+    - papel-lixo-08
+    - papel-lixo-09
+    - papel-lixo-10
+    pairs: []
   - id: task-collect-papers-01
     description: "Colete os pap\xE9is e coloque no recipiente na mesa"
     type: collect_papers

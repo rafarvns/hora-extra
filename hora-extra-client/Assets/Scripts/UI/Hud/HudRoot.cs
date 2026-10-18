@@ -69,11 +69,28 @@ namespace HoraExtra.UI.Hud
             }
             Instance = this;
 
+            // Sem isto, a HUD inteira (prompt, task card, slot de mão, marcador de
+            // objetivo) era destruída ao trocar de cena (ex: elevador para outro andar) —
+            // nenhuma outra cena de level tem seu próprio HudRoot autorado.
+            DontDestroyOnLoad(gameObject);
+
             // ShiftClock/RoomRoster assinam eventos do SocketManager no OnEnable: ele precisa existir antes.
             SocketManager.EnsureExists();
 
             Theme = _theme != null ? _theme : HudTheme.LoadOrDefault();
             InteractionPrompt.UseHudRenderer = _hideLegacyHud && _showPrompt;
+
+            // SEMPRE cria o próprio InteractionPrompt aqui (não só quando a cena não tem
+            // um) — este GameObject é DontDestroyOnLoad, então é o único jeito de garantir
+            // que sobrevive à troca de cena. Se só criasse "quando não encontrar nenhum",
+            // o HudRoot acharia o InteractionPrompt autorado em SCN_FirstFloor na primeira
+            // vez (não criaria o seu), e esse — que não é persistente — morreria ao trocar
+            // de cena, deixando a próxima cena sem nenhum de novo. Ter dois instâncias não
+            // tem problema: CarryableItem/etc. com _prompt wireado no Inspector continuam
+            // usando o seu; quem cai no fallback (FindFirstObjectByType) acha qualquer um
+            // dos dois — ambos emitem o mesmo evento estático que o PromptWidget escuta.
+            // Não precisa de Text (UseHudRenderer já desenha via PromptWidget, acima).
+            gameObject.AddComponent<InteractionPrompt>();
 
             gameObject.AddComponent<ShiftClock>();
             gameObject.AddComponent<RoomRoster>();

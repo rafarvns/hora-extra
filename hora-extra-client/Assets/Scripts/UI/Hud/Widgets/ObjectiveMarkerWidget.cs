@@ -44,6 +44,7 @@ namespace HoraExtra.UI.Hud.Widgets
         private DirtSpot[] _dirt = new DirtSpot[0];
         private CarryableItem[] _items = new CarryableItem[0];
         private CoffeeMakerInteraction[] _coffee = new CoffeeMakerInteraction[0];
+        private TrashBin[] _trashBins = new TrashBin[0];
 
         protected override void Build()
         {
@@ -105,6 +106,7 @@ namespace HoraExtra.UI.Hud.Widgets
             _dirt = FindObjectsByType<DirtSpot>(FindObjectsSortMode.None);
             _items = FindObjectsByType<CarryableItem>(FindObjectsSortMode.None);
             _coffee = FindObjectsByType<CoffeeMakerInteraction>(FindObjectsSortMode.None);
+            _trashBins = FindObjectsByType<TrashBin>(FindObjectsSortMode.None);
         }
 
         private Transform PickTarget()
@@ -134,10 +136,21 @@ namespace HoraExtra.UI.Hud.Widgets
 
             // Entrega: destino do tipo da tarefa e itens da categoria que ele aceita.
             TaskDepositPoint destino = Nearest(_deposits, d => d != null && d.isActiveAndEnabled && d.TaskType == task.Type, origem);
-            if (destino == null) return null;
+            if (destino != null)
+            {
+                if (naMao == destino.AcceptedKind) return destino.transform;
+                return NearestLooseItem(destino.AcceptedKind, origem) ?? destino.transform;
+            }
 
-            if (naMao == destino.AcceptedKind) return destino.transform;
-            return NearestLooseItem(destino.AcceptedKind, origem) ?? destino.transform;
+            // Arremesso: lixeira do tipo da tarefa e os papéis arremessáveis no mundo.
+            TrashBin lixeira = Nearest(_trashBins, b => b != null && b.isActiveAndEnabled && b.TaskType == task.Type, origem);
+            if (lixeira != null)
+            {
+                if (naMao == lixeira.AcceptedKind) return lixeira.transform;
+                return NearestLooseItem(lixeira.AcceptedKind, origem) ?? lixeira.transform;
+            }
+
+            return null;
         }
 
         /// <summary>Item da categoria ainda no mundo (não está na mão do jogador).</summary>

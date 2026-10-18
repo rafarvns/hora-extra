@@ -81,6 +81,25 @@ namespace HoraExtra.Interactions
         }
 
         /// <summary>
+        /// True no frame em que o botão de arremesso (clique esquerdo) foi pressionado.
+        /// Usado por <see cref="PaperThrower"/> para lançar o item arremessável na mão.
+        /// </summary>
+        public static bool ThrowPressed()
+        {
+#if ENABLE_INPUT_SYSTEM
+            if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
+                return true;
+#endif
+
+#if ENABLE_LEGACY_INPUT_MANAGER
+            if (Input.GetMouseButtonDown(0))
+                return true;
+#endif
+
+            return false;
+        }
+
+        /// <summary>
         /// True no frame em que [E] foi solta. Usado para cancelar uma ação contínua
         /// em andamento sem depender de polling invertido de <see cref="InteractHeld"/>.
         /// </summary>

@@ -156,6 +156,25 @@ namespace HoraExtra.Interactions
         }
 
         /// <summary>
+        /// Remove <paramref name="item"/> da mão para virar um projétil (ver
+        /// <see cref="ThrowablePaper"/>). Diferente de <see cref="Consume"/> (desativa) e
+        /// <see cref="DropAll"/> (reposiciona no chão): aqui o item continua ativo — quem
+        /// chama é responsável por aplicar a física do arremesso logo depois.
+        /// </summary>
+        public CarryableItem TakeForThrow(CarryableItem item)
+        {
+            if (item == null || !_carried.Contains(item)) return null;
+
+            _carried.Remove(item);
+            item.transform.SetParent(null, true);
+            Restack();
+
+            Debug.Log($"[GAMEPLAY] PlayerCarrier — item '{item.ItemId}' retirado da mão para arremesso.");
+            OnCarryChanged?.Invoke(Carried);
+            return item;
+        }
+
+        /// <summary>
         /// Solta a pilha inteira no chão, à frente do jogador.
         ///
         /// Os itens são posicionados no PÉ do jogador, não na altura da mão: largar na

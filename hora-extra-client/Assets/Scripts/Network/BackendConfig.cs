@@ -41,8 +41,8 @@ namespace HoraExtra.Network
         };
 
         /// <summary>Host/IP do backend. Use "127.0.0.1" pra local ou IP do servidor pra remoto.</summary>
-        public static string Host = "192.168.10.151";  // homelab (so na rede local)
-        // public static string Host = "187.127.55.122"; // build de demonstracao (acesso externo)
+        public static string Host = "187.127.55.122";  // build de demonstracao (acesso externo) — RC_07, professor testa de fora da rede local
+        // public static string Host = "192.168.10.151"; // homelab (so na rede local)
         // public static string Host = "127.0.0.1";      // backend rodando na propria maquina
         // public static string Host = "92.113.39.4";    // VPS
 

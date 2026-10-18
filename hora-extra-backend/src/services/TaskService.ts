@@ -145,9 +145,14 @@ export class TaskService {
             return [];
         }
 
-        // Sem teto fixo: a fila leva o catálogo INTEIRO da sala, embaralhado. Acrescentar
-        // uma tarefa nova ao catálogo passa a valer sozinho, sem tocar no servidor.
-        const [primeira, ...resto] = this.fisherYates([...roomCatalog]);
+        // A primeira entrada do catálogo (ordem de autoria na cena) é sempre a primeira
+        // task atribuída — só o RESTO é embaralhado. Existe para permitir fixar uma task
+        // "sempre primeiro" (ex: durante o desenvolvimento de uma feature nova, sem
+        // precisar completar o resto da fila aleatória pra chegar nela a cada teste).
+        // Sem teto fixo: a fila leva o catálogo INTEIRO da sala. Acrescentar uma tarefa
+        // nova ao catálogo passa a valer sozinho, sem tocar no servidor.
+        const [primeira, ...demais] = roomCatalog;
+        const resto = this.fisherYates([...demais]);
         const assigned = [this.toAssigned(primeira)];
 
         this.assignments.set(playerId, assigned);

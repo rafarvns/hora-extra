@@ -117,6 +117,17 @@ describe('TaskService', () => {
         expect(retrieved).toEqual(assigned);
     });
 
+    it('a primeira entrada do catálogo (ordem de autoria) é sempre a primeira task atribuída, mesmo com o resto embaralhado', () => {
+        // Várias salas/jogadores distintos para não depender de sorte do Fisher-Yates:
+        // se o pin falhar, pelo menos uma das 10 rodadas cairia com t1 fora da primeira posição.
+        for (let i = 0; i < 10; i++) {
+            const roomId = `pin-room-${i}`;
+            seedCatalog(service, roomId);
+            const result = service.assignRandomTasks(roomId, `pin-player-${i}`);
+            expect(result[0].id).toBe('t1');
+        }
+    });
+
     it('entrega a primeira e enfileira o resto do catálogo', () => {
         // Registra catálogo com apenas 2 tasks (< 3)
         service.registerCatalog('r1', [

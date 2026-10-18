@@ -28,6 +28,16 @@ namespace HoraExtra.Characters
         public static TaskSystemBridge Instance { get; private set; }
 
         /// <summary>
+        /// True depois que o catálogo autorado em cena foi adotado pela primeira vez.
+        ///
+        /// Sem isto, revisitar uma cena de level (ex: elevador 2º → 1º andar) recriava a
+        /// instância autorada dela, que no Awake sempre chamava AdoptCatalog de novo —
+        /// isso zera _myTasks/_otherTasks/_totalTasks e pede um novo sorteio ao servidor,
+        /// perdendo o progresso (e às vezes a fila de tasks) que o jogador já tinha.
+        /// </summary>
+        private static bool _catalogAdoptedFromScene;
+
+        /// <summary>
         /// Garante que existe uma instância do TaskSystemBridge. Se não existir na cena,
         /// cria um GameObject em runtime com DontDestroyOnLoad.
         ///
@@ -140,14 +150,19 @@ namespace HoraExtra.Characters
             else
             {
                 // Esta instância é da CENA e chegou depois de uma persistida (criada no menu
-                // por EnsureExists, que não tem catálogo configurado). Antes de morrer, ela
-                // entrega o catálogo autorado — que é a fonte da verdade do level.
+                // por EnsureExists, que não tem catálogo configurado, OU a própria instância
+                // persistida vinda de uma visita anterior a esta mesma cena). Antes de morrer,
+                // ela entrega o catálogo autorado — que é a fonte da verdade do level — mas
+                // SÓ NA PRIMEIRA VEZ.
                 //
-                // Sem isto, o catálogo da cena era silenciosamente descartado e o servidor
-                // ficava só com o que a instância do menu tivesse: nenhuma das tarefas da
-                // recepção existia, e os destinos nunca ativavam.
-                if (_initialCatalog != null && _initialCatalog.Count > 0)
+                // Sem o _catalogAdoptedFromScene, revisitar a cena (ex: elevador 2º → 1º andar)
+                // chamava AdoptCatalog de novo, que zera _myTasks/_otherTasks/_totalTasks e
+                // pede um novo sorteio ao servidor — perdendo o progresso que o jogador já tinha.
+                if (!_catalogAdoptedFromScene && _initialCatalog != null && _initialCatalog.Count > 0)
+                {
+                    _catalogAdoptedFromScene = true;
                     Instance.AdoptCatalog(_initialCatalog);
+                }
 
                 Destroy(gameObject);
             }
