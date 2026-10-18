@@ -18,6 +18,17 @@ namespace HoraExtra.Network
 
         public System.Action OnSessionUpdated;
 
+        /// <summary>
+        /// Garante a instância (criando um GameObject persistente se preciso). Chamado pelo menu
+        /// ao abrir, para que o login salvo em PlayerPrefs seja restaurado já na primeira tela.
+        /// </summary>
+        public static SessionManager EnsureExists()
+        {
+            if (Instance == null)
+                new GameObject("SessionManager").AddComponent<SessionManager>();
+            return Instance;
+        }
+
         private void Awake()
         {
             Debug.Log("[SessionManager] Awake chamado.");
@@ -63,6 +74,7 @@ namespace HoraExtra.Network
             PlayerPrefs.DeleteKey("PlayerName");
             PlayerPrefs.Save();
             Debug.Log("[SessionManager] Sessão encerrada.");
+            OnSessionUpdated?.Invoke();
         }
 
         /**

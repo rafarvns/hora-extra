@@ -1,42 +1,47 @@
 # Indicadores de Tarefa (UI de Missões)
 
 Conjunto de indicadores no cliente que comunicam ao jogador **quais** são suas tarefas,
-**como** executá-las e **onde** ir. Todos os dados vêm do que o servidor já envia em
-`task_assigned` / `task_updated` — **nenhuma mudança de rede** foi necessária.
+**como** executá-las e **onde** ir.
+
+> Desde a HUD nova (ver [`Docs/Arch/HUD.md`](../Arch/HUD.md)) os indicadores são widgets do
+> `HudRoot`. `MissionListHud`, `MissionRowView` e `WorldTaskMarker` foram removidos, porque
+> nunca chegaram a ser montados em cena. O `MissionHud` antigo continua na cena, mas é
+> escondido pelo `HudRoot`.
 
 ## Componentes
 
-| Script | Local | Papel |
-|--------|-------|-------|
-| `TaskPresentation` | `Assets/Scripts/UI/TaskPresentation.cs` | Classe estática: fonte única dos textos (título, "como fazer", progresso, prompt) por `type`. Centraliza as constantes de `type`/`status`. |
-| `MissionListHud` | `Assets/Scripts/UI/MissionListHud.cs` | Painel sempre visível com uma linha por tarefa do jogador local. Observer de `OnTaskAssigned`/`OnTaskUpdated`. |
-| `MissionRowView` | `Assets/Scripts/UI/MissionRowView.cs` | View de uma linha (título, instrução, progresso/status), com cor por status. |
-| `WorldTaskMarker` | `Assets/Scripts/Characters/WorldTaskMarker.cs` | Ícone flutuante sobre o objeto-alvo enquanto a task do tipo configurado está ativa. |
+| Script | Papel |
+|--------|-------|
+| `UI/TaskPresentation.cs` | Classe estática e fonte única dos textos por `type`: resumo, título, "como fazer", progresso, prompt, categoria (badge) e nome dos itens carregados. Centraliza as constantes de `type`/`status` e os helpers `FindActive`/`IsFinished`. |
+| `UI/Hud/Widgets/MissionCardWidget.cs` | Card da tarefa atual com "TAREFA X DE N", badge de categoria, barra de progresso, passo a passo e barra segmentada com todas as tarefas da partida. Segurar **[Tab]** mostra a lista completa. |
+| `UI/Hud/Widgets/ObjectiveMarkerWidget.cs` | Marcador do próximo objetivo, com distância. Fora da tela vira seta na borda. |
+| `Interactions/DepositHighlight.cs` | Losango dourado sobre o destino que aceita o item na mão (inalterado). |
 
-Edições: `CoffeeMakerInteraction` e `MissionPaperCollectible` agora exibem prompts
-descritivos (`"Pressione E para preparar o café"`, `"Pressione E para coletar documento (2/4)"`)
-via `TaskPresentation.GetActionPrompt`.
+## De onde vem cada dado
 
-## Como adicionar instrução para um novo tipo de tarefa
+- O progresso e o status são os de `task_assigned` / `task_updated`, como o servidor
+  informa (autoritativo).
+- O **N** de "Tarefa X de N" vem do campo `totalTasks` de `task_assigned` (atribuídas + fila
+  do servidor).
+- O **alvo do marcador** é derivado da cena, sem dado de rede:
+  1. `DirtSpot.TaskType`: se a tarefa atual é de limpeza, o marcador aponta para a
+     ferramenta (`RequiredKind`) e, quando ela já está na mão, para a mancha mais próxima.
+  2. `TaskDepositPoint.TaskType`: em tarefa de entrega, aponta para o item solto da
+     categoria `AcceptedKind` e, com o item na mão, para o destino.
+  3. Na tarefa de café, aponta para a cafeteira.
 
-Edite `TaskPresentation` e adicione o `case` do novo `type` em `GetHowTo`, `GetTitle` e
-`GetActionPrompt`. O painel e os prompts passam a refletir automaticamente.
+## Como adicionar um novo tipo de tarefa
 
-## Setup no editor Unity
-
-- **Painel:** Panel com `VerticalLayoutGroup` no Canvas do HUD; prefab `PFB_MissionRow`
-  (com `MissionRowView` e os 3 `Text`); objeto com `MissionListHud` ligando
-  `_rowsContainer` + `_rowPrefab` (e, opcional, `_panelRoot`).
-- **Marcadores:** sprite `SPR_TaskMarker`; `WorldTaskMarker` + filho com o ícone no
-  `PFB_Interactable_CoffeeMaker` (`_taskType = "coffee_maker"`) e em cada documento /
-  prefab do papel (`_taskType = "collect"`).
-- **Prompt da cafeteira:** ligar `_promptText` do `CoffeeMakerInteraction` ao `Text`
-  dentro do `_promptUI`.
+1. Em `TaskPresentation`, adicione o `case` do novo `type` em `GetSummary`, `GetTitle`,
+   `GetHowTo` e `GetCategory`. Se houver item novo, inclua o nome dele em `GetItemLabel`.
+2. Na cena, configure `_taskType` no `TaskDepositPoint` ou no `DirtSpot`. O marcador e o card
+   passam a funcionar sozinhos.
 
 ## Verificação (Play Mode)
 
-Com o backend ativo (`npm run dev`), checar logs `[UI]/[GAMEPLAY]`:
-1. Painel aparece ao entrar, listando as tasks com título + como fazer + progresso.
-2. Marcadores visíveis sobre cafeteira/documentos enquanto pendentes; somem ao concluir.
-3. Coletar documento → prompt com `(X/4)` e a linha do painel atualiza o progresso.
-4. Concluir o café → linha vira "Concluída" (verde) e o marcador some.
+Com o backend ativo (`npm run dev`), acompanhe os logs `[UI]`/`[GAMEPLAY]`:
+1. O card mostra "TAREFA 1 DE 4", o passo a passo e a barra de progresso.
+2. O marcador aponta para o item. Depois de pegá-lo, passa a apontar para o destino.
+3. Cada entrega faz a barra avançar. Ao concluir, o card pulsa em verde, aparece o toast e
+   entra a próxima tarefa.
+4. Na última tarefa, o card mostra "Todas as tarefas concluídas!".

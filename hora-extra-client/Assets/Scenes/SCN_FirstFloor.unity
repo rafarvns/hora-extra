@@ -8633,8 +8633,85 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 8164078558771037576, guid: f3dfcdb88fa8fa0408bd6efb3f5c00aa, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 355786500}
+    - targetCorrespondingSourceObject: {fileID: 8164078558771037576, guid: f3dfcdb88fa8fa0408bd6efb3f5c00aa, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 355786501}
+    - targetCorrespondingSourceObject: {fileID: 8164078558771037576, guid: f3dfcdb88fa8fa0408bd6efb3f5c00aa, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 355786502}
   m_SourcePrefab: {fileID: 100100000, guid: f3dfcdb88fa8fa0408bd6efb3f5c00aa, type: 3}
+--- !u!1 &355786499 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8164078558771037576, guid: f3dfcdb88fa8fa0408bd6efb3f5c00aa, type: 3}
+  m_PrefabInstance: {fileID: 355786498}
+  m_PrefabAsset: {fileID: 0}
+--- !u!65 &355786500
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 355786499}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 144.12585, y: 172.23438, z: 7.701926}
+  m_Center: {x: 0.38606587, y: -122.79283, z: -189.384}
+--- !u!65 &355786501
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 355786499}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 2.988941, y: 172.23438, z: 176.25629}
+  m_Center: {x: -70.18243, y: -122.79283, z: -105.107124}
+--- !u!65 &355786502
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 355786499}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 3.6259491, y: 172.23438, z: 176.2563}
+  m_Center: {x: 71.32715, y: -122.79283, z: -105.10713}
 --- !u!1001 &356154775
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -16055,8 +16132,24 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Characters.TaskSystemBridge
   _initialCatalog:
+  - id: task-throw-trash-01
+    description: "(2\xBA andar) Arremesse os papeis de lixo na lixeira"
+    type: throw_trash_papers
+    targetCount: 10
+    items:
+    - papel-lixo-01
+    - papel-lixo-02
+    - papel-lixo-03
+    - papel-lixo-04
+    - papel-lixo-05
+    - papel-lixo-06
+    - papel-lixo-07
+    - papel-lixo-08
+    - papel-lixo-09
+    - papel-lixo-10
+    pairs: []
   - id: task-collect-papers-01
-    description: "Colete os pap\xE9is e coloque no recipiente na mesa"
+    description: "(1\xBA andar) Colete os pap\xE9is e coloque no recipiente na mesa"
     type: collect_papers
     targetCount: 4
     items:
@@ -16066,7 +16159,7 @@ MonoBehaviour:
     - papel-04
     pairs: []
   - id: task-collect-pens-01
-    description: Organizar as canetas
+    description: "(1\xBA andar) Organizar as canetas"
     type: collect_pens
     targetCount: 2
     items:
@@ -16074,7 +16167,7 @@ MonoBehaviour:
     - caneta-02
     pairs: []
   - id: task-collect-magazines-01
-    description: Organizar as revistas
+    description: "(1\xBA andar) Organizar as revistas"
     type: collect_magazines
     targetCount: 2
     items:
@@ -16082,7 +16175,7 @@ MonoBehaviour:
     - revista-02
     pairs: []
   - id: task-limpar-chao-01
-    description: Limpe as manchas de agua e cafe do chao
+    description: "(1\xBA andar) Limpe as manchas de agua e cafe do chao"
     type: clean_floor
     targetCount: 6
     items:
@@ -51099,6 +51192,63 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
   m_PrefabInstance: {fileID: 2144108329}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &791000001
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 791000002}
+  - component: {fileID: 791000003}
+  m_Layer: 5
+  m_Name: HUD
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &791000002
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 791000001}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &791000003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 791000001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a7f3c2d94e1b4f6a8c0d5e2b1f9a0c11, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.UI.Hud.HudRoot
+  _theme: {fileID: 11400000, guid: c9f5e4fb6a3d4b8cae2f7a4d3b1c2e33, type: 2}
+  _sortingOrder: 100
+  _showClock: 1
+  _showMissionCard: 1
+  _showTeam: 1
+  _showToasts: 1
+  _showPrompt: 1
+  _showCarrySlot: 1
+  _showStamina: 1
+  _showKeyHints: 1
+  _showObjectiveMarker: 1
+  _showNetworkStatus: 1
+  _hideLegacyHud: 1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -51210,3 +51360,4 @@ SceneRoots:
   - {fileID: 700000052}
   - {fileID: 700000010}
   - {fileID: 700000049}
+  - {fileID: 791000002}

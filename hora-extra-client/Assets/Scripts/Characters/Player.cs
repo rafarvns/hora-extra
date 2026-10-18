@@ -15,6 +15,9 @@ namespace HoraExtra.Characters
         [SerializeField, Tooltip("Duração da invencibilidade após sofrer dano.")]
         private float _invincibilityDuration = 1.0f;
 
+        /// <summary>Duração da invencibilidade após dano (ainda não aplicada no TakeDamage).</summary>
+        public float InvincibilityDuration => _invincibilityDuration;
+
         protected override void Awake()
         {
             base.Awake();

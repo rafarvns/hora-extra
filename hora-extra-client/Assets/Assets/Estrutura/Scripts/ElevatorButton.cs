@@ -1,10 +1,10 @@
 using UnityEngine;
+using HoraExtra.Interactions;
 
 public class ElevatorButton : MonoBehaviour
 {
     [SerializeField] string targetScene;        // nome da cena do outro andar
     [SerializeField] GameObject promptUI;       // texto "Aperte E para subir"
-    [SerializeField] KeyCode interactKey = KeyCode.E;
 
     bool playerInside;
 
@@ -16,7 +16,9 @@ public class ElevatorButton : MonoBehaviour
 
     void Update()
     {
-        if (playerInside && Input.GetKeyDown(interactKey))
+        // InteractionInput ([E]) funciona com o Input System novo, que é o único ativo no
+        // projeto — Input.GetKeyDown lançava InvalidOperationException ao entrar no elevador.
+        if (playerInside && InteractionInput.InteractPressed())
         {
             Debug.Log("E apertado, chamando transição");
             SetInside(false);

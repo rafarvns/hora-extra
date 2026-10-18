@@ -17,6 +17,12 @@ namespace HoraExtra.Network.Rest
         private static string BaseUrl => HoraExtra.Network.BackendConfig.ApiBaseUrl;
 
         /// <summary>
+        /// Timeout (s) de toda requisição. Sem ele, um host inalcançável deixa a chamada
+        /// pendurada indefinidamente e a UI esperando para sempre.
+        /// </summary>
+        public static int TimeoutSeconds = 10;
+
+        /// <summary>
         /// Realiza uma requisição GET assíncrona.
         /// </summary>
         public static async Task<ApiResponse<T>> Get<T>(string endpoint)
@@ -46,6 +52,7 @@ namespace HoraExtra.Network.Rest
 
         private static async Task<ApiResponse<T>> SendRequest<T>(UnityWebRequest request)
         {
+            request.timeout = TimeoutSeconds;
             var operation = request.SendWebRequest();
 
             while (!operation.isDone)

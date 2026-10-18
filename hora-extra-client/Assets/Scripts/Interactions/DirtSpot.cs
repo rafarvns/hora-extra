@@ -49,6 +49,12 @@ namespace HoraExtra.Interactions
         [SerializeField] private AudioClip _somLimpeza;
         [SerializeField, Range(0f, 1f)] private float _volume = 1f;
 
+        /// <summary>Tipo da task que esta sujeira atende. Lido pelo marcador de objetivo da HUD.</summary>
+        public string TaskType => _taskType;
+
+        /// <summary>Categoria da ferramenta exigida. Lido pelo marcador de objetivo da HUD.</summary>
+        public string RequiredKind => _requiredKind;
+
         // === Estado ===
         private PlayerCarrier _carrierInRange;
         private float _progresso;
@@ -106,8 +112,7 @@ namespace HoraExtra.Interactions
             if (InteractionInput.InteractHeld())
             {
                 _progresso += Time.deltaTime;
-                int pct = Mathf.Clamp(Mathf.RoundToInt(_progresso / _segundosParaLimpar * 100f), 0, 100);
-                _prompt?.Show(this, $"Limpando... {pct}%");
+                _prompt?.ShowProgress(this, "Limpando...", _progresso / _segundosParaLimpar);
 
                 if (_progresso >= _segundosParaLimpar)
                     Enviar(task);

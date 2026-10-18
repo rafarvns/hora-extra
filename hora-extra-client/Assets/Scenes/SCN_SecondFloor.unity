@@ -5922,8 +5922,85 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 8164078558771037576, guid: f3dfcdb88fa8fa0408bd6efb3f5c00aa, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 223930145}
+    - targetCorrespondingSourceObject: {fileID: 8164078558771037576, guid: f3dfcdb88fa8fa0408bd6efb3f5c00aa, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 223930144}
+    - targetCorrespondingSourceObject: {fileID: 8164078558771037576, guid: f3dfcdb88fa8fa0408bd6efb3f5c00aa, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 223930143}
   m_SourcePrefab: {fileID: 100100000, guid: f3dfcdb88fa8fa0408bd6efb3f5c00aa, type: 3}
+--- !u!1 &223930142 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8164078558771037576, guid: f3dfcdb88fa8fa0408bd6efb3f5c00aa, type: 3}
+  m_PrefabInstance: {fileID: 223930141}
+  m_PrefabAsset: {fileID: 0}
+--- !u!65 &223930143
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 223930142}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 3.6259491, y: 172.23438, z: 176.2563}
+  m_Center: {x: 71.32715, y: -122.79283, z: -105.10713}
+--- !u!65 &223930144
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 223930142}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 2.988941, y: 172.23438, z: 176.25629}
+  m_Center: {x: -70.18243, y: -122.79283, z: -105.107124}
+--- !u!65 &223930145
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 223930142}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 144.12585, y: 172.23438, z: 7.701926}
+  m_Center: {x: 0.38606587, y: -122.79283, z: -189.384}
 --- !u!1001 &228246848
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7148,6 +7225,74 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 7166050396316604535, guid: 562dea507fa81aa4bbdb746388dd0a1d, type: 3}
+--- !u!1001 &282571780
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 484578604}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: 562dea507fa81aa4bbdb746388dd0a1d, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -23
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 562dea507fa81aa4bbdb746388dd0a1d, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 562dea507fa81aa4bbdb746388dd0a1d, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 562dea507fa81aa4bbdb746388dd0a1d, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 562dea507fa81aa4bbdb746388dd0a1d, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 562dea507fa81aa4bbdb746388dd0a1d, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 562dea507fa81aa4bbdb746388dd0a1d, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 562dea507fa81aa4bbdb746388dd0a1d, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 562dea507fa81aa4bbdb746388dd0a1d, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 562dea507fa81aa4bbdb746388dd0a1d, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 562dea507fa81aa4bbdb746388dd0a1d, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 4398d883232d3b04ba1abb41379338f5, type: 2}
+    - target: {fileID: 919132149155446097, guid: 562dea507fa81aa4bbdb746388dd0a1d, type: 3}
+      propertyPath: m_Name
+      value: SM_Env_Floor_200x200x10 (124)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 562dea507fa81aa4bbdb746388dd0a1d, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 2147483647
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 562dea507fa81aa4bbdb746388dd0a1d, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2137279174}
+  m_SourcePrefab: {fileID: 100100000, guid: 562dea507fa81aa4bbdb746388dd0a1d, type: 3}
 --- !u!1001 &286385383
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7397,6 +7542,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 30c1a696b7e53894b86edae7a7fed639, type: 3}
       insertIndex: -1
       addedObject: {fileID: 301734660}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 30c1a696b7e53894b86edae7a7fed639, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 913000041}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 30c1a696b7e53894b86edae7a7fed639, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 913000042}
   m_SourcePrefab: {fileID: 100100000, guid: 30c1a696b7e53894b86edae7a7fed639, type: 3}
 --- !u!1 &301734659 stripped
 GameObject:
@@ -7418,12 +7569,45 @@ SphereCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 1.1033089
+  m_Radius: 5.6
   m_Center: {x: -0.0005285144, y: -0.0679909, z: 0.03079629}
+--- !u!114 &913000041
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 301734659}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91c3e3a6c17a61744b1e2607dd1e3ef9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.CarryableItem
+  _itemId: papel-lixo-04
+  _kind: papel_lixo
+  _isTool: 0
+  _pickupMessage: Aperte [E] para pegar a bolinha de papel
+  _prompt: {fileID: 0}
+  _pickupSound: {fileID: 0}
+  _pickupVolume: 1
+--- !u!114 &913000042
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 301734659}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45b4b1bc3fa8a944a9471a227fcae293, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.ThrowablePaper
+  _restVelocityThreshold: 0.05
+  _restCheckDelay: 0.3
 --- !u!1001 &302861280
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -12379,6 +12563,7 @@ Transform:
   - {fileID: 1892515709}
   - {fileID: 423962934}
   - {fileID: 1307035631}
+  - {fileID: 2137279173}
   - {fileID: 1820273210}
   - {fileID: 2120787647}
   - {fileID: 960997152}
@@ -17916,6 +18101,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 30c1a696b7e53894b86edae7a7fed639, type: 3}
       insertIndex: -1
       addedObject: {fileID: 658036430}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 30c1a696b7e53894b86edae7a7fed639, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 913000061}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 30c1a696b7e53894b86edae7a7fed639, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 913000062}
   m_SourcePrefab: {fileID: 100100000, guid: 30c1a696b7e53894b86edae7a7fed639, type: 3}
 --- !u!1 &658036429 stripped
 GameObject:
@@ -17937,12 +18128,45 @@ SphereCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 1.1033089
+  m_Radius: 5.6
   m_Center: {x: -0.0005285144, y: -0.0679909, z: 0.03079629}
+--- !u!114 &913000061
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 658036429}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91c3e3a6c17a61744b1e2607dd1e3ef9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.CarryableItem
+  _itemId: papel-lixo-06
+  _kind: papel_lixo
+  _isTool: 0
+  _pickupMessage: Aperte [E] para pegar a bolinha de papel
+  _prompt: {fileID: 0}
+  _pickupSound: {fileID: 0}
+  _pickupVolume: 1
+--- !u!114 &913000062
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 658036429}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45b4b1bc3fa8a944a9471a227fcae293, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.ThrowablePaper
+  _restVelocityThreshold: 0.05
+  _restCheckDelay: 0.3
 --- !u!1001 &663413733
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -19580,6 +19804,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 35b687bea25285c45b0c06b1e799324a, type: 3}
       insertIndex: -1
       addedObject: {fileID: 722616505}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 35b687bea25285c45b0c06b1e799324a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 910000001}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 35b687bea25285c45b0c06b1e799324a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 910000002}
   m_SourcePrefab: {fileID: 100100000, guid: 35b687bea25285c45b0c06b1e799324a, type: 3}
 --- !u!1 &722616504 stripped
 GameObject:
@@ -19607,6 +19837,44 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.6191669, y: 0.83978033, z: 0.6191669}
   m_Center: {x: 0, y: 0.00095407665, z: -0.000000059604645}
+--- !u!65 &910000001
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 722616504}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.9, y: 0.8, z: 0.9}
+  m_Center: {x: 0, y: 0.3, z: 0}
+--- !u!114 &910000002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 722616504}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 35a3351cdee1d5c4da9a81d99f8e0155, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.TrashBin
+  _slotId: lixeira-01
+  _acceptedKind: papel_lixo
+  _taskType: throw_trash_papers
+  _hitSound: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb3, type: 3}
+  _hitVolume: 1
 --- !u!4 &722616506 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 35b687bea25285c45b0c06b1e799324a, type: 3}
@@ -23951,6 +24219,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 30c1a696b7e53894b86edae7a7fed639, type: 3}
       insertIndex: -1
       addedObject: {fileID: 880186922}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 30c1a696b7e53894b86edae7a7fed639, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 913000031}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 30c1a696b7e53894b86edae7a7fed639, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 913000032}
   m_SourcePrefab: {fileID: 100100000, guid: 30c1a696b7e53894b86edae7a7fed639, type: 3}
 --- !u!1 &880186921 stripped
 GameObject:
@@ -23972,12 +24246,45 @@ SphereCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 1.1033089
+  m_Radius: 5.6
   m_Center: {x: -0.0005285144, y: -0.0679909, z: 0.03079629}
+--- !u!114 &913000031
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 880186921}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91c3e3a6c17a61744b1e2607dd1e3ef9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.CarryableItem
+  _itemId: papel-lixo-03
+  _kind: papel_lixo
+  _isTool: 0
+  _pickupMessage: Aperte [E] para pegar a bolinha de papel
+  _prompt: {fileID: 0}
+  _pickupSound: {fileID: 0}
+  _pickupVolume: 1
+--- !u!114 &913000032
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 880186921}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45b4b1bc3fa8a944a9471a227fcae293, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.ThrowablePaper
+  _restVelocityThreshold: 0.05
+  _restCheckDelay: 0.3
 --- !u!4 &884449504 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3877025530316016204, guid: 38f068d20c4cae84ea6ce0135bff6c3a, type: 3}
@@ -24474,6 +24781,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 35b687bea25285c45b0c06b1e799324a, type: 3}
       insertIndex: -1
       addedObject: {fileID: 904059583}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 35b687bea25285c45b0c06b1e799324a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 910000011}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 35b687bea25285c45b0c06b1e799324a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 910000012}
   m_SourcePrefab: {fileID: 100100000, guid: 35b687bea25285c45b0c06b1e799324a, type: 3}
 --- !u!1 &904059582 stripped
 GameObject:
@@ -24501,6 +24814,44 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.6191669, y: 0.83978033, z: 0.6191669}
   m_Center: {x: 0, y: 0.00095407665, z: -0.000000059604645}
+--- !u!65 &910000011
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 904059582}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.9, y: 0.8, z: 0.9}
+  m_Center: {x: 0, y: 0.3, z: 0}
+--- !u!114 &910000012
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 904059582}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 35a3351cdee1d5c4da9a81d99f8e0155, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.TrashBin
+  _slotId: lixeira-02
+  _acceptedKind: papel_lixo
+  _taskType: throw_trash_papers
+  _hitSound: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb3, type: 3}
+  _hitVolume: 1
 --- !u!1 &907805327
 GameObject:
   m_ObjectHideFlags: 0
@@ -32692,6 +33043,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 35b687bea25285c45b0c06b1e799324a, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1241483518}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 35b687bea25285c45b0c06b1e799324a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 910000021}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 35b687bea25285c45b0c06b1e799324a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 910000022}
   m_SourcePrefab: {fileID: 100100000, guid: 35b687bea25285c45b0c06b1e799324a, type: 3}
 --- !u!1 &1241483517 stripped
 GameObject:
@@ -32719,6 +33076,44 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.6191669, y: 0.83978033, z: 0.6191669}
   m_Center: {x: 0, y: 0.00095407665, z: -0.000000059604645}
+--- !u!65 &910000021
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1241483517}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.9, y: 0.8, z: 0.9}
+  m_Center: {x: 0, y: 0.3, z: 0}
+--- !u!114 &910000022
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1241483517}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 35a3351cdee1d5c4da9a81d99f8e0155, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.TrashBin
+  _slotId: lixeira-03
+  _acceptedKind: papel_lixo
+  _taskType: throw_trash_papers
+  _hitSound: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb3, type: 3}
+  _hitVolume: 1
 --- !u!1001 &1249224076
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -33596,6 +33991,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 30c1a696b7e53894b86edae7a7fed639, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1275538456}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 30c1a696b7e53894b86edae7a7fed639, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 913000011}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 30c1a696b7e53894b86edae7a7fed639, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 913000012}
   m_SourcePrefab: {fileID: 100100000, guid: 30c1a696b7e53894b86edae7a7fed639, type: 3}
 --- !u!1 &1275538455 stripped
 GameObject:
@@ -33617,12 +34018,45 @@ SphereCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 1.1033089
+  m_Radius: 5.6
   m_Center: {x: -0.0005285144, y: -0.0679909, z: 0.03079629}
+--- !u!114 &913000011
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1275538455}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91c3e3a6c17a61744b1e2607dd1e3ef9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.CarryableItem
+  _itemId: papel-lixo-01
+  _kind: papel_lixo
+  _isTool: 0
+  _pickupMessage: Aperte [E] para pegar a bolinha de papel
+  _prompt: {fileID: 0}
+  _pickupSound: {fileID: 0}
+  _pickupVolume: 1
+--- !u!114 &913000012
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1275538455}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45b4b1bc3fa8a944a9471a227fcae293, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.ThrowablePaper
+  _restVelocityThreshold: 0.05
+  _restCheckDelay: 0.3
 --- !u!1001 &1276101172
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -35385,6 +35819,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 30c1a696b7e53894b86edae7a7fed639, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1336292640}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 30c1a696b7e53894b86edae7a7fed639, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 913000091}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 30c1a696b7e53894b86edae7a7fed639, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 913000092}
   m_SourcePrefab: {fileID: 100100000, guid: 30c1a696b7e53894b86edae7a7fed639, type: 3}
 --- !u!1 &1336292639 stripped
 GameObject:
@@ -35406,12 +35846,45 @@ SphereCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 1.1033089
+  m_Radius: 5.6
   m_Center: {x: -0.0005285144, y: -0.0679909, z: 0.03079629}
+--- !u!114 &913000091
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1336292639}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91c3e3a6c17a61744b1e2607dd1e3ef9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.CarryableItem
+  _itemId: papel-lixo-09
+  _kind: papel_lixo
+  _isTool: 0
+  _pickupMessage: Aperte [E] para pegar a bolinha de papel
+  _prompt: {fileID: 0}
+  _pickupSound: {fileID: 0}
+  _pickupVolume: 1
+--- !u!114 &913000092
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1336292639}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45b4b1bc3fa8a944a9471a227fcae293, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.ThrowablePaper
+  _restVelocityThreshold: 0.05
+  _restCheckDelay: 0.3
 --- !u!1001 &1337926429
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -37980,6 +38453,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 30c1a696b7e53894b86edae7a7fed639, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1433278503}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 30c1a696b7e53894b86edae7a7fed639, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 913000071}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 30c1a696b7e53894b86edae7a7fed639, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 913000072}
   m_SourcePrefab: {fileID: 100100000, guid: 30c1a696b7e53894b86edae7a7fed639, type: 3}
 --- !u!1 &1433278502 stripped
 GameObject:
@@ -38001,12 +38480,45 @@ SphereCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 1.1033089
+  m_Radius: 5.6
   m_Center: {x: -0.0005285144, y: -0.0679909, z: 0.03079629}
+--- !u!114 &913000071
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1433278502}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91c3e3a6c17a61744b1e2607dd1e3ef9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.CarryableItem
+  _itemId: papel-lixo-07
+  _kind: papel_lixo
+  _isTool: 0
+  _pickupMessage: Aperte [E] para pegar a bolinha de papel
+  _prompt: {fileID: 0}
+  _pickupSound: {fileID: 0}
+  _pickupVolume: 1
+--- !u!114 &913000072
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1433278502}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45b4b1bc3fa8a944a9471a227fcae293, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.ThrowablePaper
+  _restVelocityThreshold: 0.05
+  _restCheckDelay: 0.3
 --- !u!1001 &1435610536
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -38160,6 +38672,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 30c1a696b7e53894b86edae7a7fed639, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1436137694}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 30c1a696b7e53894b86edae7a7fed639, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 913000021}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 30c1a696b7e53894b86edae7a7fed639, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 913000022}
   m_SourcePrefab: {fileID: 100100000, guid: 30c1a696b7e53894b86edae7a7fed639, type: 3}
 --- !u!1 &1436137693 stripped
 GameObject:
@@ -38181,12 +38699,45 @@ SphereCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 1.1033089
+  m_Radius: 5.6
   m_Center: {x: -0.0005285144, y: -0.0679909, z: 0.03079629}
+--- !u!114 &913000021
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1436137693}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91c3e3a6c17a61744b1e2607dd1e3ef9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.CarryableItem
+  _itemId: papel-lixo-02
+  _kind: papel_lixo
+  _isTool: 0
+  _pickupMessage: Aperte [E] para pegar a bolinha de papel
+  _prompt: {fileID: 0}
+  _pickupSound: {fileID: 0}
+  _pickupVolume: 1
+--- !u!114 &913000022
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1436137693}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45b4b1bc3fa8a944a9471a227fcae293, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.ThrowablePaper
+  _restVelocityThreshold: 0.05
+  _restCheckDelay: 0.3
 --- !u!1001 &1438355305
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -39970,6 +40521,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 30c1a696b7e53894b86edae7a7fed639, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1487224870}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 30c1a696b7e53894b86edae7a7fed639, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 913000101}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 30c1a696b7e53894b86edae7a7fed639, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 913000102}
   m_SourcePrefab: {fileID: 100100000, guid: 30c1a696b7e53894b86edae7a7fed639, type: 3}
 --- !u!1 &1487224869 stripped
 GameObject:
@@ -39991,12 +40548,45 @@ SphereCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 1.1033089
+  m_Radius: 5.6
   m_Center: {x: -0.0005285144, y: -0.0679909, z: 0.03079629}
+--- !u!114 &913000101
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1487224869}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91c3e3a6c17a61744b1e2607dd1e3ef9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.CarryableItem
+  _itemId: papel-lixo-10
+  _kind: papel_lixo
+  _isTool: 0
+  _pickupMessage: Aperte [E] para pegar a bolinha de papel
+  _prompt: {fileID: 0}
+  _pickupSound: {fileID: 0}
+  _pickupVolume: 1
+--- !u!114 &913000102
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1487224869}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45b4b1bc3fa8a944a9471a227fcae293, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.ThrowablePaper
+  _restVelocityThreshold: 0.05
+  _restCheckDelay: 0.3
 --- !u!1 &1489511612
 GameObject:
   m_ObjectHideFlags: 0
@@ -40335,6 +40925,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 30c1a696b7e53894b86edae7a7fed639, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1497893362}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 30c1a696b7e53894b86edae7a7fed639, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 913000051}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 30c1a696b7e53894b86edae7a7fed639, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 913000052}
   m_SourcePrefab: {fileID: 100100000, guid: 30c1a696b7e53894b86edae7a7fed639, type: 3}
 --- !u!1 &1497893361 stripped
 GameObject:
@@ -40356,12 +40952,45 @@ SphereCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 1.1033089
+  m_Radius: 5.6
   m_Center: {x: -0.0005285144, y: -0.0679909, z: 0.03079629}
+--- !u!114 &913000051
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1497893361}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91c3e3a6c17a61744b1e2607dd1e3ef9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.CarryableItem
+  _itemId: papel-lixo-05
+  _kind: papel_lixo
+  _isTool: 0
+  _pickupMessage: Aperte [E] para pegar a bolinha de papel
+  _prompt: {fileID: 0}
+  _pickupSound: {fileID: 0}
+  _pickupVolume: 1
+--- !u!114 &913000052
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1497893361}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45b4b1bc3fa8a944a9471a227fcae293, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.ThrowablePaper
+  _restVelocityThreshold: 0.05
+  _restCheckDelay: 0.3
 --- !u!1001 &1502245646
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -46648,6 +47277,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 30c1a696b7e53894b86edae7a7fed639, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1691714864}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 30c1a696b7e53894b86edae7a7fed639, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 913000081}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 30c1a696b7e53894b86edae7a7fed639, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 913000082}
   m_SourcePrefab: {fileID: 100100000, guid: 30c1a696b7e53894b86edae7a7fed639, type: 3}
 --- !u!1 &1691714863 stripped
 GameObject:
@@ -46669,12 +47304,45 @@ SphereCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 1.1033089
+  m_Radius: 5.6
   m_Center: {x: -0.0005285144, y: -0.0679909, z: 0.03079629}
+--- !u!114 &913000081
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1691714863}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91c3e3a6c17a61744b1e2607dd1e3ef9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.CarryableItem
+  _itemId: papel-lixo-08
+  _kind: papel_lixo
+  _isTool: 0
+  _pickupMessage: Aperte [E] para pegar a bolinha de papel
+  _prompt: {fileID: 0}
+  _pickupSound: {fileID: 0}
+  _pickupVolume: 1
+--- !u!114 &913000082
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1691714863}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45b4b1bc3fa8a944a9471a227fcae293, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.ThrowablePaper
+  _restVelocityThreshold: 0.05
+  _restCheckDelay: 0.3
 --- !u!1001 &1692156080
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -50570,6 +51238,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 35b687bea25285c45b0c06b1e799324a, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1863368592}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 35b687bea25285c45b0c06b1e799324a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 910000031}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 35b687bea25285c45b0c06b1e799324a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 910000032}
   m_SourcePrefab: {fileID: 100100000, guid: 35b687bea25285c45b0c06b1e799324a, type: 3}
 --- !u!1 &1863368590 stripped
 GameObject:
@@ -50602,6 +51276,44 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.6191669, y: 0.83978033, z: 0.6191669}
   m_Center: {x: 0, y: 0.00095407665, z: -0.000000059604645}
+--- !u!65 &910000031
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1863368590}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.9, y: 0.8, z: 0.9}
+  m_Center: {x: 0, y: 0.3, z: 0}
+--- !u!114 &910000032
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1863368590}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 35a3351cdee1d5c4da9a81d99f8e0155, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.TrashBin
+  _slotId: lixeira-04
+  _acceptedKind: papel_lixo
+  _taskType: throw_trash_papers
+  _hitSound: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb3, type: 3}
+  _hitVolume: 1
 --- !u!1001 &1869432505
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -58701,6 +59413,38 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 7166050396316604535, guid: 562dea507fa81aa4bbdb746388dd0a1d, type: 3}
+--- !u!1 &2137279172 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 562dea507fa81aa4bbdb746388dd0a1d, type: 3}
+  m_PrefabInstance: {fileID: 282571780}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &2137279173 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 562dea507fa81aa4bbdb746388dd0a1d, type: 3}
+  m_PrefabInstance: {fileID: 282571780}
+  m_PrefabAsset: {fileID: 0}
+--- !u!64 &2137279174
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2137279172}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 7166050396316604535, guid: 562dea507fa81aa4bbdb746388dd0a1d, type: 3}
 --- !u!1 &2138125544 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 562dea507fa81aa4bbdb746388dd0a1d, type: 3}
@@ -58899,10 +59643,127 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: b9161ddedbccf5e4199a555938ff27a5, type: 3}
   m_PrefabInstance: {fileID: 2139419262}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &900000001
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 900000004}
+  - component: {fileID: 900000003}
+  - component: {fileID: 900000002}
+  m_Layer: 0
+  m_Name: Trigger_Botao_Volta
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &900000002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6da06676d6b006146ad5f63b73222928, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::ElevatorButton
+  targetScene: SCN_FirstFloor
+  promptUI: {fileID: 0}
+--- !u!65 &900000003
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000001}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.5096016, y: 1.1608114, z: 0.4363103}
+  m_Center: {x: -0.13324356, y: -0.8144705, z: -0.25201726}
+--- !u!4 &900000004
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000001}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -22.345, y: 1.682, z: 5.858}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &914000001
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 914000002}
+  - component: {fileID: 914000003}
+  m_Layer: 0
+  m_Name: BackgroundMusic
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &914000002
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 914000001}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &914000003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 914000001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c39a7d1e5f8b4a24d9061e2a3c4b8f71, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Audio.BackgroundMusic
+  _clip: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb2, type: 3}
+  _volume: 0.5
+  _fadeInSeconds: 1.5
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
+  - {fileID: 900000004}
+  - {fileID: 914000002}
   - {fileID: 768265984}
   - {fileID: 212937156}
   - {fileID: 1655361312}

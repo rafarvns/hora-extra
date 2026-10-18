@@ -22,6 +22,25 @@ public class ElevatorTransition : MonoBehaviour
 
         blackScreen.alpha = 0f;
         blackScreen.blocksRaycasts = false;
+
+        EnsureElevatorFloor(SceneManager.GetActiveScene());
+        EnsureElevatorWallVisuals(SceneManager.GetActiveScene());
+    }
+
+    void OnEnable()
+    {
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    void OnDisable()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        EnsureElevatorFloor(scene);
+        EnsureElevatorWallVisuals(scene);
     }
 
     public void GoToScene(string sceneName)
@@ -34,24 +53,26 @@ public class ElevatorTransition : MonoBehaviour
         busy = true;
         blackScreen.blocksRaycasts = true; // impede clicar em coisas durante a transição
 
-        // 1. Escurece a tela
+        // 1. Vai ficando tudo escuro
         yield return Fade(1f);
 
-        // 2. Toca o som do elevador e espera acabar
+        // 2. Toca o som do elevador
         audioSource.PlayOneShot(elevatorSound);
-        yield return new WaitForSeconds(elevatorSound.length);
 
-        // 2b. Toca o segundo som (ex: "ding" de chegada) e espera acabar
-        audioSource.PlayOneShot(arrivalSound);
-        yield return new WaitForSeconds(arrivalSound.length);
+        // 3. Após 2 segundos...
+        yield return new WaitForSeconds(2f);
 
-        // 3. Carrega a nova cena (o jogador já começa dentro do elevador nela)
+        // 4. Carrega a nova cena e reposiciona o jogador perto do elevador de lá
         AsyncOperation op = SceneManager.LoadSceneAsync(sceneName);
         yield return op;
         yield return null; // espera um frame pra cena nova "assentar"
 
-        // 4. Clareia a tela
+        RepositionPlayerNearElevator();
+
+        // 5. Clareia a tela
         yield return Fade(0f);
+
+        if (arrivalSound != null) audioSource.PlayOneShot(arrivalSound);
 
         blackScreen.blocksRaycasts = false;
         busy = false;
@@ -68,5 +89,146 @@ public class ElevatorTransition : MonoBehaviour
             yield return null;
         }
         blackScreen.alpha = target;
+    }
+
+    /// <summary>
+    /// A cena recém-carregada só tem a posição genérica de spawn do Player, que não
+    /// fica perto do elevador dela. Encontra o modelo do elevador na cena ativa e
+    /// reposiciona o jogador ao lado dele.
+    /// </summary>
+    void RepositionPlayerNearElevator()
+    {
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        if (player == null) return;
+
+        Transform elevator = FindElevatorTransform();
+        if (elevator == null) return;
+
+        var pc = player.GetComponent<HoraExtra.Characters.PlayerController>();
+        pc?.Teleport(elevator.position + Vector3.up * 1f);
+    }
+
+    static Transform FindElevatorTransform()
+    {
+        foreach (var t in FindObjectsByType<Transform>(FindObjectsSortMode.None))
+        {
+            string n = t.name.ToLowerInvariant();
+            if (n.Contains("elevator") || n.Contains("elevador")) return t;
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// O modelo 3D do elevador (elevator.obj) foi importado sem collider (addColliders: 0)
+    /// e nenhuma das cenas tem um collider físico manual na cabine — só o trigger do botão.
+    /// Isso fazia o jogador cair pelo mapa ao entrar na região. Gera uma fatia fina de
+    /// BoxCollider sólido só no piso da cabine (não a bounding box inteira do modelo, que
+    /// incluiria paredes/teto e selaria a cabine, impedindo o jogador de entrar), em
+    /// coordenadas mundiais (evita lidar com a escala 0.009 do modelo), de forma idempotente
+    /// a cada cena carregada.
+    /// </summary>
+    static void EnsureElevatorFloor(Scene scene)
+    {
+        const float floorThickness = 0.2f;
+
+        foreach (var root in scene.GetRootGameObjects())
+        {
+            foreach (var t in root.GetComponentsInChildren<Transform>(true))
+            {
+                string n = t.name.ToLowerInvariant();
+                if (!n.Contains("elevator") && !n.Contains("elevador")) continue;
+                if (t.name == "ElevatorFloor_Generated") continue;
+
+                bool hasSolidCollider = false;
+                foreach (var c in t.GetComponentsInChildren<Collider>(true))
+                {
+                    if (!c.isTrigger) { hasSolidCollider = true; break; }
+                }
+                if (hasSolidCollider) continue;
+
+                var renderers = t.GetComponentsInChildren<Renderer>();
+                if (renderers.Length == 0) continue;
+
+                Bounds b = renderers[0].bounds;
+                for (int i = 1; i < renderers.Length; i++) b.Encapsulate(renderers[i].bounds);
+
+                bool floorAlreadyCovered = false;
+                Vector3 floorTestPoint = new Vector3(b.center.x, b.min.y + 0.05f, b.center.z);
+                foreach (var c in t.GetComponentsInChildren<Collider>(true))
+                {
+                    if (c.isTrigger) continue;
+                    if (c.bounds.Contains(floorTestPoint)) { floorAlreadyCovered = true; break; }
+                }
+                if (floorAlreadyCovered) continue;
+
+                var floor = new GameObject("ElevatorFloor_Generated");
+                floor.transform.SetParent(t, true); // mantém posição mundial
+                floor.transform.position = new Vector3(b.center.x, b.min.y + floorThickness * 0.5f, b.center.z);
+                floor.AddComponent<BoxCollider>().size = new Vector3(b.size.x, floorThickness, b.size.z);
+                Debug.Log($"[GAMEPLAY] Piso sólido gerado para '{t.name}' em {floor.transform.position}, size {new Vector3(b.size.x, floorThickness, b.size.z)}");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Colliders sólidos adicionados manualmente na cabine do elevador (paredes da
+    /// PrefabInstance, ver branch SegundoAndar) não têm nenhuma malha/Renderer — são só
+    /// física. Encostar numa emenda entre os painéis decorativos do modelo mostra o vazio
+    /// atrás deles (bug "encosta na parede e vê o outro lado"). Gera um cubo simples e opaco
+    /// do tamanho exato de cada BoxCollider sólido sem Renderer correspondente, só pra
+    /// tapar visualmente — sem collider próprio, a física já existe no BoxCollider original.
+    /// </summary>
+    static void EnsureElevatorWallVisuals(Scene scene)
+    {
+        Color corParede = new Color(0.22f, 0.22f, 0.24f);
+
+        foreach (var root in scene.GetRootGameObjects())
+        {
+            foreach (var t in root.GetComponentsInChildren<Transform>(true))
+            {
+                string n = t.name.ToLowerInvariant();
+                if (!n.Contains("elevator") && !n.Contains("elevador")) continue;
+                if (n.Contains("generated")) continue; // não gera visual pros nossos próprios geradinhos
+
+                var boxColliders = t.GetComponents<BoxCollider>();
+                for (int i = 0; i < boxColliders.Length; i++)
+                {
+                    var col = boxColliders[i];
+                    if (col.isTrigger) continue;
+
+                    string visualName = $"ElevatorWallVisual_Generated_{i}";
+                    if (t.Find(visualName) != null) continue; // já gerado nesta sessão
+
+                    bool jaTemRendererCobrindo = false;
+                    Vector3 worldCenter = t.TransformPoint(col.center);
+                    foreach (var r in t.GetComponentsInChildren<Renderer>())
+                    {
+                        if (r.bounds.Contains(worldCenter)) { jaTemRendererCobrindo = true; break; }
+                    }
+                    if (jaTemRendererCobrindo) continue;
+
+                    var wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    wall.name = visualName;
+                    var genCollider = wall.GetComponent<Collider>();
+                    if (genCollider != null) Destroy(genCollider); // física já existe no BoxCollider original
+
+                    wall.transform.SetParent(t, false);
+                    wall.transform.localPosition = col.center;
+                    wall.transform.localRotation = Quaternion.identity;
+                    wall.transform.localScale = col.size;
+
+                    var rend = wall.GetComponent<Renderer>();
+                    if (rend != null)
+                    {
+                        rend.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                        var mat = rend.material;
+                        if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", corParede);
+                        if (mat.HasProperty("_Color")) mat.SetColor("_Color", corParede);
+                    }
+
+                    Debug.Log($"[GAMEPLAY] Parede visual gerada para '{t.name}' collider #{i}.");
+                }
+            }
+        }
     }
 }

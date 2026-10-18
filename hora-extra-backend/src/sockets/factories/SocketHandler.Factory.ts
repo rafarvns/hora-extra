@@ -11,6 +11,7 @@ import { TaskAssignRequestHandler } from '../handlers/TaskAssignRequestHandler.H
 import { TaskStartInteractionHandler } from '../handlers/TaskStartInteraction.Handler.js';
 import { TaskCompleteAttemptHandler } from '../handlers/TaskCompleteAttempt.Handler.js';
 import { TaskProgressHandler } from '../handlers/TaskProgress.Handler.js';
+import { ShiftClockRequestHandler } from '../handlers/ShiftClockRequest.Handler.js';
 
 /**
  * SocketHandlerFactory: Mapeia nomes de eventos socket para suas implementações concretas (Handlers).
@@ -36,6 +37,7 @@ export class SocketHandlerFactory {
         this.handlers.set('task_start_interaction', TaskStartInteractionHandler);
         this.handlers.set('task_complete_attempt', TaskCompleteAttemptHandler);
         this.handlers.set('task_progress', TaskProgressHandler);
+        this.handlers.set('shift_clock_request', ShiftClockRequestHandler);
     }
 
     /**

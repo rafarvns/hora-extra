@@ -52,6 +52,7 @@ export class TaskAssignRequestHandler implements ISocketHandler {
         const broadcastPayload = {
             playerId: session.id,
             tasks,
+            totalTasks: taskService.getTotalTaskCount(session.id),
         };
 
         server.broadcastToRoom(session.roomId, 'task_assigned', broadcastPayload);

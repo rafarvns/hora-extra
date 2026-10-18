@@ -142,13 +142,14 @@ describe('TaskProgressHandler', () => {
         (ServiceFactory.getTaskService as any).mockReturnValue({
             incrementProgress: vi.fn().mockReturnValue({ id: 'coleta-1', currentProgress: 4, status: 'completed', targetCount: 4 }),
             advanceQueue: vi.fn().mockReturnValue(proxima),
+            getTotalTaskCount: vi.fn().mockReturnValue(4),
         });
         mockServer.getSession.mockReturnValue({ id: 'player-99', roomId: 'room-2' });
 
         await handler.handle(mockServer as any, rinfo, { taskId: 'coleta-1' });
 
         expect(mockServer.broadcastToRoom).toHaveBeenCalledWith(
-            'room-2', 'task_assigned', { playerId: 'player-99', tasks: [proxima] },
+            'room-2', 'task_assigned', { playerId: 'player-99', tasks: [proxima], totalTasks: 4 },
         );
     });
 
