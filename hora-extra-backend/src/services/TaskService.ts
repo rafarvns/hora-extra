@@ -202,6 +202,16 @@ export class TaskService {
     }
 
     /**
+     * Total de tarefas do jogador nesta partida: já atribuídas + ainda na fila.
+     * Constante desde o sorteio — é o "N" de "Tarefa X de N" na HUD. 0 sem atribuição.
+     */
+    public getTotalTaskCount(playerId: string): number {
+        const atribuidas = this.assignments.get(playerId)?.length ?? 0;
+        const naFila = this.taskQueue.get(playerId)?.length ?? 0;
+        return atribuidas + naFila;
+    }
+
+    /**
      * Muda o status de uma task de 'pending' para 'in_progress'.
      * Lança ApiError se: jogador sem tasks, taskId não encontrado, status != pending.
      */

@@ -651,3 +651,43 @@ describe('TaskService — incrementProgress com items/pairs', () => {
         expect(result.currentProgress).toBe(1);
     });
 });
+
+// ────────────────────────────────────────────────────────────
+// TaskService — getTotalTaskCount (alimenta "Tarefa X de N" na HUD)
+// ────────────────────────────────────────────────────────────
+describe('TaskService — getTotalTaskCount', () => {
+    let service: TaskService;
+
+    beforeEach(() => {
+        service = makeService();
+        seedCatalog(service);
+    });
+
+    it('jogador sem atribuição tem total 0', () => {
+        expect(service.getTotalTaskCount('ninguem')).toBe(0);
+    });
+
+    it('total = atribuídas + fila, logo após o sorteio', () => {
+        service.assignRandomTasks('r1', 'p1');
+
+        expect(service.getTotalTaskCount('p1')).toBe(5);
+    });
+
+    it('total não muda conforme a fila avança', () => {
+        service.assignRandomTasks('r1', 'p1');
+        const primeira = service.getAssignedTasks('r1', 'p1')[0];
+        service.startTask('p1', primeira.id);
+        service.resolveTask('p1', primeira.id, true);
+        service.advanceQueue('p1');
+
+        expect(service.getAssignedTasks('r1', 'p1')).toHaveLength(2);
+        expect(service.getTotalTaskCount('p1')).toBe(5);
+    });
+
+    it('clearRoom zera o total', () => {
+        service.assignRandomTasks('r1', 'p1');
+        service.clearRoom(['p1']);
+
+        expect(service.getTotalTaskCount('p1')).toBe(0);
+    });
+});

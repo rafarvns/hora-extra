@@ -53,6 +53,9 @@ namespace HoraExtra.Interactions
         /// <summary>Categoria da pilha atual, ou null se a mão está vazia.</summary>
         public string CarriedKind => _carried.Count > 0 ? _carried[0].Kind : null;
 
+        /// <summary>Quantos itens do mesmo tipo cabem na mão.</summary>
+        public int MaxStack => _maxStack;
+
         /// <summary>True quando a pilha atingiu o limite.</summary>
         public bool IsFull => _carried.Count >= _maxStack;
 

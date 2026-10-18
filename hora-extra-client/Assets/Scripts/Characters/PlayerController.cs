@@ -249,7 +249,8 @@ namespace HoraExtra.Characters
             if (Mouse.current == null) return;
 
             // Delta do mouse
-            Vector2 mouseDelta = Mouse.current.delta.ReadValue() * _lookSensitivity;
+            // Multiplicador do jogador (menu → Configurações) sobre o valor ajustado no prefab.
+            Vector2 mouseDelta = Mouse.current.delta.ReadValue() * _lookSensitivity * HoraExtra.Settings.GameSettings.MouseSensitivity;
 
             // Rotação Vertical (Pitch - Câmera)
             _verticalRotation -= mouseDelta.y;

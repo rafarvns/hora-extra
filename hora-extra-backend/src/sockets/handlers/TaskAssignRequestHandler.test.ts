@@ -20,6 +20,7 @@ describe('TaskAssignRequestHandler', () => {
         mockTaskService = {
             assignRandomTasks: vi.fn(),
             getAssignedTasks: vi.fn(),
+            getTotalTaskCount: vi.fn().mockReturnValue(4),
         };
         mockServer = {
             getSession: vi.fn(),
@@ -81,7 +82,7 @@ describe('TaskAssignRequestHandler', () => {
         );
     });
 
-    it('faz broadcast task_assigned com playerId e tasks', async () => {
+    it('faz broadcast task_assigned com playerId, tasks e totalTasks', async () => {
         const tasks = [
             { id: 't1', description: 'Desc1', type: 'collect', targetCount: 3, currentProgress: 0, status: 'pending' },
             { id: 't2', description: 'Desc2', type: 'deliver', targetCount: 1, currentProgress: 0, status: 'pending' },
@@ -95,8 +96,9 @@ describe('TaskAssignRequestHandler', () => {
         expect(mockServer.broadcastToRoom).toHaveBeenCalledWith(
             'r1',
             'task_assigned',
-            { playerId: 'p1', tasks },
+            { playerId: 'p1', tasks, totalTasks: 4 },
         );
+        expect(mockTaskService.getTotalTaskCount).toHaveBeenCalledWith('p1');
     });
 
     it('payload broadcast tem shape correto (todos os campos de AssignedTask presentes)', async () => {

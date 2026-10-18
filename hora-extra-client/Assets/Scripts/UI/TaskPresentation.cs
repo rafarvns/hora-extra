@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using HoraExtra.Network.Models;
 
 namespace HoraExtra.UI
@@ -7,8 +8,8 @@ namespace HoraExtra.UI
     ///
     /// Mapeia o <see cref="AssignedTask"/> cru (vindo do servidor) para conteúdo legível
     /// — título, instrução de "como fazer", rótulo de progresso e prompt de ação — usado
-    /// pelo painel de missões (<see cref="MissionListHud"/>), pelos marcadores de mundo
-    /// (<see cref="HoraExtra.Characters.WorldTaskMarker"/>) e pelos prompts de interação.
+    /// pela HUD (card de missão, colegas, marcador de objetivo — ver <c>UI/Hud/</c>) e pelos
+    /// prompts de interação.
     ///
     /// Centraliza também as constantes de <c>type</c> e <c>status</c> que antes eram
     /// redeclaradas em cada script. NENHUM dado de rede novo: tudo deriva dos campos já
@@ -34,6 +35,71 @@ namespace HoraExtra.UI
         public const string STATUS_IN_PROGRESS = "in_progress";
         public const string STATUS_COMPLETED   = "completed";
         public const string STATUS_FAILED      = "failed";
+
+        /// <summary>Agrupamento visual das tarefas (cor e rótulo do badge na HUD).</summary>
+        public enum TaskCategory { Organize, Clean, Coffee, Other }
+
+        /// <summary>True para status terminais (concluída ou falhou).</summary>
+        public static bool IsFinished(AssignedTask task)
+        {
+            return task != null && (task.Status == STATUS_COMPLETED || task.Status == STATUS_FAILED);
+        }
+
+        /// <summary>
+        /// Primeira tarefa ainda aberta (pending/in_progress) na ordem em que foram liberadas,
+        /// ou null. Com a fila sequencial do servidor, é "a tarefa atual".
+        /// </summary>
+        public static AssignedTask FindActive(IEnumerable<AssignedTask> tasks)
+        {
+            if (tasks == null) return null;
+            foreach (var t in tasks)
+                if (t != null && !IsFinished(t)) return t;
+            return null;
+        }
+
+        public static TaskCategory GetCategory(string type)
+        {
+            switch (type)
+            {
+                case TYPE_COLLECT:
+                case TYPE_COLLECT_PAPERS:
+                case TYPE_COLLECT_PENS:
+                case TYPE_COLLECT_MAGAZINES: return TaskCategory.Organize;
+                case TYPE_CLEAN_FLOOR:       return TaskCategory.Clean;
+                case TYPE_COFFEE_MAKER:      return TaskCategory.Coffee;
+                default:                     return TaskCategory.Other;
+            }
+        }
+
+        public static string GetCategoryLabel(TaskCategory category)
+        {
+            switch (category)
+            {
+                case TaskCategory.Organize: return "ORGANIZAÇÃO";
+                case TaskCategory.Clean:    return "LIMPEZA";
+                case TaskCategory.Coffee:   return "COPA";
+                default:                    return "TAREFA";
+            }
+        }
+
+        /// <summary>
+        /// Nome legível de uma categoria de item carregado (campo <c>_kind</c> do
+        /// CarryableItem), no singular ou plural conforme <paramref name="count"/>.
+        /// </summary>
+        public static string GetItemLabel(string kind, int count = 1)
+        {
+            if (string.IsNullOrWhiteSpace(kind)) return string.Empty;
+
+            bool plural = count != 1;
+            switch (kind)
+            {
+                case "papel":   return plural ? "Papéis" : "Papel";
+                case "caneta":  return plural ? "Canetas" : "Caneta";
+                case "revista": return plural ? "Revistas" : "Revista";
+                case "rodo":    return "Rodo";
+                default:        return char.ToUpper(kind[0]) + kind.Substring(1);
+            }
+        }
 
         /// <summary>
         /// Resumo curto para a linha do checklist — sempre o rótulo do tipo, nunca a
