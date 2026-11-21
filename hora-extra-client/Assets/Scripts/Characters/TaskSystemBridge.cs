@@ -28,6 +28,16 @@ namespace HoraExtra.Characters
         public static TaskSystemBridge Instance { get; private set; }
 
         /// <summary>
+        /// True depois que o catálogo autorado em cena foi adotado pela primeira vez.
+        ///
+        /// Sem isto, revisitar uma cena de level (ex: elevador 2º → 1º andar) recriava a
+        /// instância autorada dela, que no Awake sempre chamava AdoptCatalog de novo —
+        /// isso zera _myTasks/_otherTasks/_totalTasks e pede um novo sorteio ao servidor,
+        /// perdendo o progresso (e às vezes a fila de tasks) que o jogador já tinha.
+        /// </summary>
+        private static bool _catalogAdoptedFromScene;
+
+        /// <summary>
         /// Garante que existe uma instância do TaskSystemBridge. Se não existir na cena,
         /// cria um GameObject em runtime com DontDestroyOnLoad.
         ///
@@ -83,6 +93,17 @@ namespace HoraExtra.Characters
         /// </summary>
         private Dictionary<string, AssignedTask> _myTasks = new Dictionary<string, AssignedTask>();
 
+        /// <summary>
+        /// Tasks dos OUTROS jogadores da sala, keyed por playerId → taskId. Alimentado pelos
+        /// mesmos broadcasts (task_assigned / task_updated) — só para exibição (HUD de colegas).
+        /// Tarefas atribuídas antes deste cliente entrar não aparecem aqui.
+        /// </summary>
+        private readonly Dictionary<string, Dictionary<string, AssignedTask>> _otherTasks =
+            new Dictionary<string, Dictionary<string, AssignedTask>>();
+
+        /// <summary>playerId → totalTasks recebido no último task_assigned daquele jogador.</summary>
+        private readonly Dictionary<string, int> _totalTasks = new Dictionary<string, int>();
+
         // === Eventos públicos (Observer pattern) ===
         /// <summary>
         /// Disparado quando o servidor faz broadcast de tasks atribuídas a um jogador.
@@ -129,14 +150,19 @@ namespace HoraExtra.Characters
             else
             {
                 // Esta instância é da CENA e chegou depois de uma persistida (criada no menu
-                // por EnsureExists, que não tem catálogo configurado). Antes de morrer, ela
-                // entrega o catálogo autorado — que é a fonte da verdade do level.
+                // por EnsureExists, que não tem catálogo configurado, OU a própria instância
+                // persistida vinda de uma visita anterior a esta mesma cena). Antes de morrer,
+                // ela entrega o catálogo autorado — que é a fonte da verdade do level — mas
+                // SÓ NA PRIMEIRA VEZ.
                 //
-                // Sem isto, o catálogo da cena era silenciosamente descartado e o servidor
-                // ficava só com o que a instância do menu tivesse: nenhuma das tarefas da
-                // recepção existia, e os destinos nunca ativavam.
-                if (_initialCatalog != null && _initialCatalog.Count > 0)
+                // Sem o _catalogAdoptedFromScene, revisitar a cena (ex: elevador 2º → 1º andar)
+                // chamava AdoptCatalog de novo, que zera _myTasks/_otherTasks/_totalTasks e
+                // pede um novo sorteio ao servidor — perdendo o progresso que o jogador já tinha.
+                if (!_catalogAdoptedFromScene && _initialCatalog != null && _initialCatalog.Count > 0)
+                {
+                    _catalogAdoptedFromScene = true;
                     Instance.AdoptCatalog(_initialCatalog);
+                }
 
                 Destroy(gameObject);
             }
@@ -275,6 +301,34 @@ namespace HoraExtra.Characters
         }
 
         /// <summary>
+        /// Total de tarefas do jogador local na partida (atribuídas + fila do servidor).
+        /// Cai no número de tarefas já liberadas quando o servidor não informou o total.
+        /// </summary>
+        public int MyTotalTasks => GetTotalTasksOf(SocketManager.Instance?.LocalPlayerId);
+
+        /// <summary>
+        /// Tasks conhecidas de qualquer jogador da sala (local ou colega), em ordem de chegada.
+        /// Lista vazia se nada foi recebido para ele.
+        /// </summary>
+        public List<AssignedTask> GetTasksOf(string playerId)
+        {
+            if (string.IsNullOrEmpty(playerId)) return new List<AssignedTask>();
+            if (IsLocalPlayer(playerId)) return GetMyTasks();
+
+            return _otherTasks.TryGetValue(playerId, out var tasks)
+                ? new List<AssignedTask>(tasks.Values)
+                : new List<AssignedTask>();
+        }
+
+        /// <summary>Total de tarefas de um jogador (ver <see cref="MyTotalTasks"/>).</summary>
+        public int GetTotalTasksOf(string playerId)
+        {
+            if (string.IsNullOrEmpty(playerId)) return 0;
+            int conhecidas = GetTasksOf(playerId).Count;
+            return _totalTasks.TryGetValue(playerId, out var total) ? Mathf.Max(total, conhecidas) : conhecidas;
+        }
+
+        /// <summary>
         /// Retorna a primeira task do jogador local que bate com o tipo e status informados.
         /// Retorna null se não encontrar nenhuma.
         /// </summary>
@@ -309,6 +363,8 @@ namespace HoraExtra.Characters
         {
             _catalogRegistered = false;
             _myTasks.Clear();
+            _otherTasks.Clear();
+            _totalTasks.Clear();
             RegisterCatalog();
 
             // Solicita a atribuição automática de tasks após o catálogo ser registrado.
@@ -375,6 +431,16 @@ namespace HoraExtra.Characters
                     foreach (var task in payload.Tasks)
                         _myTasks[task.Id] = task;
                 }
+                else if (!string.IsNullOrEmpty(payload.PlayerId))
+                {
+                    if (!_otherTasks.TryGetValue(payload.PlayerId, out var tasksDoColega))
+                        _otherTasks[payload.PlayerId] = tasksDoColega = new Dictionary<string, AssignedTask>();
+                    foreach (var task in payload.Tasks)
+                        tasksDoColega[task.Id] = task;
+                }
+
+                if (payload.TotalTasks > 0 && !string.IsNullOrEmpty(payload.PlayerId))
+                    _totalTasks[payload.PlayerId] = payload.TotalTasks;
 
                 OnTaskAssigned?.Invoke(payload.PlayerId, payload.Tasks);
             }
@@ -416,6 +482,14 @@ namespace HoraExtra.Characters
                 if (IsLocalPlayer(payload.PlayerId) && _myTasks.TryGetValue(payload.TaskId, out var localTask))
                 {
                     updatedTask = localTask;
+                }
+                else if (!string.IsNullOrEmpty(payload.PlayerId)
+                         && _otherTasks.TryGetValue(payload.PlayerId, out var tasksDoColega)
+                         && tasksDoColega.TryGetValue(payload.TaskId, out var taskDoColega))
+                {
+                    taskDoColega.Status = payload.Status;
+                    taskDoColega.CurrentProgress = payload.CurrentProgress;
+                    updatedTask = taskDoColega;
                 }
                 else
                 {

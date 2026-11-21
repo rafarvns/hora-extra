@@ -67,6 +67,18 @@ namespace HoraExtra.UI
             TaskSystemBridge.OnTaskUpdated  -= HandleTaskUpdated;
         }
 
+        /// <summary>
+        /// Esconde este HUD legado (contador, mensagem de sucesso e passo a passo) e para de
+        /// escutar eventos. Chamado pela HUD nova (<c>HudRoot</c>), que o substitui.
+        /// </summary>
+        public void HideLegacyVisuals()
+        {
+            if (_missionCountText != null) _missionCountText.gameObject.SetActive(false);
+            if (_successMessageText != null) _successMessageText.gameObject.SetActive(false);
+            if (_howToText != null) _howToText.gameObject.SetActive(false);
+            enabled = false;
+        }
+
         // === Handlers dos eventos do TaskSystemBridge ===
 
         private void HandleTasksAssigned(string playerId, List<AssignedTask> tasks)

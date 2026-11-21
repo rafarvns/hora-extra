@@ -2,9 +2,10 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // Capture the message handler registered via socket.on('message', ...)
 // Use an object so the vi.mock factory (hoisted) can mutate it safely.
-const state = {
+const state = vi.hoisted(() => ({
     capturedMessageHandler: null as ((msg: Buffer, rinfo: any) => void) | null,
-};
+    send: null as any,
+}));
 
 vi.mock('dgram', () => {
     const mockSocket = {
@@ -13,7 +14,7 @@ vi.mock('dgram', () => {
             if (event === 'listening') handler(); // fire 'listening' immediately
         }),
         bind: vi.fn(),
-        send: vi.fn(),
+        send: (state.send = vi.fn()),
         close: vi.fn(),
         address: vi.fn().mockReturnValue({ address: '0.0.0.0', port: 5001 }),
     };
@@ -51,6 +52,9 @@ vi.mock('../core/factories/Service.Factory.js', () => ({
             assignRandomTasks: vi.fn(),
             getAssignedTasks: vi.fn(),
         }),
+        getShiftClockService: vi.fn().mockReturnValue({
+            resetRoom: vi.fn(),
+        }),
     },
 }));
 
@@ -79,6 +83,13 @@ async function simulateCONN(
     const packet = JSON.stringify({ e: 'CONN', token, d: extraData });
     const rinfo = { address, port, family: 'IPv4', size: 0 };
     await state.capturedMessageHandler!(Buffer.from(packet), rinfo);
+}
+
+/** Pacotes enviados pelo socket mockado, decodificados: { e, d, port, address }. */
+function sentPackets(eventName?: string): Array<{ e: string; d: any; port: number; address: string }> {
+    return state.send.mock.calls
+        .map((c: any[]) => ({ ...JSON.parse(c[0].toString()), port: c[1], address: c[2] }))
+        .filter((p: any) => !eventName || p.e === eventName);
 }
 
 describe('UdpSocketManager — guest path', () => {
@@ -197,5 +208,90 @@ describe('UdpSocketManager — guest path', () => {
         // The previous session (10.0.3.1) should have been removed
         const removedSession = manager.getSession({ address: '10.0.3.1', port: 4300, family: 'IPv4', size: 0 });
         expect(removedSession).toBeUndefined();
+    });
+});
+
+describe('UdpSocketManager — room_roster', () => {
+    let manager: UdpSocketManager;
+    const rinfoOf = (address: string, port: number) => ({ address, port, family: 'IPv4', size: 0 }) as any;
+
+    beforeEach(() => {
+        (UdpSocketManager as any).instance = undefined;
+        state.capturedMessageHandler = null;
+        vi.clearAllMocks();
+        manager = UdpSocketManager.initialize(9997);
+    });
+
+    afterEach(() => {
+        manager.close();
+        (UdpSocketManager as any).instance = undefined;
+    });
+
+    it('getRoomRoster lista só os jogadores da sala, com id e nome', async () => {
+        (authService.verifyToken as any).mockReturnValueOnce({ id: 'guest-ana' });
+        await simulateCONN(manager, 'jwt-a', '10.1.0.1', 5100, { playerName: 'Ana' });
+        (authService.verifyToken as any).mockReturnValueOnce({ id: 'guest-bia' });
+        await simulateCONN(manager, 'jwt-b', '10.1.0.2', 5101, { playerName: 'Bia' });
+        (authService.verifyToken as any).mockReturnValueOnce({ id: 'player-fora' });
+        await simulateCONN(manager, 'jwt-c', '10.1.0.3', 5102); // sem auto-join
+
+        expect(manager.getRoomRoster('guest-room')).toEqual([
+            { id: 'guest-ana', n: 'Ana' },
+            { id: 'guest-bia', n: 'Bia' },
+        ]);
+    });
+
+    it('CONN com auto-join faz broadcast room_roster para a sala', async () => {
+        (authService.verifyToken as any).mockReturnValueOnce({ id: 'guest-ana' });
+        await simulateCONN(manager, 'jwt-a', '10.1.1.1', 5200, { playerName: 'Ana' });
+        (authService.verifyToken as any).mockReturnValueOnce({ id: 'guest-bia' });
+        await simulateCONN(manager, 'jwt-b', '10.1.1.2', 5201, { playerName: 'Bia' });
+
+        const paraAna = sentPackets('room_roster').filter(p => p.port === 5200);
+        const ultimo = paraAna[paraAna.length - 1];
+        expect(ultimo.d).toEqual({ p: [{ id: 'guest-ana', n: 'Ana' }, { id: 'guest-bia', n: 'Bia' }] });
+    });
+
+    it('CONN sem sala não envia room_roster', async () => {
+        (authService.verifyToken as any).mockReturnValueOnce({ id: 'player-solo' });
+        await simulateCONN(manager, 'jwt-solo', '10.1.2.1', 5300);
+
+        expect(sentPackets('room_roster')).toHaveLength(0);
+    });
+
+    it('cleanupSessions reenvia room_roster aos jogadores que ficaram', async () => {
+        (authService.verifyToken as any).mockReturnValueOnce({ id: 'guest-ana' });
+        await simulateCONN(manager, 'jwt-a', '10.1.3.1', 5400, { playerName: 'Ana' });
+        (authService.verifyToken as any).mockReturnValueOnce({ id: 'guest-bia' });
+        await simulateCONN(manager, 'jwt-b', '10.1.3.2', 5401, { playerName: 'Bia' });
+        state.send.mockClear();
+
+        manager.getSession(rinfoOf('10.1.3.2', 5401))!.lastSeen = Date.now() - 35000;
+        (manager as any).cleanupSessions();
+
+        const rosters = sentPackets('room_roster');
+        expect(rosters).toHaveLength(1);
+        expect(rosters[0].port).toBe(5400);
+        expect(rosters[0].d).toEqual({ p: [{ id: 'guest-ana', n: 'Ana' }] });
+    });
+
+    it('cleanupSessions descarta o relógio do expediente quando a guest-room esvazia', async () => {
+        (authService.verifyToken as any).mockReturnValueOnce({ id: 'guest-ana' });
+        await simulateCONN(manager, 'jwt-a', '10.1.4.1', 5500);
+
+        manager.getSession(rinfoOf('10.1.4.1', 5500))!.lastSeen = Date.now() - 35000;
+        (manager as any).cleanupSessions();
+
+        expect(ServiceFactory.getShiftClockService().resetRoom).toHaveBeenCalledWith('guest-room');
+    });
+
+    it('resetRoom descarta o relógio do expediente da sala', async () => {
+        process.env.NODE_ENV = 'development';
+        process.env.DEV_TEST_TOKEN = 'dev-tok-clock';
+        process.env.DEV_TEST_USER_ID = 'dev-player-clock';
+
+        await simulateCONN(manager, 'dev-tok-clock', '10.1.5.1', 5600, { resetRoom: true });
+
+        expect(ServiceFactory.getShiftClockService().resetRoom).toHaveBeenCalledWith('dev-room');
     });
 });

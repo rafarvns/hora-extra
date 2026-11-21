@@ -38,7 +38,7 @@ export interface AssignedTaskPayload {
     type: string;
     targetCount: number;
     currentProgress: number;
-    status: 'pending' | 'in_progress' | 'completed';
+    status: 'pending' | 'in_progress' | 'completed' | 'failed';
 }
 
 /**
@@ -47,4 +47,22 @@ export interface AssignedTaskPayload {
 export interface TaskAssignedPayload {
     playerId: string;
     tasks: AssignedTaskPayload[];
+    /** Total de tarefas do jogador na partida (atribuídas + fila). Constante desde o sorteio. */
+    totalTasks: number;
+}
+
+// ──────────────────────────────────────────────────────────────
+// HUD: relógio do expediente e roster da sala
+// ──────────────────────────────────────────────────────────────
+
+/** Payload C→S: shift_clock_request — sem campos (sala vem da sessão). */
+export type ShiftClockRequest = Record<string, never>;
+
+/** Payload S→C: shift_clock. Ver ShiftClockSnapshot em services/ShiftClockService.ts. */
+export type { ShiftClockSnapshot as ShiftClockPayload } from '../../services/ShiftClockService.js';
+
+/** Payload S→C: room_roster */
+export interface RoomRosterPayload {
+    /** Jogadores da sala: id + nome de exibição. */
+    p: Array<{ id: string; n: string }>;
 }

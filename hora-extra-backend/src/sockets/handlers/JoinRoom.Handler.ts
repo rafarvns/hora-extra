@@ -25,6 +25,7 @@ export class JoinRoomHandler implements ISocketHandler {
         }
 
         // Atualizar sessão com sala e nome
+        const previousRoomId: string | undefined = session.roomId;
         session.roomId = roomId;
         session.playerName = playerName;
         session.lastSeen = Date.now();
@@ -47,5 +48,11 @@ export class JoinRoomHandler implements ISocketHandler {
             playerId: session.id,
             message: `Bem-vindo à sala ${roomId} (UDP Protocol)`
         });
+
+        // Roster atualizado para todos — inclusive para a sala que o jogador deixou.
+        if (previousRoomId && previousRoomId !== roomId) {
+            server.broadcastRoster(previousRoomId);
+        }
+        server.broadcastRoster(roomId);
     }
 }

@@ -16,6 +16,9 @@ public class NetworkUI : MonoBehaviour
 
         [Header("Configurações")]
         [SerializeField] private int maxLogLines = 15;
+
+        [Tooltip("Console de log visível ao iniciar. [F3] alterna em jogo.")]
+        [SerializeField] private bool showLogOnStart = false;
         
         private List<string> _logLines = new List<string>();
         private StringBuilder _stringBuilder = new StringBuilder();
@@ -50,14 +53,34 @@ public class NetworkUI : MonoBehaviour
             Application.logMessageReceived -= HandleLog;
         }
 
+        private bool _pingVisible = true;
+
         private void Start()
         {
-            if (logDebug != null) logDebug.text = "<color=cyan>[SYSTEM] Log Debug Console Iniciado.</color>";
+            if (logDebug != null)
+            {
+                logDebug.text = "<color=cyan>[SYSTEM] Log Debug Console Iniciado. [F3] mostra/esconde.</color>";
+                logDebug.gameObject.SetActive(showLogOnStart);
+            }
+        }
+
+        /// <summary>
+        /// Mostra/esconde o indicador de ping legado. A HUD nova (<c>HudRoot</c>) desliga, pois
+        /// tem o próprio indicador; o console de log continua aqui, no [F3].
+        /// </summary>
+        public void SetPingVisible(bool visible)
+        {
+            _pingVisible = visible;
+            if (pingImage != null) pingImage.gameObject.SetActive(visible);
+            if (pingText != null) pingText.gameObject.SetActive(visible);
         }
 
         private void Update()
         {
-            UpdatePingUI();
+            if (logDebug != null && HoraExtra.UI.Hud.HudInput.DebugTogglePressed())
+                logDebug.gameObject.SetActive(!logDebug.gameObject.activeSelf);
+
+            if (_pingVisible) UpdatePingUI();
         }
 
         private void UpdatePingUI()

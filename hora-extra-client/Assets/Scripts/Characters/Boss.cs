@@ -17,6 +17,9 @@ namespace HoraExtra.Characters
         [SerializeField, Tooltip("Dano de habilidade especial.")]
         private int _ultimateDamage = 50;
 
+        /// <summary>Dano da habilidade especial (a habilidade ainda não foi implementada).</summary>
+        public int UltimateDamage => _ultimateDamage;
+
         private int _currentPhase = 1;
 
         protected override void Initialize()

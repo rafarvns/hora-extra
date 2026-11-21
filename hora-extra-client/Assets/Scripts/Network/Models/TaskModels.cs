@@ -83,6 +83,12 @@ namespace HoraExtra.Network.Models
     {
         [JsonProperty("playerId")] public string           PlayerId;
         [JsonProperty("tasks")]    public List<AssignedTask> Tasks;
+
+        /// <summary>
+        /// Total de tarefas do jogador na partida (atribuídas + fila do servidor).
+        /// Constante desde o sorteio. 0 quando o servidor é anterior a este campo.
+        /// </summary>
+        [JsonProperty("totalTasks")] public int TotalTasks;
     }
 
     /// <summary>

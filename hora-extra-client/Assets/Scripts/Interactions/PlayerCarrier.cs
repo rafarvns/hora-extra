@@ -53,6 +53,9 @@ namespace HoraExtra.Interactions
         /// <summary>Categoria da pilha atual, ou null se a mão está vazia.</summary>
         public string CarriedKind => _carried.Count > 0 ? _carried[0].Kind : null;
 
+        /// <summary>Quantos itens do mesmo tipo cabem na mão.</summary>
+        public int MaxStack => _maxStack;
+
         /// <summary>True quando a pilha atingiu o limite.</summary>
         public bool IsFull => _carried.Count >= _maxStack;
 
@@ -150,6 +153,25 @@ namespace HoraExtra.Interactions
             // preso na mão para sempre sem uma forma explícita de largar.
             if (IsCarrying && InteractionInput.DropPressed())
                 DropAll();
+        }
+
+        /// <summary>
+        /// Remove <paramref name="item"/> da mão para virar um projétil (ver
+        /// <see cref="ThrowablePaper"/>). Diferente de <see cref="Consume"/> (desativa) e
+        /// <see cref="DropAll"/> (reposiciona no chão): aqui o item continua ativo — quem
+        /// chama é responsável por aplicar a física do arremesso logo depois.
+        /// </summary>
+        public CarryableItem TakeForThrow(CarryableItem item)
+        {
+            if (item == null || !_carried.Contains(item)) return null;
+
+            _carried.Remove(item);
+            item.transform.SetParent(null, true);
+            Restack();
+
+            Debug.Log($"[GAMEPLAY] PlayerCarrier — item '{item.ItemId}' retirado da mão para arremesso.");
+            OnCarryChanged?.Invoke(Carried);
+            return item;
         }
 
         /// <summary>

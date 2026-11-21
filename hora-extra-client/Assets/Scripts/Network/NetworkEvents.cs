@@ -29,6 +29,12 @@ public static class NetworkEvents
     public const string TASK_COMPLETE_ATTEMPT = "task_complete_attempt";
     public const string TASK_PROGRESS = "task_progress";
 
+    /// <summary>
+    /// Pede o relógio do expediente da sala. O primeiro pedido da sala inicia o
+    /// expediente; os seguintes só sincronizam. Payload: {}. Resposta: SHIFT_CLOCK.
+    /// </summary>
+    public const string SHIFT_CLOCK_REQUEST = "shift_clock_request";
+
     // Servidor -> Cliente
     public const string CONNECTION_SUCCESS = "connection_success";
     public const string ROOM_JOINED = "room_joined";
@@ -47,4 +53,16 @@ public static class NetworkEvents
     /// pacote malformado. Payload: { taskId, code, message, itemId? }.
     /// </summary>
     public const string TASK_REJECTED = "task_rejected";
+
+    /// <summary>
+    /// Relógio do expediente (autoritativo). Payload: { m, s, e, k, st } — ver
+    /// ShiftClockPayload. O cliente extrapola m + k·Δt entre sincronizações.
+    /// </summary>
+    public const string SHIFT_CLOCK = "shift_clock";
+
+    /// <summary>
+    /// Lista completa de jogadores da sala, reenviada a cada entrada/saída.
+    /// Payload: { p: [{ id, n }] } — ver RoomRosterPayload.
+    /// </summary>
+    public const string ROOM_ROSTER = "room_roster";
 }

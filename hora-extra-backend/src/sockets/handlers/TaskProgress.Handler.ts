@@ -110,6 +110,7 @@ export function releaseNextTask(server: any, session: any, taskService: any): vo
     server.broadcastToRoom(session.roomId, 'task_assigned', {
         playerId: session.id,
         tasks: [proxima],
+        totalTasks: taskService.getTotalTaskCount(session.id),
     });
 
     logger.info(`[UDP_SOCKET] task_assigned (fila): '${proxima.id}' liberada para '${session.id}'`, { module: 'UDP_SOCKET' });

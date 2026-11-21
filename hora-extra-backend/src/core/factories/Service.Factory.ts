@@ -1,6 +1,7 @@
 import authService from '../../services/authService.js';
 import guestService from '../../services/guestService.js';
 import taskService from '../../services/TaskService.js';
+import shiftClockService from '../../services/ShiftClockService.js';
 import prisma from '../../database/prisma.js';
 import { PrismaClient } from '@prisma/client';
 
@@ -30,6 +31,13 @@ export class ServiceFactory {
      */
     public static getTaskService() {
         return taskService;
+    }
+
+    /**
+     * Retorna a instância singleton do ShiftClockService (relógio do expediente).
+     */
+    public static getShiftClockService() {
+        return shiftClockService;
     }
 
     /**

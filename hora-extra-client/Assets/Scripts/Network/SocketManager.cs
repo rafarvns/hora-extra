@@ -62,7 +62,6 @@ public class SocketManager : MonoBehaviour
     private bool _isConnected = false;
     
     private float _lastPingTime;
-    private bool _waitingForPong = false;
     private const float HeartbeatInterval = 2f;
     private float _heartbeatTimer = 0f;
 
@@ -135,7 +134,6 @@ public class SocketManager : MonoBehaviour
     private void SendPing()
     {
         _lastPingTime = Time.realtimeSinceStartup;
-        _waitingForPong = true;
         Emit(NetworkEvents.PING, new { t = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() });
     }
 
@@ -160,7 +158,7 @@ public class SocketManager : MonoBehaviour
         }
     }
 
-    private async void SendHandshake()
+    private void SendHandshake()
     {
         string token = UseTestToken ? TestToken : HoraExtra.Network.NetworkSettings.AuthToken;
         
@@ -169,7 +167,7 @@ public class SocketManager : MonoBehaviour
             e = "CONN",
             token = token,
             d = new {
-                playerName = "Player_" + UnityEngine.Random.Range(100, 999),
+                playerName = HoraExtra.Settings.GameSettings.ResolvePlayerName() ?? "Player_" + UnityEngine.Random.Range(100, 999),
                 resetRoom = UseTestToken // Sinaliza para o servidor resetar a sala se for modo teste
             }
         };
@@ -226,7 +224,6 @@ public class SocketManager : MonoBehaviour
             }
             else if (eventName == NetworkEvents.PONG)
             {
-                _waitingForPong = false;
                 Latency = (Time.realtimeSinceStartup - _lastPingTime) * 1000f; // Conversão para ms
             }
             else

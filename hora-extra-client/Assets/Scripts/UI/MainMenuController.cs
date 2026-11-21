@@ -2,7 +2,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using HoraExtra.Network;
-using HoraExtra.Network.Rest.Services;
 
 namespace HoraExtra.UI
 {
@@ -21,7 +20,7 @@ namespace HoraExtra.UI
         [Header("Scene Names")]
         [SerializeField] private string registerSceneName = "CreateAccountScene";
         [SerializeField] private string loginSceneName = "LoginScene";
-        [SerializeField] private string lobbySceneName = "SampleScene"; // Ajuste se houver uma cena específica de Lobby
+        [SerializeField] private string lobbySceneName = "LobbyScene";
 
         [Tooltip("Cena de gameplay carregada direto ao entrar como convidado. O guest já é " +
                  "auto-joinado na 'guest-room' pelo servidor, então não passa pelo lobby de salas.")]
@@ -132,37 +131,13 @@ namespace HoraExtra.UI
         
         private async void OnGuestPlayClicked()
         {
-            Debug.Log("[UI] Botão Guest Play clicado — solicitando JWT...");
+            Debug.Log("[UI] Botão Guest Play clicado.");
+            if (btnGuestPlay != null) btnGuestPlay.interactable = false;
 
-            var resp = await GuestService.JoinAsGuest();
-            if (resp == null || !resp.Success || resp.Data == null)
-            {
-                Debug.LogError($"[UI] Guest join falhou: {resp?.Error?.Message ?? "resposta nula"}");
-                return;
-            }
-
-            Debug.Log($"[UI] Guest concedido — id={resp.Data.GuestId}, room={resp.Data.RoomId}");
-
-            // Configura sessão antes do SocketManager conectar
-            NetworkSettings.AuthToken = resp.Data.Token;
-            GuestSession.IsGuestMode = true;
-            GuestSession.GuestRoomId = resp.Data.RoomId;
-
-            // Objetos de rede criados ANTES do handshake: SCN_FirstFloor é uma cena de level
-            // sem objetos de netplay pré-configurados, e os três sobrevivem ao LoadScene via
-            // DontDestroyOnLoad. A ordem importa — o TaskSystemBridge precisa já estar
-            // inscrito em CONN_SUCCESS quando a resposta do servidor chegar, senão perderia
-            // o registro do catálogo (ele tem fallback por IsConnected, mas assim nem abre
-            // a janela de corrida).
-            SocketManager.EnsureExists();
-            RemotePlayerSpawner.EnsureExists();
-            HoraExtra.Characters.TaskSystemBridge.EnsureExists();
-
-            // Força reconexão UDP com o token guest
-            SocketManager.Instance.SetAuthTokenAndReconnect(resp.Data.Token);
-
-            // Carrega a cena de gameplay do convidado
-            LoadScene(guestGameSceneName);
+            // Mesmo fluxo do menu novo (MainMenuRoot); em sucesso a cena já foi trocada.
+            var result = await GuestPlayFlow.Start(guestGameSceneName);
+            if (!result.Success && btnGuestPlay != null)
+                btnGuestPlay.interactable = true;
         }
     }
 }
