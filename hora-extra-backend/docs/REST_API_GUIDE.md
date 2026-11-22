@@ -62,31 +62,16 @@ O middleware global (`errorHandler.ts`) capturará o erro e formatará a respost
 
 ---
 
-## 4. Autenticação (JWT)
+## 4. Sessão (sem cadastro)
 
-A API utiliza JSON Web Tokens (JWT) para autenticação.
-
-### Endpoints
-- `POST /api/auth/register`: Cria um novo jogador.
-- `POST /api/auth/login`: Autentica um jogador e retorna o token.
-
-### Protegendo Rotas
-Para proteger uma rota, utilize o `authMiddleware.authenticate`:
-
-```typescript
-import authMiddleware from '../../middleware/authMiddleware.js';
-
-router.get('/perfil', authMiddleware.authenticate, controller.getPerfil);
-```
-
-As rotas protegidas esperam o header `Authorization`:
-`Authorization: Bearer <TOKEN>`
-
-O ID do jogador autenticado estará disponível em `req.jogadorId`.
+Não há contas. O jogador só digita o nome: `POST /api/session { nome }` devolve um JWT com
+`{ id, n }` (id gerado pelo servidor + nome), usado no `CONN` do UDP. Ver
+`docs/Networking/COMMUNICATION.md` §2 e `docs/Mechanics/Salas.md`.
 
 ---
 
 ## 5. Endpoints Atuais
 - `GET /api/health`: Verifica o status do servidor.
-- `POST /api/auth/register`: Cadastro de jogador.
-- `POST /api/auth/login`: Login de jogador.
+- `POST /api/session`: Abre a sessão com o nome do jogador.
+- `GET /api/rooms`: Lista as salas (em memória, máx. 2 jogadores).
+- `POST /api/rooms`: Cria uma sala.
