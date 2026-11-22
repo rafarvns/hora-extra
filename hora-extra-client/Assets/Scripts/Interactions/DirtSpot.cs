@@ -78,12 +78,30 @@ namespace HoraExtra.Interactions
         {
             TaskSystemBridge.OnTaskUpdated += AoAtualizarTask;
             TaskSystemBridge.OnTaskRejected += AoRecusar;
+            TaskSystemBridge.OnRoomStateChanged += AplicarEstadoDaSala;
+        }
+
+        private void Start()
+        {
+            // Mancha que o colega (ou nós, antes de trocar de andar) já limpou não volta.
+            AplicarEstadoDaSala();
+        }
+
+        /// <summary>Estado compartilhado da sala: já limpa por alguém → some.</summary>
+        private void AplicarEstadoDaSala()
+        {
+            var bridge = TaskSystemBridge.Instance;
+            if (bridge == null || _aguardandoServidor || !bridge.IsItemDone(_itemId)) return;
+
+            Debug.Log($"[GAMEPLAY] DirtSpot '{_itemId}' — já limpa na sala.");
+            gameObject.SetActive(false);
         }
 
         private void OnDisable()
         {
             TaskSystemBridge.OnTaskUpdated -= AoAtualizarTask;
             TaskSystemBridge.OnTaskRejected -= AoRecusar;
+            TaskSystemBridge.OnRoomStateChanged -= AplicarEstadoDaSala;
             _carrierInRange = null;
             _progresso = 0f;
             _aguardandoServidor = false;

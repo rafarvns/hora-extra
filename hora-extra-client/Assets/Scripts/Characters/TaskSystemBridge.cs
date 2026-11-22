@@ -104,6 +104,13 @@ namespace HoraExtra.Characters
         /// <summary>playerId → totalTasks recebido no último task_assigned daquele jogador.</summary>
         private readonly Dictionary<string, int> _totalTasks = new Dictionary<string, int>();
 
+        /// <summary>
+        /// Estado COMPARTILHADO de cada tarefa da sala (taskId → estado), vindo do room_state
+        /// e mantido por todo task_assigned/task_updated, de qualquer jogador. É o que o
+        /// mundo usa para refletir o que o colega já fez (mancha limpa, cofre aberto...).
+        /// </summary>
+        private readonly Dictionary<string, RoomTaskState> _roomTasks = new Dictionary<string, RoomTaskState>();
+
         // === Eventos públicos (Observer pattern) ===
         /// <summary>
         /// Disparado quando o servidor faz broadcast de tasks atribuídas a um jogador.
@@ -127,6 +134,13 @@ namespace HoraExtra.Characters
         /// jogador — e exibir Message.
         /// </summary>
         public static event Action<TaskRejectedPayload> OnTaskRejected;
+
+        /// <summary>
+        /// O estado compartilhado da sala mudou (room_state ao entrar, ou qualquer
+        /// task_assigned/task_updated de qualquer jogador). Objetos do mundo reaplicam o
+        /// próprio estado (ex: <see cref="IsItemDone"/>) quando isto dispara.
+        /// </summary>
+        public static event Action OnRoomStateChanged;
 
         /// <summary>
         /// Enquanto true, a atribuição automática de tarefas fica retida mesmo depois do
@@ -182,6 +196,10 @@ namespace HoraExtra.Characters
             // Assina recusa de gameplay (unicast ao remetente).
             SocketManager.Instance?.On(NetworkEvents.TASK_REJECTED, OnTaskRejectedReceived);
 
+            // Retrato da sala (quem entra no meio) e saída do colega.
+            SocketManager.Instance?.On(NetworkEvents.ROOM_STATE, OnRoomStateReceived);
+            SocketManager.Instance?.On(NetworkEvents.PLAYER_DISCONNECTED, OnPlayerDisconnected);
+
             // Caso a conexão UDP já tenha sido estabelecida ANTES desta cena carregar
             // (ex: modo guest conecta na cena de menu), o CONN_SUCCESS já disparou e
             // não vai disparar de novo. Inicializa imediatamente para não perder o evento.
@@ -198,6 +216,8 @@ namespace HoraExtra.Characters
             SocketManager.Instance?.Off(NetworkEvents.TASK_ASSIGNED, OnTaskAssignedReceived);
             SocketManager.Instance?.Off(NetworkEvents.TASK_UPDATED, OnTaskUpdatedReceived);
             SocketManager.Instance?.Off(NetworkEvents.TASK_REJECTED, OnTaskRejectedReceived);
+            SocketManager.Instance?.Off(NetworkEvents.ROOM_STATE, OnRoomStateReceived);
+            SocketManager.Instance?.Off(NetworkEvents.PLAYER_DISCONNECTED, OnPlayerDisconnected);
         }
 
         // === Métodos públicos ===
@@ -222,6 +242,10 @@ namespace HoraExtra.Characters
             _catalogRegistered = false;
 
             Debug.Log($"[GAMEPLAY] TaskSystemBridge — catálogo da cena adotado ({_initialCatalog.Count} entrada(s)).");
+
+            // O room_state pode ter chegado antes do catálogo (ele vem logo após o CONN, ainda
+            // no menu): agora dá para montar a tarefa que já era nossa (reconexão).
+            SeedTasksFromRoomState();
 
             if (SocketManager.Instance != null && SocketManager.Instance.IsConnected)
                 HandleConnectionEstablished();
@@ -343,15 +367,199 @@ namespace HoraExtra.Characters
             return null;
         }
 
+        // === Estado da sala (compartilhado) ===
+
+        /// <summary>Estado compartilhado de uma tarefa; null se desconhecida.</summary>
+        public RoomTaskState GetRoomTask(string taskId)
+        {
+            return !string.IsNullOrEmpty(taskId) && _roomTasks.TryGetValue(taskId, out var t) ? t : null;
+        }
+
+        /// <summary>A tarefa foi encerrada (por qualquer jogador)?</summary>
+        public bool IsTaskDone(string taskId) => GetRoomTask(taskId)?.IsClosed ?? false;
+
+        /// <summary>
+        /// O item já foi contado em alguma tarefa da sala (por qualquer jogador)? Os itemIds
+        /// são únicos no catálogo, então basta o id do item.
+        /// </summary>
+        public bool IsItemDone(string itemId)
+        {
+            if (string.IsNullOrEmpty(itemId)) return false;
+            foreach (var t in _roomTasks.Values)
+                if (t.CollectedItems != null && t.CollectedItems.Contains(itemId)) return true;
+            return false;
+        }
+
+        /// <summary>
+        /// O item pertence (pelo catálogo) a uma tarefa aberta que está com OUTRO jogador?
+        /// </summary>
+        public bool IsItemHeldByTeammate(string itemId)
+        {
+            if (string.IsNullOrEmpty(itemId) || _initialCatalog == null) return false;
+            string local = SocketManager.Instance?.LocalPlayerId;
+            foreach (var e in _initialCatalog)
+            {
+                bool contem = (e.items != null && e.items.Contains(itemId))
+                              || (e.pairs != null && e.pairs.Exists(p => p != null && p.itemId == itemId));
+                if (!contem) continue;
+                var t = GetRoomTask(e.id);
+                return t != null && !t.IsClosed && !string.IsNullOrEmpty(t.Holder) && t.Holder != local;
+            }
+            return false;
+        }
+
+        /// <summary>Alguma tarefa deste tipo já foi encerrada na sala?</summary>
+        public bool IsTaskTypeDone(string type)
+        {
+            foreach (var t in _roomTasks.Values)
+                if (t.IsClosed && TypeOf(t.Id) == type) return true;
+            return false;
+        }
+
+        /// <summary>Progresso da equipe: tarefas encerradas / total do catálogo da sala.</summary>
+        public int TeamDoneCount
+        {
+            get
+            {
+                int n = 0;
+                foreach (var t in _roomTasks.Values) if (t.IsClosed) n++;
+                return n;
+            }
+        }
+
+        public int TeamTotalCount => _roomTasks.Count > 0 ? _roomTasks.Count : (_initialCatalog?.Count ?? 0);
+
+        /// <summary>
+        /// Sem tarefa aberta e com tarefas ainda em andamento com o colega — o jogador
+        /// está esperando (as livres acabaram).
+        /// </summary>
+        public bool IsWaitingForTeammate
+        {
+            get
+            {
+                foreach (var t in _myTasks.Values)
+                    if (t.Status == "pending" || t.Status == "in_progress") return false;
+                foreach (var t in _roomTasks.Values)
+                    if (!t.IsClosed) return true;
+                return false;
+            }
+        }
+
+        private string TypeOf(string taskId)
+        {
+            if (_initialCatalog == null) return null;
+            foreach (var e in _initialCatalog) if (e.id == taskId) return e.type;
+            return null;
+        }
+
+        private TaskEntryData EntryOf(string taskId)
+        {
+            if (_initialCatalog == null) return null;
+            foreach (var e in _initialCatalog) if (e.id == taskId) return e;
+            return null;
+        }
+
+        private RoomTaskState RoomTaskOrNew(string taskId)
+        {
+            if (!_roomTasks.TryGetValue(taskId, out var t))
+                _roomTasks[taskId] = t = new RoomTaskState { Id = taskId, Status = "pending" };
+            return t;
+        }
+
         // === Handlers de rede ===
 
         /// <summary>
-        /// Callback de CONN_SUCCESS: registra o catálogo de tarefas na sala.
-        /// Chamado na main thread (SocketManager drena _mainThreadQueue no Update).
+        /// Callback de CONN_SUCCESS: nova sessão — zera o estado da partida anterior e
+        /// registra o catálogo. Chamado na main thread.
         /// </summary>
         private void OnConnectionSuccess(JToken data)
         {
+            _myTasks.Clear();
+            _otherTasks.Clear();
+            _totalTasks.Clear();
+            _roomTasks.Clear();
             HandleConnectionEstablished();
+        }
+
+        /// <summary>
+        /// room_state: retrato da sala para quem acabou de entrar. Guarda o estado de todas
+        /// as tarefas e recupera a tarefa que já era nossa (reconexão).
+        /// </summary>
+        private void OnRoomStateReceived(JToken data)
+        {
+            try
+            {
+                var estado = data.ToObject<RoomStatePayload>();
+                if (estado?.Tasks == null) return;
+
+                _roomTasks.Clear();
+                foreach (var t in estado.Tasks)
+                    if (!string.IsNullOrEmpty(t.Id)) _roomTasks[t.Id] = t;
+
+                Debug.Log($"[GAMEPLAY] room_state — {estado.Tasks.Count} tarefa(s) na sala, {TeamDoneCount} concluída(s).");
+                SeedTasksFromRoomState();
+                OnRoomStateChanged?.Invoke();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[NETWORK] Falha ao parsear room_state: {ex.Message} | raw: {data}");
+            }
+        }
+
+        /// <summary>
+        /// Monta, a partir do retrato da sala, as tarefas que já têm dono: as nossas (vamos
+        /// continuar de onde paramos) e as do colega (painel de equipe).
+        /// </summary>
+        private void SeedTasksFromRoomState()
+        {
+            string local = SocketManager.Instance?.LocalPlayerId;
+            bool mudou = false;
+            foreach (var t in _roomTasks.Values)
+            {
+                if (string.IsNullOrEmpty(t.Holder)) continue;
+                var entry = EntryOf(t.Id);
+                if (entry == null) continue; // catálogo ainda não chegou — tenta no AdoptCatalog
+
+                var task = new AssignedTask
+                {
+                    Id = t.Id,
+                    Description = entry.description,
+                    Type = entry.type,
+                    TargetCount = entry.targetCount,
+                    CurrentProgress = t.Progress,
+                    Status = t.Status,
+                    CollectedItems = t.CollectedItems ?? new List<string>(),
+                };
+
+                if (t.Holder == local)
+                {
+                    if (_myTasks.ContainsKey(t.Id)) continue;
+                    _myTasks[t.Id] = task;
+                    mudou = true;
+                }
+                else
+                {
+                    if (!_otherTasks.TryGetValue(t.Holder, out var doColega))
+                        _otherTasks[t.Holder] = doColega = new Dictionary<string, AssignedTask>();
+                    doColega[t.Id] = task;
+                }
+            }
+
+            if (mudou && !string.IsNullOrEmpty(local))
+                OnTaskAssigned?.Invoke(local, GetMyTasks());
+        }
+
+        /// <summary>O colega saiu: a tarefa aberta dele voltou ao pool (o servidor já cuidou).</summary>
+        private void OnPlayerDisconnected(JToken data)
+        {
+            string id = data?["id"]?.ToString();
+            if (string.IsNullOrEmpty(id)) return;
+
+            _otherTasks.Remove(id);
+            _totalTasks.Remove(id);
+            foreach (var t in _roomTasks.Values)
+                if (t.Holder == id && !t.IsClosed) t.Holder = null;
+            OnRoomStateChanged?.Invoke();
         }
 
         /// <summary>
@@ -362,9 +570,6 @@ namespace HoraExtra.Characters
         private void HandleConnectionEstablished()
         {
             _catalogRegistered = false;
-            _myTasks.Clear();
-            _otherTasks.Clear();
-            _totalTasks.Clear();
             RegisterCatalog();
 
             // Solicita a atribuição automática de tasks após o catálogo ser registrado.
@@ -425,7 +630,7 @@ namespace HoraExtra.Characters
                 // Armazena tasks do jogador local. MESCLA em vez de substituir: com a fila
                 // sequencial, o servidor reenvia task_assigned a cada nova tarefa liberada,
                 // e limpar aqui apagaria as já concluídas do HUD.
-                // A limpeza acontece uma vez só, no HandleConnectionEstablished.
+                // A limpeza acontece uma vez só, a cada nova conexão (OnConnectionSuccess).
                 if (IsLocalPlayer(payload.PlayerId))
                 {
                     foreach (var task in payload.Tasks)
@@ -442,7 +647,19 @@ namespace HoraExtra.Characters
                 if (payload.TotalTasks > 0 && !string.IsNullOrEmpty(payload.PlayerId))
                     _totalTasks[payload.PlayerId] = payload.TotalTasks;
 
+                // Estado da sala: a tarefa agora tem dono (e pode já vir com progresso de
+                // quem saiu antes de terminar).
+                foreach (var task in payload.Tasks)
+                {
+                    var rt = RoomTaskOrNew(task.Id);
+                    rt.Holder = payload.PlayerId;
+                    rt.Status = task.Status;
+                    rt.Progress = task.CurrentProgress;
+                    if (task.CollectedItems != null) rt.CollectedItems = new List<string>(task.CollectedItems);
+                }
+
                 OnTaskAssigned?.Invoke(payload.PlayerId, payload.Tasks);
+                OnRoomStateChanged?.Invoke();
             }
             catch (Exception ex)
             {
@@ -470,11 +687,19 @@ namespace HoraExtra.Characters
                           $"status={payload.Status} progress={payload.CurrentProgress} " +
                           $"playerId={payload.PlayerId}");
 
+                // Estado da sala (vale para tarefa de qualquer jogador).
+                var rt = RoomTaskOrNew(payload.TaskId);
+                rt.Status = payload.Status;
+                rt.Progress = payload.CurrentProgress;
+                if (!string.IsNullOrEmpty(payload.PlayerId)) rt.Holder = payload.PlayerId;
+                if (payload.CollectedItems != null) rt.CollectedItems = new List<string>(payload.CollectedItems);
+
                 // Atualiza estado local se for task do jogador local.
                 if (IsLocalPlayer(payload.PlayerId) && _myTasks.TryGetValue(payload.TaskId, out var existingTask))
                 {
                     existingTask.Status = payload.Status;
                     existingTask.CurrentProgress = payload.CurrentProgress;
+                    if (payload.CollectedItems != null) existingTask.CollectedItems = new List<string>(payload.CollectedItems);
                 }
 
                 // Constrói objeto AssignedTask para o evento (snapshot do estado atual ou parcial).
@@ -503,6 +728,7 @@ namespace HoraExtra.Characters
                 }
 
                 OnTaskUpdated?.Invoke(payload.PlayerId, updatedTask);
+                OnRoomStateChanged?.Invoke();
             }
             catch (Exception ex)
             {

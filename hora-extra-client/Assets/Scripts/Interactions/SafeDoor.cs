@@ -50,6 +50,20 @@ namespace HoraExtra.Interactions
             StartCoroutine(Girar());
         }
 
+        /// <summary>
+        /// Deixa a porta aberta na hora, sem animação nem som — usado quando o cofre já foi
+        /// aberto antes (pelo colega, ou por nós antes de trocar de andar).
+        /// </summary>
+        public void AbrirInstantaneo()
+        {
+            if (Aberta) return;
+            Aberta = true;
+            Transform porta = Porta;
+            Vector3 pivo = _dobradica != null ? _dobradica.position : porta.TransformPoint(_dobradicaLocal);
+            Vector3 eixo = porta.TransformDirection(_eixoLocal.sqrMagnitude > 0f ? _eixoLocal.normalized : Vector3.up);
+            GirarTudo(porta, pivo, eixo, _angulo);
+        }
+
         private IEnumerator Girar()
         {
             Transform porta = Porta;

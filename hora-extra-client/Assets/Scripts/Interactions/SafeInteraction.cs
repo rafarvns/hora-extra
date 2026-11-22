@@ -82,12 +82,37 @@ namespace HoraExtra.Interactions
         {
             TaskSystemBridge.OnTaskUpdated += AoAtualizarTask;
             TaskSystemBridge.OnTaskRejected += AoRecusar;
+            TaskSystemBridge.OnRoomStateChanged += AplicarEstadoDaSala;
+        }
+
+        private void Start()
+        {
+            AplicarEstadoDaSala();
+        }
+
+        /// <summary>
+        /// Estado compartilhado da sala: se o dinheiro deste cofre já foi recolhido (pelo
+        /// colega, ou por nós antes de trocar de andar), o cofre aparece aberto e vazio.
+        /// </summary>
+        private void AplicarEstadoDaSala()
+        {
+            if (_estado != Estado.Trancado && _estado != Estado.Aberto) return; // fluxo local em andamento
+            var bridge = TaskSystemBridge.Instance;
+            if (bridge == null || !bridge.IsItemDone(_itemId)) return;
+
+            _estado = Estado.Vazio;
+            if (_porta != null) _porta.AbrirInstantaneo();
+            foreach (var d in _dinheiroVisual)
+                if (d != null) d.SetActive(false);
+            _prompt?.Hide(this);
+            Debug.Log($"[GAMEPLAY] Cofre '{_itemId}' — já esvaziado na sala.");
         }
 
         private void OnDisable()
         {
             TaskSystemBridge.OnTaskUpdated -= AoAtualizarTask;
             TaskSystemBridge.OnTaskRejected -= AoRecusar;
+            TaskSystemBridge.OnRoomStateChanged -= AplicarEstadoDaSala;
 
             if (_estado == Estado.DigitandoSenha)
             {

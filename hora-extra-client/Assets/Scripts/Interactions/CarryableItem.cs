@@ -99,10 +99,48 @@ namespace HoraExtra.Interactions
                 _prompt = FindFirstObjectByType<InteractionPrompt>();
         }
 
+        private void OnEnable()
+        {
+            HoraExtra.Characters.TaskSystemBridge.OnRoomStateChanged += AplicarEstadoDaSala;
+        }
+
+        private void Start()
+        {
+            // Item que alguém (o colega, ou nós antes de trocar de andar) já entregou não volta.
+            AplicarEstadoDaSala();
+        }
+
+        /// <summary>Estado compartilhado da sala: item já contado por alguém → some do mundo.</summary>
+        private void AplicarEstadoDaSala()
+        {
+            if (_isTool) return;
+            var bridge = HoraExtra.Characters.TaskSystemBridge.Instance;
+            if (bridge == null || !bridge.IsItemDone(_itemId)) return;
+
+            Debug.Log($"[GAMEPLAY] CarryableItem '{_itemId}' — já entregue na sala, removido do mundo.");
+            gameObject.SetActive(false);
+        }
+
+        /// <summary>
+        /// O item faz parte de uma tarefa que está com o colega? Aí não dá para pegar:
+        /// posição de item carregado não é sincronizada, e ele sumiria do mundo do colega.
+        /// </summary>
+        private bool EhTarefaDoColega()
+        {
+            var bridge = HoraExtra.Characters.TaskSystemBridge.Instance;
+            return bridge != null && bridge.IsItemHeldByTeammate(_itemId);
+        }
+
         private void Update()
         {
             // Sem jogador por perto, ou com as mãos já ocupadas, não há nada a fazer.
             if (_carrierInRange == null) return;
+
+            if (!_isTool && EhTarefaDoColega())
+            {
+                _prompt?.Show(this, "Isto é tarefa do colega");
+                return;
+            }
 
             // A mão pode estar cheia, ou já carregando outra categoria (não se mistura
             // papel com caneta). Nos dois casos o prompt some, para não prometer uma
@@ -151,6 +189,8 @@ namespace HoraExtra.Interactions
 
         private void OnDisable()
         {
+            HoraExtra.Characters.TaskSystemBridge.OnRoomStateChanged -= AplicarEstadoDaSala;
+
             // Ao ser pego ou consumido, o objeto sai de cena sem disparar OnTriggerExit.
             // Sem isto, o prompt fica aceso apontando para um item que não está mais lá.
             _carrierInRange = null;
