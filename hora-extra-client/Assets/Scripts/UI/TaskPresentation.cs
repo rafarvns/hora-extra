@@ -30,6 +30,10 @@ namespace HoraExtra.UI
         // Tarefa 18 — Limpar recepção e almoxarifado (plano 0006).
         public const string TYPE_CLEAN_FLOOR = "clean_floor";
 
+        // Financeiro (3º andar) — Tarefa 6 (cofres) e Tarefa 7 (enviar e-mail).
+        public const string TYPE_OPEN_SAFE_COLLECT_MONEY = "open_safe_collect_money";
+        public const string TYPE_SEND_EMAIL_UPLOAD       = "send_email_upload";
+
         // === Status (campo 'status' autoritativo do servidor) ===
         public const string STATUS_PENDING     = "pending";
         public const string STATUS_IN_PROGRESS = "in_progress";
@@ -37,7 +41,7 @@ namespace HoraExtra.UI
         public const string STATUS_FAILED      = "failed";
 
         /// <summary>Agrupamento visual das tarefas (cor e rótulo do badge na HUD).</summary>
-        public enum TaskCategory { Organize, Clean, Coffee, Other }
+        public enum TaskCategory { Organize, Clean, Coffee, Finance, Other }
 
         /// <summary>True para status terminais (concluída ou falhou).</summary>
         public static bool IsFinished(AssignedTask task)
@@ -67,6 +71,8 @@ namespace HoraExtra.UI
                 case TYPE_COLLECT_MAGAZINES: return TaskCategory.Organize;
                 case TYPE_CLEAN_FLOOR:       return TaskCategory.Clean;
                 case TYPE_COFFEE_MAKER:      return TaskCategory.Coffee;
+                case TYPE_OPEN_SAFE_COLLECT_MONEY:
+                case TYPE_SEND_EMAIL_UPLOAD: return TaskCategory.Finance;
                 default:                     return TaskCategory.Other;
             }
         }
@@ -78,6 +84,7 @@ namespace HoraExtra.UI
                 case TaskCategory.Organize: return "ORGANIZAÇÃO";
                 case TaskCategory.Clean:    return "LIMPEZA";
                 case TaskCategory.Coffee:   return "COPA";
+                case TaskCategory.Finance:  return "FINANCEIRO";
                 default:                    return "TAREFA";
             }
         }
@@ -121,6 +128,8 @@ namespace HoraExtra.UI
                 case TYPE_COLLECT_PENS:      return "Organizar as canetas";
                 case TYPE_COLLECT_MAGAZINES: return "Organizar as revistas";
                 case TYPE_CLEAN_FLOOR:       return "Limpar as manchas do chão";
+                case TYPE_OPEN_SAFE_COLLECT_MONEY: return "Abrir os cofres e recolher o dinheiro";
+                case TYPE_SEND_EMAIL_UPLOAD: return "Enviar o e-mail pendente";
                 default:
                     return string.IsNullOrWhiteSpace(task.Description) ? "Tarefa" : task.Description;
             }
@@ -145,6 +154,8 @@ namespace HoraExtra.UI
                 case TYPE_COLLECT_PENS:     return "Organizar as canetas";
                 case TYPE_COLLECT_MAGAZINES:return "Organizar as revistas";
                 case TYPE_CLEAN_FLOOR:      return "Limpar as manchas do chão";
+                case TYPE_OPEN_SAFE_COLLECT_MONEY: return "Abrir os cofres e recolher o dinheiro";
+                case TYPE_SEND_EMAIL_UPLOAD: return "Enviar o e-mail pendente";
                 default:                    return "Tarefa";
             }
         }
@@ -181,6 +192,17 @@ namespace HoraExtra.UI
                            "Primeiro pegue o rodo com [E] — ele fica perto da entrada.\n" +
                            "Depois vá até cada mancha e SEGURE [E] até a barra encher.\n" +
                            "O rodo continua na sua mão: dá para limpar todas sem voltar.";
+                case TYPE_OPEN_SAFE_COLLECT_MONEY:
+                    // TEMPORÁRIO: senhas no texto porque os post-its estão ilegíveis na cena
+                    // (cadeira na frente). Tirar quando a Alice reposicionar os post-its.
+                    return "Na sala dos cofres do Financeiro, dois cofres estão trancados.\n" +
+                           "Senhas: cofre da DIREITA = 1512 · cofre da ESQUERDA = 2803.\n" +
+                           "Aperte [E] no cofre e digite a senha; com a porta aberta, aperte [E] de novo\n" +
+                           "para recolher o dinheiro (cerca de 10 s parado). Repita no outro cofre.";
+                case TYPE_SEND_EMAIL_UPLOAD:
+                    return "Há um e-mail pendente de envio no Financeiro.\n" +
+                           "Vá até o computador com a tela de e-mail e aperte [E].\n" +
+                           "Clique em \"Enviar email\" e espere a barra encher sem fechar a tela.";
                 default:
                     return "Aproxime-se do objetivo e pressione E para interagir.";
             }
@@ -210,6 +232,8 @@ namespace HoraExtra.UI
                     return "Pressione E para preparar o café";
                 case TYPE_COLLECT:
                     return $"Pressione E para coletar documento ({task.CurrentProgress}/{task.TargetCount})";
+                case TYPE_SEND_EMAIL_UPLOAD:
+                    return "Aperte [E] para usar o computador";
                 default:
                     return "Pressione E para interagir";
             }

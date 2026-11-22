@@ -588,6 +588,9 @@ namespace HoraExtra.Characters
                 });
             }
 
+            // Teste rápido do Financeiro (só Editor, desligado por padrão): ver DevQuickTest.
+            tasks = HoraExtra.Dev.DevQuickTest.FiltrarCatalogo(tasks);
+
             var payload = new TaskCatalogRegisterPayload { Tasks = tasks };
             SocketManager.Instance.Emit(NetworkEvents.TASK_CATALOG_REGISTER, payload);
             _catalogRegistered = true;

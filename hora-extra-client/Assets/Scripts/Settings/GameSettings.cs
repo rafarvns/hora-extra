@@ -94,7 +94,14 @@ namespace HoraExtra.Settings
         private static void ApplyOnBoot()
         {
             AudioListener.volume = MasterVolume;
+#if UNITY_EDITOR
+            // No Editor o jogo sempre começa no backend desta máquina (npm run dev). O preset
+            // salvo é ignorado só no boot: dá para trocar de servidor pelo menu durante a sessão.
+            BackendConfig.Host = "127.0.0.1";
+            Debug.Log("[NETWORK] Editor — backend local (127.0.0.1). Troque em Configurações → Servidor se precisar.");
+#else
             BackendConfig.ApplyPreset(ServerPreset);
+#endif
             // No Editor a "tela" é a Game View; mexer em resolução lá só atrapalha.
             if (!Application.isEditor) ApplyDisplay();
         }

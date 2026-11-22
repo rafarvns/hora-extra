@@ -45,6 +45,8 @@ namespace HoraExtra.UI.Hud.Widgets
         private CarryableItem[] _items = new CarryableItem[0];
         private CoffeeMakerInteraction[] _coffee = new CoffeeMakerInteraction[0];
         private TrashBin[] _trashBins = new TrashBin[0];
+        private SafeInteraction[] _safes = new SafeInteraction[0];
+        private EmailComputer[] _computers = new EmailComputer[0];
 
         protected override void Build()
         {
@@ -107,6 +109,8 @@ namespace HoraExtra.UI.Hud.Widgets
             _items = FindObjectsByType<CarryableItem>(FindObjectsSortMode.None);
             _coffee = FindObjectsByType<CoffeeMakerInteraction>(FindObjectsSortMode.None);
             _trashBins = FindObjectsByType<TrashBin>(FindObjectsSortMode.None);
+            _safes = FindObjectsByType<SafeInteraction>(FindObjectsSortMode.None);
+            _computers = FindObjectsByType<EmailComputer>(FindObjectsSortMode.None);
         }
 
         private Transform PickTarget()
@@ -125,6 +129,13 @@ namespace HoraExtra.UI.Hud.Widgets
                 var cafeteira = Nearest(_coffee, c => c.isActiveAndEnabled, origem);
                 return cafeteira != null ? cafeteira.transform : null;
             }
+
+            // Financeiro: cofre ainda não esvaziado e o computador do e-mail.
+            SafeInteraction cofre = Nearest(_safes, c => c != null && c.isActiveAndEnabled && c.Pendente && c.TaskType == task.Type, origem);
+            if (cofre != null) return cofre.transform;
+
+            EmailComputer pc = Nearest(_computers, c => c != null && c.isActiveAndEnabled && c.TaskType == task.Type, origem);
+            if (pc != null) return pc.transform;
 
             // Limpeza: manchas do tipo da tarefa.
             DirtSpot mancha = Nearest(_dirt, d => d != null && d.isActiveAndEnabled && d.TaskType == task.Type, origem);

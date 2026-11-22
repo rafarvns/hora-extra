@@ -16217,6 +16217,20 @@ MonoBehaviour:
     - mancha-cafe-01
     - mancha-cafe-02
     pairs: []
+  - id: task-cofres-01
+    description: "(3\xBA andar) Abra os cofres e recolha o dinheiro"
+    type: open_safe_collect_money
+    targetCount: 2
+    items:
+    - cofre-direito
+    - cofre-esquerdo
+    pairs: []
+  - id: task-enviar-email-01
+    description: "(3\xBA andar) Envie o e-mail pendente no computador do Financeiro"
+    type: send_email_upload
+    targetCount: 1
+    items: []
+    pairs: []
   _autoRequestTasksOnConnect: 1
   _autoRequestDelaySeconds: 0.5
 --- !u!4 &700000010

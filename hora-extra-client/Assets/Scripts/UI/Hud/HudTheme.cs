@@ -40,6 +40,7 @@ namespace HoraExtra.UI.Hud
         public Color CategoryOrganize = new Color32(0x4D, 0xA3, 0xFF, 0xFF);
         public Color CategoryClean    = new Color32(0x2E, 0xC4, 0xB6, 0xFF);
         public Color CategoryCoffee   = new Color32(0xC0, 0x84, 0x52, 0xFF);
+        public Color CategoryFinance  = new Color32(0x3D, 0xDC, 0x84, 0xFF);
         public Color CategoryOther    = new Color32(0x9A, 0xA6, 0xB8, 0xFF);
 
         [Header("Tamanhos de fonte")]
@@ -71,6 +72,7 @@ namespace HoraExtra.UI.Hud
                 case TaskPresentation.TaskCategory.Organize: return CategoryOrganize;
                 case TaskPresentation.TaskCategory.Clean:    return CategoryClean;
                 case TaskPresentation.TaskCategory.Coffee:   return CategoryCoffee;
+                case TaskPresentation.TaskCategory.Finance:  return CategoryFinance;
                 default:                                     return CategoryOther;
             }
         }

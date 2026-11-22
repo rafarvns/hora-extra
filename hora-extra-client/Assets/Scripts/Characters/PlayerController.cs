@@ -286,6 +286,16 @@ namespace HoraExtra.Characters
         }
 
         /// <summary>
+        /// Trava/destrava só o movimento e a câmera, sem mexer no cursor. Usado pela
+        /// <see cref="HoraExtra.Interactions.PlayerActionLock"/> (ex: os 10 s recolhendo o
+        /// dinheiro do cofre), em que o cursor deve continuar preso no centro da tela.
+        /// </summary>
+        public void SetMovementLocked(bool locked)
+        {
+            _canMove = !locked;
+        }
+
+        /// <summary>
         /// Permite habilitar/desabilitar controle externamente.
         /// </summary>
         public void ToggleControl(bool state)
