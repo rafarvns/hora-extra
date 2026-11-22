@@ -1,5 +1,6 @@
 import authService from '../../services/authService.js';
-import guestService from '../../services/guestService.js';
+import sessionService from '../../services/sessionService.js';
+import roomRegistry from '../../services/RoomRegistry.js';
 import taskService from '../../services/TaskService.js';
 import shiftClockService from '../../services/ShiftClockService.js';
 import prisma from '../../database/prisma.js';
@@ -12,38 +13,34 @@ import { PrismaClient } from '@prisma/client';
  * do serviço, facilitando mocks em testes e gerência centralizada de dependências.
  */
 export class ServiceFactory {
-    /**
-     * Retorna a instância singleton do AuthService.
-     */
+    /** Emissão/verificação do token de sessão. */
     public static getAuthService() {
         return authService;
     }
 
-    /**
-     * Retorna a instância singleton do GuestService.
-     */
-    public static getGuestService() {
-        return guestService;
+    /** Entrada no jogo só com o nome. */
+    public static getSessionService() {
+        return sessionService;
     }
 
-    /**
-     * Retorna a instância singleton do TaskService.
-     */
+    /** Salas de jogo em memória (limite de jogadores, lista, expiração). */
+    public static getRoomRegistry() {
+        return roomRegistry;
+    }
+
+    /** Tarefas compartilhadas da sala. */
     public static getTaskService() {
         return taskService;
     }
 
-    /**
-     * Retorna a instância singleton do ShiftClockService (relógio do expediente).
-     */
+    /** Relógio do expediente. */
     public static getShiftClockService() {
         return shiftClockService;
     }
 
     /**
-     * Retorna o cliente do banco de dados (Prisma).
-     * Embora o Prisma já seja uma factory internamente, o ServiceFactory pode envolver
-     * acessos ao banco para padronizar logs ou auditoria se necessário.
+     * Retorna o cliente do banco de dados (Prisma). Hoje sem uso pelo jogo (salas e
+     * sessões vivem em memória); mantido para usos futuros.
      */
     public static getPrismaClient(): PrismaClient {
         return prisma;

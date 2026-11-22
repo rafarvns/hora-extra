@@ -5,764 +5,389 @@ import { ApiError } from '../core/ApiError.js';
 // ────────────────────────────────────────────────────────────
 // Helpers
 // ────────────────────────────────────────────────────────────
-function makeService(): TaskService {
-    return new TaskService();
+
+const CATALOGO = [
+    { id: 't1', description: 'Tarefa 1', type: 'collect', targetCount: 3 },
+    { id: 't2', description: 'Tarefa 2', type: 'deliver', targetCount: 1 },
+    { id: 't3', description: 'Tarefa 3', type: 'collect', targetCount: 2 },
+    { id: 't4', description: 'Tarefa 4', type: 'escort',  targetCount: 1 },
+    { id: 't5', description: 'Tarefa 5', type: 'collect', targetCount: 5 },
+];
+
+function seedCatalog(service: TaskService, roomId: string = 'r1'): void {
+    service.registerCatalog(roomId, CATALOGO);
 }
 
-/** Seed a service with 5 tasks for roomId via registerCatalog. */
-function seedCatalog(service: TaskService, roomId: string = 'r1'): void {
-    service.registerCatalog(roomId, [
-        { id: 't1', description: 'Tarefa 1', type: 'collect', targetCount: 3 },
-        { id: 't2', description: 'Tarefa 2', type: 'deliver', targetCount: 1 },
-        { id: 't3', description: 'Tarefa 3', type: 'collect', targetCount: 2 },
-        { id: 't4', description: 'Tarefa 4', type: 'escort',  targetCount: 1 },
-        { id: 't5', description: 'Tarefa 5', type: 'collect', targetCount: 5 },
-    ]);
+/** Conclui a tarefa aberta do jogador somando progresso até o alvo. */
+function concluir(service: TaskService, playerId: string, taskId: string): void {
+    const total = service.getAssignedTasks('', playerId).find(t => t.id === taskId)!.targetCount;
+    for (let i = 0; i < total; i++) service.incrementProgress(playerId, taskId);
 }
 
 // ────────────────────────────────────────────────────────────
-// TaskService — registerCatalog
+// Catálogo
 // ────────────────────────────────────────────────────────────
 describe('TaskService — registerCatalog', () => {
     let service: TaskService;
+    beforeEach(() => { service = new TaskService(); });
 
-    beforeEach(() => {
-        service = makeService();
+    it('registra o catálogo da sala e devolve true na primeira vez', () => {
+        expect(service.registerCatalog('r1', CATALOGO)).toBe(true);
+        expect(service.getRoomSnapshot('r1').map(t => t.id)).toEqual(['t1', 't2', 't3', 't4', 't5']);
     });
 
-    it('registerCatalog armazena tasks sem npcId indexadas por roomId — catálogo de outra sala não vaza', () => {
-        // Registra catálogo só para room-A
-        service.registerCatalog('room-A', [
-            { id: 'task-01', description: 'Tarefa 01', type: 'collect', targetCount: 3 },
-        ]);
-
-        // room-B NÃO tem catálogo — deve lançar ApiError (catálogo da sala vazio)
-        expect(() => service.assignRandomTasks('room-B', 'p-room-b')).toThrow();
-
-        // room-A ainda funciona normalmente (isolamento)
-        const result = service.assignRandomTasks('room-A', 'p-room-a');
-        expect(result).toHaveLength(1);
-        expect(result[0]).toMatchObject({ id: 'task-01', description: 'Tarefa 01', type: 'collect', targetCount: 3 });
-        expect((result[0] as any).npcId).toBeUndefined();
-    });
-
-    it('registerCatalog sobrescreve catálogo existente da MESMA sala (não afeta outras salas)', () => {
-        service.registerCatalog('room-A', [
-            { id: 'old-task', description: 'Antiga', type: 'collect', targetCount: 1 },
-        ]);
-        service.registerCatalog('room-B', [
-            { id: 'room-b-task', description: 'Room B', type: 'deliver', targetCount: 1 },
-        ]);
-        // Segunda chamada para room-A substitui só o catálogo dela
-        service.registerCatalog('room-A', [
-            { id: 'new-task-1', description: 'Nova 1', type: 'deliver', targetCount: 2 },
-            { id: 'new-task-2', description: 'Nova 2', type: 'repair',  targetCount: 1 },
-        ]);
-
-        const resultA = service.assignRandomTasks('room-A', 'p-a');
-        const idsA = resultA.map(t => t.id);
-        expect(idsA).not.toContain('old-task');
-        expect(idsA.every(id => ['new-task-1', 'new-task-2'].includes(id))).toBe(true);
-
-        // room-B continua com seu catálogo intacto
-        const resultB = service.assignRandomTasks('room-B', 'p-b');
-        expect(resultB.map(t => t.id)).toContain('room-b-task');
-    });
-});
-
-// ────────────────────────────────────────────────────────────
-// TaskService — assignRandomTasks
-// ────────────────────────────────────────────────────────────
-describe('TaskService', () => {
-    let service: TaskService;
-
-    beforeEach(() => {
-        service = makeService();
+    it('segundo registro na MESMA sala é ignorado — não zera o progresso de quem já joga', () => {
         seedCatalog(service);
+        const [t] = service.assignRandomTasks('r1', 'A');
+        service.incrementProgress('A', t.id);
+
+        expect(service.registerCatalog('r1', [{ id: 'x', description: 'X', type: 'collect', targetCount: 1 }])).toBe(false);
+        const snap = service.getRoomSnapshot('r1');
+        expect(snap.map(s => s.id)).toEqual(['t1', 't2', 't3', 't4', 't5']);
+        expect(snap.find(s => s.id === t.id)!.p).toBe(1);
     });
 
-    // Antes da fila sequencial este teste esperava 3. O contrato mudou: o sorteio
-    // continua de 3, mas a entrega é de uma por vez (ver 'TaskService — fila sequencial').
-    it('atribui uma task por vez, mesmo sorteando um lote maior', () => {
-        const result = service.assignRandomTasks('r1', 'p1');
-        expect(result).toHaveLength(1);
+    it('catálogo de outra sala não vaza', () => {
+        seedCatalog(service, 'r1');
+        service.registerCatalog('r2', [{ id: 'z', description: 'Z', type: 'collect', targetCount: 1 }]);
+        expect(service.getRoomSnapshot('r2').map(t => t.id)).toEqual(['z']);
     });
 
-    it('tasks retornadas pertencem ao catálogo da sala', () => {
-        const catalogIds = ['t1', 't2', 't3', 't4', 't5'];
-        const result = service.assignRandomTasks('r1', 'p1');
-        for (const task of result) {
-            expect(catalogIds).toContain(task.id);
-        }
-    });
-
-    it('tasks atribuídas têm status pending e progress 0', () => {
-        const result = service.assignRandomTasks('r1', 'p1');
-        for (const task of result) {
-            expect(task.status).toBe('pending');
-            expect(task.currentProgress).toBe(0);
-        }
-    });
-
-    it('não repete tasks na mesma atribuição', () => {
-        const result = service.assignRandomTasks('r1', 'p1');
-        const ids = result.map(t => t.id);
-        const uniqueIds = new Set(ids);
-        expect(uniqueIds.size).toBe(ids.length);
-    });
-
-    it('armazena no map e getAssignedTasks retorna os mesmos dados', () => {
-        const assigned = service.assignRandomTasks('r1', 'p1');
-        const retrieved = service.getAssignedTasks('r1', 'p1');
-        expect(retrieved).toEqual(assigned);
-    });
-
-    it('a primeira entrada do catálogo (ordem de autoria) é sempre a primeira task atribuída, mesmo com o resto embaralhado', () => {
-        // Várias salas/jogadores distintos para não depender de sorte do Fisher-Yates:
-        // se o pin falhar, pelo menos uma das 10 rodadas cairia com t1 fora da primeira posição.
-        for (let i = 0; i < 10; i++) {
-            const roomId = `pin-room-${i}`;
-            seedCatalog(service, roomId);
-            const result = service.assignRandomTasks(roomId, `pin-player-${i}`);
-            expect(result[0].id).toBe('t1');
-        }
-    });
-
-    it('entrega a primeira e enfileira o resto do catálogo', () => {
-        // Registra catálogo com apenas 2 tasks (< 3)
-        service.registerCatalog('r1', [
-            { id: 'small-1', description: 'Pequena 1', type: 'collect', targetCount: 1 },
-            { id: 'small-2', description: 'Pequena 2', type: 'deliver', targetCount: 1 },
-        ]);
-
-        const result = service.assignRandomTasks('r1', 'p-small');
-        expect(result).toHaveLength(1);
-
-        // A segunda existe, mas só sai quando a primeira terminar.
-        expect(service.advanceQueue('p-small')).toBeNull();
-        service.incrementProgress('p-small', result[0].id);
-        expect(service.advanceQueue('p-small')).not.toBeNull();
-    });
-
-    it('assignRandomTasks lança ApiError se catálogo DA SALA estiver vazio', () => {
-        // Sala sem catálogo registrado
-        expect(() => service.assignRandomTasks('sala-sem-catalogo', 'p-qualquer')).toThrow();
-        // Também deve lançar se catálogo foi registrado mas vazio
-        service.registerCatalog('sala-vazia', []);
-        expect(() => service.assignRandomTasks('sala-vazia', 'p-qualquer')).toThrow();
-    });
-
-    it('segunda chamada de assignRandomTasks é idempotente: retorna [] e não sobrescreve', () => {
-        const first = service.assignRandomTasks('r1', 'p1');
-        const second = service.assignRandomTasks('r1', 'p1');
-        expect(second).toEqual([]);
-        // original assignment untouched
-        expect(service.getAssignedTasks('r1', 'p1')).toEqual(first);
-    });
-
-    it('clearRoom remove entradas dos playerIds fornecidos', () => {
-        service.assignRandomTasks('r1', 'p1');
-        service.assignRandomTasks('r1', 'p2');
-        service.clearRoom(['p1', 'p2']);
-        expect(service.getAssignedTasks('r1', 'p1')).toEqual([]);
-        expect(service.getAssignedTasks('r1', 'p2')).toEqual([]);
-    });
-
-    it('clearRoom não remove entradas de players não listados', () => {
-        service.assignRandomTasks('r1', 'p1');
-        service.assignRandomTasks('r1', 'p2');
-        // p3 tem catálogo separado (simula outra sala)
-        seedCatalog(service, 'r2');
-        service.assignRandomTasks('r2', 'p3');
-        service.clearRoom(['p1', 'p2']);
-        const p3Tasks = service.getAssignedTasks('r2', 'p3');
-        expect(p3Tasks).toHaveLength(1);           // uma por vez, e a dele não foi limpa
-        expect(p3Tasks[0].status).toBe('pending');
+    it('snapshot de sala inexistente é vazio', () => {
+        expect(service.getRoomSnapshot('nada')).toEqual([]);
     });
 });
 
 // ────────────────────────────────────────────────────────────
-// TaskService — startTask
+// Atribuição compartilhada
 // ────────────────────────────────────────────────────────────
-describe('TaskService — startTask', () => {
+describe('TaskService — tarefas compartilhadas da sala', () => {
     let service: TaskService;
+    beforeEach(() => { service = new TaskService(); seedCatalog(service); });
 
-    beforeEach(() => {
-        service = makeService();
-        seedCatalog(service);
+    it('entrega UMA tarefa por vez, pending com progresso 0', () => {
+        const tasks = service.assignRandomTasks('r1', 'A');
+        expect(tasks).toHaveLength(1);
+        expect(tasks[0]).toMatchObject({ status: 'pending', currentProgress: 0, ci: [] });
     });
 
-    it('startTask muda status pending → in_progress e retorna AssignedTask atualizada', () => {
-        service.assignRandomTasks('r1', 'p1');
-        const tasks = service.getAssignedTasks('r1', 'p1');
-        const taskId = tasks[0].id;
-
-        const result = service.startTask('p1', taskId);
-
-        expect(result.status).toBe('in_progress');
-        expect(result.id).toBe(taskId);
-        // deve atualizar o objeto no map também
-        const updated = service.getAssignedTasks('r1', 'p1').find(t => t.id === taskId);
-        expect(updated?.status).toBe('in_progress');
+    it('a 1ª entrada do catálogo sai primeiro', () => {
+        expect(service.assignRandomTasks('r1', 'A')[0].id).toBe('t1');
     });
 
-    it('startTask lança ApiError se jogador não tem tasks atribuídas', () => {
-        // 'p-sem-tasks' nunca chamou assignRandomTasks
-        expect(() => service.startTask('p-sem-tasks', 'any-task-id')).toThrow();
+    it('dois jogadores nunca recebem a mesma tarefa', () => {
+        const [a] = service.assignRandomTasks('r1', 'A');
+        const [b] = service.assignRandomTasks('r1', 'B');
+        expect(a.id).not.toBe(b.id);
     });
 
-    it('startTask lança ApiError se taskId não encontrado no array do jogador', () => {
-        service.assignRandomTasks('r1', 'p1');
-        expect(() => service.startTask('p1', 'task-inexistente-xyz')).toThrow();
+    it('lança ApiError se o catálogo da sala estiver vazio ou não existir', () => {
+        expect(() => service.assignRandomTasks('sem-catalogo', 'A')).toThrow(ApiError);
     });
 
-    it('startTask lança ApiError se task não está pending — transição inválida', () => {
-        service.assignRandomTasks('r1', 'p1');
-        const tasks = service.getAssignedTasks('r1', 'p1');
-        const taskId = tasks[0].id;
-        // Primeira chamada leva para in_progress
-        service.startTask('p1', taskId);
-        // Segunda chamada deve lançar (já não é pending)
-        expect(() => service.startTask('p1', taskId)).toThrow();
-    });
-});
-
-// ────────────────────────────────────────────────────────────
-// TaskService — resolveTask
-// ────────────────────────────────────────────────────────────
-describe('TaskService — resolveTask', () => {
-    let service: TaskService;
-
-    beforeEach(() => {
-        service = makeService();
-        seedCatalog(service);
-    });
-
-    it('resolveTask com success=true muda in_progress → completed e seta currentProgress=targetCount', () => {
-        service.assignRandomTasks('r1', 'p1');
-        const tasks = service.getAssignedTasks('r1', 'p1');
-        const taskId = tasks[0].id;
-        const targetCount = tasks[0].targetCount;
-        service.startTask('p1', taskId);
-
-        const result = service.resolveTask('p1', taskId, true);
-
-        expect(result.status).toBe('completed');
-        expect(result.currentProgress).toBe(targetCount);
-    });
-
-    it('resolveTask com success=false muda in_progress → failed', () => {
-        service.assignRandomTasks('r1', 'p1');
-        const tasks = service.getAssignedTasks('r1', 'p1');
-        const taskId = tasks[0].id;
-        service.startTask('p1', taskId);
-
-        const result = service.resolveTask('p1', taskId, false);
-
-        expect(result.status).toBe('failed');
-    });
-
-    it('resolveTask lança ApiError se task não está in_progress', () => {
-        service.assignRandomTasks('r1', 'p1');
-        const tasks = service.getAssignedTasks('r1', 'p1');
-        const taskId = tasks[0].id;
-        // status=pending → deve lançar (não está in_progress)
-        expect(() => service.resolveTask('p1', taskId, true)).toThrow();
-
-        // status=completed → deve lançar
-        service.startTask('p1', taskId);
-        service.resolveTask('p1', taskId, true); // → completed
-        expect(() => service.resolveTask('p1', taskId, true)).toThrow();
-    });
-
-    it('resolveTask lança ApiError se taskId não encontrado', () => {
-        service.assignRandomTasks('r1', 'p1');
-        expect(() => service.resolveTask('p1', 'id-inexistente-999', true)).toThrow();
-    });
-});
-
-// ────────────────────────────────────────────────────────────
-// TaskService — incrementProgress
-// ────────────────────────────────────────────────────────────
-describe('TaskService — incrementProgress', () => {
-    let service: TaskService;
-
-    /** Catálogo com uma única task de coleta de targetCount conhecido. */
-    function seedCollectTask(targetCount: number): { taskId: string } {
-        service.registerCatalog('r1', [
-            { id: 'collect-1', description: 'Colete os documentos', type: 'collect', targetCount },
-        ]);
-        service.assignRandomTasks('r1', 'p1');
-        return { taskId: 'collect-1' };
-    }
-
-    beforeEach(() => {
-        service = makeService();
-    });
-
-    it('primeiro incremento muda pending → in_progress e seta currentProgress=1', () => {
-        const { taskId } = seedCollectTask(3);
-
-        const result = service.incrementProgress('p1', taskId);
-
-        expect(result.status).toBe('in_progress');
-        expect(result.currentProgress).toBe(1);
-    });
-
-    it('incrementos sucessivos somam currentProgress mantendo in_progress até o alvo', () => {
-        const { taskId } = seedCollectTask(3);
-
-        service.incrementProgress('p1', taskId); // 1
-        const result = service.incrementProgress('p1', taskId); // 2
-
-        expect(result.currentProgress).toBe(2);
-        expect(result.status).toBe('in_progress');
-    });
-
-    it('ao atingir targetCount muda status → completed e clampeia currentProgress', () => {
-        const { taskId } = seedCollectTask(2);
-
-        service.incrementProgress('p1', taskId); // 1
-        const result = service.incrementProgress('p1', taskId); // 2 → completed
-
-        expect(result.currentProgress).toBe(2);
-        expect(result.status).toBe('completed');
-    });
-
-    it('lança ApiError se a task já está completed (transição inválida)', () => {
-        const { taskId } = seedCollectTask(1);
-        service.incrementProgress('p1', taskId); // 1 → completed
-
-        expect(() => service.incrementProgress('p1', taskId)).toThrow();
-    });
-
-    it('lança ApiError se jogador não tem tasks atribuídas', () => {
-        expect(() => service.incrementProgress('p-sem-tasks', 'collect-1')).toThrow();
-    });
-
-    it('lança ApiError se taskId não encontrado', () => {
-        seedCollectTask(3);
-        expect(() => service.incrementProgress('p1', 'id-inexistente-999')).toThrow();
-    });
-});
-
-// ────────────────────────────────────────────────────────────
-// TaskService — fila sequencial de tarefas
-//
-// Regra: o jogador recebe UMA tarefa por vez. As demais ficam numa fila e só são
-// atribuídas quando a atual termina. Substitui o comportamento anterior de atribuir
-// as 3 de uma vez (plano 0001).
-// ────────────────────────────────────────────────────────────
-describe('TaskService — fila sequencial', () => {
-    let service: TaskService;
-
-    /** Catálogo com `n` tarefas de coleta, cada uma com targetCount 1. */
-    function seedMany(n: number): void {
-        service.registerCatalog('r1', Array.from({ length: n }, (_, i) => ({
-            id: `t${i + 1}`,
-            description: `Tarefa ${i + 1}`,
-            type: 'collect',
-            targetCount: 1,
-        })));
-    }
-
-    /** Conclui a task aberta do jogador. */
-    function concluir(playerId: string): void {
-        const aberta = service.getAssignedTasks('r1', playerId)
-            .find(t => t.status === 'pending' || t.status === 'in_progress')!;
-        service.incrementProgress(playerId, aberta.id);
-    }
-
-    beforeEach(() => {
-        service = makeService();
-    });
-
-    it('assignRandomTasks entrega UMA tarefa, não três', () => {
-        seedMany(5);
-        const result = service.assignRandomTasks('r1', 'p1');
-        expect(result).toHaveLength(1);
-        expect(service.getAssignedTasks('r1', 'p1')).toHaveLength(1);
+    it('é idempotente: com tarefa aberta devolve []', () => {
+        service.assignRandomTasks('r1', 'A');
+        expect(service.assignRandomTasks('r1', 'A')).toEqual([]);
     });
 
     it('advanceQueue devolve null enquanto a tarefa atual está aberta', () => {
-        seedMany(5);
-        service.assignRandomTasks('r1', 'p1');
-        expect(service.advanceQueue('p1')).toBeNull();
+        service.assignRandomTasks('r1', 'A');
+        expect(service.advanceQueue('A')).toBeNull();
     });
 
-    it('advanceQueue entrega a próxima quando a atual conclui', () => {
-        seedMany(5);
-        const [primeira] = service.assignRandomTasks('r1', 'p1');
-        concluir('p1');
-
-        const proxima = service.advanceQueue('p1');
-
+    it('advanceQueue entrega outra tarefa livre quando a atual conclui', () => {
+        const [t] = service.assignRandomTasks('r1', 'A');
+        concluir(service, 'A', t.id);
+        const proxima = service.advanceQueue('A');
         expect(proxima).not.toBeNull();
-        expect(proxima!.id).not.toBe(primeira.id);
-        expect(proxima!.status).toBe('pending');
-        expect(proxima!.currentProgress).toBe(0);
+        expect(proxima!.id).not.toBe(t.id);
     });
 
-    it('a tarefa concluída continua no histórico do jogador', () => {
-        seedMany(5);
-        const [primeira] = service.assignRandomTasks('r1', 'p1');
-        concluir('p1');
-        service.advanceQueue('p1');
-
-        const todas = service.getAssignedTasks('r1', 'p1');
-        expect(todas).toHaveLength(2);
-        expect(todas.find(t => t.id === primeira.id)!.status).toBe('completed');
-    });
-
-    it('a fila entrega TODAS as tarefas do catálogo da sala, uma por vez', () => {
-        seedMany(10);
-        service.assignRandomTasks('r1', 'p1');
-
-        let entregues = 1;
-        for (let i = 0; i < 20; i++) {
-            concluir('p1');
-            const proxima = service.advanceQueue('p1');
-            if (proxima === null) break;
-            entregues++;
+    it('cada tarefa é feita uma vez pela sala: os dois juntos esgotam o catálogo sem repetir', () => {
+        const feitas: string[] = [];
+        let [a] = service.assignRandomTasks('r1', 'A');
+        let [b] = service.assignRandomTasks('r1', 'B');
+        let atualA: any = a, atualB: any = b;
+        while (atualA || atualB) {
+            if (atualA) { concluir(service, 'A', atualA.id); feitas.push(atualA.id); atualA = service.advanceQueue('A'); }
+            if (atualB) { concluir(service, 'B', atualB.id); feitas.push(atualB.id); atualB = service.advanceQueue('B'); }
         }
-
-        // Sem teto fixo: a fila acompanha o tamanho do catálogo. Acrescentar uma tarefa
-        // nova ao catálogo passa a valer sem mexer no servidor.
-        expect(entregues).toBe(10);
-        expect(service.advanceQueue('p1')).toBeNull(); // seca e continua seca
+        expect([...feitas].sort()).toEqual(['t1', 't2', 't3', 't4', 't5']);
     });
 
-    it('nunca repete a mesma tarefa na fila de um jogador', () => {
-        seedMany(10);
-        const vistos = new Set<string>();
-        vistos.add(service.assignRandomTasks('r1', 'p1')[0].id);
-        for (let i = 0; i < 9; i++) {
-            concluir('p1');
-            vistos.add(service.advanceQueue('p1')!.id);
-        }
-        expect(vistos.size).toBe(10);
+    it('quem entra no meio só recebe tarefas ainda não feitas e sem dono', () => {
+        const [a] = service.assignRandomTasks('r1', 'A');
+        concluir(service, 'A', a.id);
+        const a2 = service.advanceQueue('A')!;
+
+        const [b] = service.assignRandomTasks('r1', 'B');
+        expect([a.id, a2.id]).not.toContain(b.id);
     });
 
-    it('catálogo menor que o total: a fila entrega só o que existe', () => {
-        seedMany(2);
-        service.assignRandomTasks('r1', 'p1');
-        concluir('p1');
-        expect(service.advanceQueue('p1')).not.toBeNull();
-        concluir('p1');
-        expect(service.advanceQueue('p1')).toBeNull();
+    it('sem tarefa livre devolve [] / null', () => {
+        service = new TaskService();
+        service.registerCatalog('r1', [{ id: 'unica', description: 'U', type: 'collect', targetCount: 1 }]);
+        service.assignRandomTasks('r1', 'A');
+        expect(service.assignRandomTasks('r1', 'B')).toEqual([]);
+        expect(service.advanceQueue('B')).toBeNull();
     });
 
-    it('advanceQueue de jogador sem atribuição devolve null em vez de lançar', () => {
-        seedMany(5);
-        expect(service.advanceQueue('p-fantasma')).toBeNull();
+    it('failed encerra a tarefa (não volta ao pool)', () => {
+        service = new TaskService();
+        service.registerCatalog('r1', [{ id: 'qte', description: 'Q', type: 'coffee', targetCount: 1 }]);
+        service.assignRandomTasks('r1', 'A');
+        service.startTask('A', 'qte');
+        service.resolveTask('A', 'qte', false);
+        expect(service.assignRandomTasks('r1', 'B')).toEqual([]);
     });
 
-    it('clearRoom limpa a fila — o jogador recomeça do zero', () => {
-        seedMany(5);
-        service.assignRandomTasks('r1', 'p1');
-        concluir('p1');
+    it('getTotalTaskCount = tamanho do catálogo da sala; 0 sem sala', () => {
+        expect(service.getTotalTaskCount('A')).toBe(0);
+        service.assignRandomTasks('r1', 'A');
+        expect(service.getTotalTaskCount('A')).toBe(5);
+    });
 
-        service.clearRoom(['p1']);
-
-        expect(service.getAssignedTasks('r1', 'p1')).toEqual([]);
-        expect(service.advanceQueue('p1')).toBeNull();
-        expect(service.assignRandomTasks('r1', 'p1')).toHaveLength(1);
+    it('getAssignedTasks traz a aberta e as encerradas pelo jogador', () => {
+        const [t] = service.assignRandomTasks('r1', 'A');
+        concluir(service, 'A', t.id);
+        const t2 = service.advanceQueue('A')!;
+        expect(service.getAssignedTasks('r1', 'A').map(x => x.id).sort()).toEqual([t.id, t2.id].sort());
     });
 });
 
 // ────────────────────────────────────────────────────────────
-// TaskService — incrementProgress com identidade de item (plano 0004)
-//
-// O servidor passa a saber QUAL item foi entregue e ONDE. Entradas de catálogo
-// que declaram `items` ou `pairs` ganham validação de pertencimento, pareamento
-// e deduplicação; entradas sem esses campos mantêm a contagem cega de +1.
+// Saída do jogador
 // ────────────────────────────────────────────────────────────
+describe('TaskService — releasePlayer', () => {
+    let service: TaskService;
+    beforeEach(() => { service = new TaskService(); seedCatalog(service); });
+
+    it('a tarefa aberta volta ao pool com o progresso que tinha', () => {
+        const [t] = service.assignRandomTasks('r1', 'A'); // t1, alvo 3
+        service.incrementProgress('A', t.id);
+
+        expect(service.releasePlayer('A')).toEqual([t.id]);
+        const snap = service.getRoomSnapshot('r1').find(s => s.id === t.id)!;
+        expect(snap).toMatchObject({ h: null, p: 1, s: 'in_progress' });
+
+        const [b] = service.assignRandomTasks('r1', 'B');
+        expect(b).toMatchObject({ id: t.id, currentProgress: 1 });
+    });
+
+    it('tarefa aberta sem progresso volta a pending (QTE recomeça com start)', () => {
+        service = new TaskService();
+        service.registerCatalog('r1', [{ id: 'email', description: 'E', type: 'send_email_upload', targetCount: 1 }]);
+        service.assignRandomTasks('r1', 'A');
+        service.startTask('A', 'email');
+        service.releasePlayer('A');
+
+        service.assignRandomTasks('r1', 'B');
+        expect(() => service.startTask('B', 'email')).not.toThrow();
+    });
+
+    it('tarefas concluídas continuam concluídas', () => {
+        const [t] = service.assignRandomTasks('r1', 'A');
+        concluir(service, 'A', t.id);
+        service.releasePlayer('A');
+        expect(service.getRoomSnapshot('r1').find(s => s.id === t.id)!.s).toBe('completed');
+    });
+
+    it('quem saiu não consegue mais mexer na tarefa', () => {
+        const [t] = service.assignRandomTasks('r1', 'A');
+        service.releasePlayer('A');
+        expect(() => service.incrementProgress('A', t.id)).toThrow(TaskRejectionError);
+    });
+
+    it('jogador desconhecido não devolve nada', () => {
+        expect(service.releasePlayer('ninguem')).toEqual([]);
+    });
+
+    it('hasOpenTask acompanha atribuição e saída', () => {
+        expect(service.hasOpenTask('A')).toBe(false);
+        service.assignRandomTasks('r1', 'A');
+        expect(service.hasOpenTask('A')).toBe(true);
+        service.releasePlayer('A');
+        expect(service.hasOpenTask('A')).toBe(false);
+    });
+
+    it('clearRoom descarta o estado da sala inteira', () => {
+        service.assignRandomTasks('r1', 'A');
+        service.clearRoom('r1');
+        expect(service.getRoomSnapshot('r1')).toEqual([]);
+        expect(service.hasOpenTask('A')).toBe(false);
+        expect(service.registerCatalog('r1', CATALOGO)).toBe(true);
+    });
+});
+
+// ────────────────────────────────────────────────────────────
+// Dono da tarefa
+// ────────────────────────────────────────────────────────────
+describe('TaskService — só o dono mexe na tarefa', () => {
+    let service: TaskService;
+    beforeEach(() => { service = new TaskService(); seedCatalog(service); });
+
+    it('incrementProgress de outro jogador → NOT_ASSIGNED', () => {
+        const [t] = service.assignRandomTasks('r1', 'A');
+        service.assignRandomTasks('r1', 'B');
+        try {
+            service.incrementProgress('B', t.id);
+            expect.unreachable();
+        } catch (e: any) {
+            expect(e).toBeInstanceOf(TaskRejectionError);
+            expect(e.code).toBe('NOT_ASSIGNED');
+        }
+    });
+
+    it('startTask/resolveTask de outro jogador lançam ApiError', () => {
+        const [t] = service.assignRandomTasks('r1', 'A');
+        service.assignRandomTasks('r1', 'B');
+        expect(() => service.startTask('B', t.id)).toThrow(ApiError);
+        service.startTask('A', t.id);
+        expect(() => service.resolveTask('B', t.id, true)).toThrow(ApiError);
+    });
+
+    it('jogador sem sala → NOT_ASSIGNED', () => {
+        expect(() => service.incrementProgress('fantasma', 't1')).toThrow(TaskRejectionError);
+        expect(() => service.startTask('fantasma', 't1')).toThrow(ApiError);
+    });
+});
+
+// ────────────────────────────────────────────────────────────
+// start / resolve
+// ────────────────────────────────────────────────────────────
+describe('TaskService — startTask / resolveTask', () => {
+    let service: TaskService;
+    beforeEach(() => { service = new TaskService(); seedCatalog(service); service.assignRandomTasks('r1', 'A'); });
+
+    it('startTask: pending → in_progress', () => {
+        expect(service.startTask('A', 't1').status).toBe('in_progress');
+    });
+
+    it('startTask fora de pending lança', () => {
+        service.startTask('A', 't1');
+        expect(() => service.startTask('A', 't1')).toThrow(ApiError);
+    });
+
+    it('resolveTask(true): completed com progresso cheio', () => {
+        service.startTask('A', 't1');
+        expect(service.resolveTask('A', 't1', true)).toMatchObject({ status: 'completed', currentProgress: 3 });
+    });
+
+    it('resolveTask(false): failed', () => {
+        service.startTask('A', 't1');
+        expect(service.resolveTask('A', 't1', false).status).toBe('failed');
+    });
+
+    it('resolveTask fora de in_progress lança', () => {
+        expect(() => service.resolveTask('A', 't1', true)).toThrow(ApiError);
+    });
+});
+
+// ────────────────────────────────────────────────────────────
+// incrementProgress
+// ────────────────────────────────────────────────────────────
+describe('TaskService — incrementProgress', () => {
+    let service: TaskService;
+    beforeEach(() => { service = new TaskService(); seedCatalog(service); service.assignRandomTasks('r1', 'A'); });
+
+    it('primeiro incremento: pending → in_progress, progresso 1', () => {
+        expect(service.incrementProgress('A', 't1')).toMatchObject({ status: 'in_progress', currentProgress: 1 });
+    });
+
+    it('ao atingir o alvo: completed', () => {
+        service.incrementProgress('A', 't1');
+        service.incrementProgress('A', 't1');
+        expect(service.incrementProgress('A', 't1')).toMatchObject({ status: 'completed', currentProgress: 3 });
+    });
+
+    it('task encerrada → INVALID_STATUS', () => {
+        concluir(service, 'A', 't1');
+        expect(() => service.incrementProgress('A', 't1')).toThrow(TaskRejectionError);
+    });
+});
+
 describe('TaskService — incrementProgress com items/pairs', () => {
     let service: TaskService;
 
-    /** Catálogo de uma task só, com os campos novos opcionais. */
-    function seedItemTask(entry: {
-        targetCount: number;
-        items?: string[];
-        pairs?: Array<{ itemId: string; slotId: string }>;
-    }): string {
+    beforeEach(() => {
+        service = new TaskService();
         service.registerCatalog('r1', [
-            {
-                id: 'coleta-1',
-                description: 'Guarde os itens',
-                type: 'collect',
-                targetCount: entry.targetCount,
-                ...(entry.items ? { items: entry.items } : {}),
-                ...(entry.pairs ? { pairs: entry.pairs } : {}),
-            },
+            { id: 'itens', description: 'I', type: 'collect', targetCount: 2, items: ['a', 'b'] },
+            { id: 'pares', description: 'P', type: 'collect', targetCount: 2, pairs: [{ itemId: 'x', slotId: 's1' }, { itemId: 'y', slotId: 's2' }] },
         ]);
-        service.assignRandomTasks('r1', 'p1');
-        return 'coleta-1';
+    });
+
+    const codigo = (fn: () => void) => { try { fn(); return null; } catch (e: any) { return e.code; } };
+
+    it('aceita item declarado e devolve os itens contados em ci', () => {
+        service.assignRandomTasks('r1', 'A');
+        expect(service.incrementProgress('A', 'itens', 'a')).toMatchObject({ currentProgress: 1, ci: ['a'] });
+    });
+
+    it('MISSING_ITEM / UNKNOWN_ITEM / ALREADY_COUNTED', () => {
+        service.assignRandomTasks('r1', 'A');
+        expect(codigo(() => service.incrementProgress('A', 'itens'))).toBe('MISSING_ITEM');
+        expect(codigo(() => service.incrementProgress('A', 'itens', 'z'))).toBe('UNKNOWN_ITEM');
+        service.incrementProgress('A', 'itens', 'a');
+        expect(codigo(() => service.incrementProgress('A', 'itens', 'a'))).toBe('ALREADY_COUNTED');
+    });
+
+    it('item contado por quem saiu continua contado para o próximo dono', () => {
+        service.assignRandomTasks('r1', 'A');
+        service.incrementProgress('A', 'itens', 'a');
+        service.releasePlayer('A');
+        service.assignRandomTasks('r1', 'B');
+        expect(codigo(() => service.incrementProgress('B', 'itens', 'a'))).toBe('ALREADY_COUNTED');
+        expect(service.incrementProgress('B', 'itens', 'b').status).toBe('completed');
+    });
+
+    it('pairs: aceita par certo, WRONG_SLOT no destino errado, UNKNOWN_ITEM fora dos pares', () => {
+        service.assignRandomTasks('r1', 'A');
+        concluir2(service);
+        service.advanceQueue('A');
+        expect(codigo(() => service.incrementProgress('A', 'pares', 'x', 's2'))).toBe('WRONG_SLOT');
+        expect(codigo(() => service.incrementProgress('A', 'pares', 'q', 's1'))).toBe('UNKNOWN_ITEM');
+        expect(service.incrementProgress('A', 'pares', 'x', 's1').currentProgress).toBe(1);
+    });
+
+    function concluir2(s: TaskService) {
+        s.incrementProgress('A', 'itens', 'a');
+        s.incrementProgress('A', 'itens', 'b');
     }
 
-    /** Captura o TaskRejectionError lançado, para inspecionar o `code`. */
-    function rejectionFrom(fn: () => unknown): TaskRejectionError {
-        try {
-            fn();
-        } catch (err) {
-            return err as TaskRejectionError;
-        }
-        throw new Error('esperava TaskRejectionError, mas nada foi lançado');
-    }
-
-    beforeEach(() => {
-        service = makeService();
-    });
-
-    // Cycle 1
-    it('sem items/pairs no catálogo mantém o comportamento atual de +1', () => {
-        const taskId = seedItemTask({ targetCount: 3 });
-
-        // Sem itemId nenhum — contagem cega, como antes do plano 0004.
-        // incrementProgress devolve o objeto vivo da atribuição, então o valor é
-        // copiado a cada passo em vez de guardar a referência.
-        const afterFirst = service.incrementProgress('p1', taskId).currentProgress;
-        const second = service.incrementProgress('p1', taskId);
-
-        expect(afterFirst).toBe(1);
-        expect(second.currentProgress).toBe(2);
-        expect(second.status).toBe('in_progress');
-    });
-
-    // Cycle 2
-    it('aceita itemId declarado em items e soma +1', () => {
-        const taskId = seedItemTask({ targetCount: 2, items: ['papel-01', 'papel-02'] });
-
-        const result = service.incrementProgress('p1', taskId, 'papel-01');
-
-        expect(result.currentProgress).toBe(1);
-        expect(result.status).toBe('in_progress');
-    });
-
-    // Cycle 3
-    it('lança MISSING_ITEM quando o catálogo declara items e o payload não manda itemId', () => {
-        const taskId = seedItemTask({ targetCount: 2, items: ['papel-01', 'papel-02'] });
-
-        const err = rejectionFrom(() => service.incrementProgress('p1', taskId));
-
-        expect(err.code).toBe('MISSING_ITEM');
-        expect(service.getAssignedTasks('r1', 'p1')[0].currentProgress).toBe(0);
-    });
-
-    // Cycle 4
-    it('lança UNKNOWN_ITEM quando itemId não está em items', () => {
-        const taskId = seedItemTask({ targetCount: 2, items: ['papel-01', 'papel-02'] });
-
-        const err = rejectionFrom(() => service.incrementProgress('p1', taskId, 'caneta-99'));
-
-        expect(err.code).toBe('UNKNOWN_ITEM');
-        expect(service.getAssignedTasks('r1', 'p1')[0].currentProgress).toBe(0);
-    });
-
-    // Cycle 5
-    it('lança ALREADY_COUNTED ao repetir o mesmo itemId', () => {
-        const taskId = seedItemTask({ targetCount: 4, items: ['papel-01', 'papel-02'] });
-
-        service.incrementProgress('p1', taskId, 'papel-01');
-        const err = rejectionFrom(() => service.incrementProgress('p1', taskId, 'papel-01'));
-
-        expect(err.code).toBe('ALREADY_COUNTED');
-        expect(service.getAssignedTasks('r1', 'p1')[0].currentProgress).toBe(1);
-    });
-
-    // Cycle 6
-    it('aceita par (itemId, slotId) declarado em pairs', () => {
-        const taskId = seedItemTask({
-            targetCount: 2,
-            pairs: [
-                { itemId: 'caixa-ti', slotId: 'estante-ti' },
-                { itemId: 'caixa-rh', slotId: 'estante-rh' },
-            ],
-        });
-
-        const result = service.incrementProgress('p1', taskId, 'caixa-ti', 'estante-ti');
-
-        expect(result.currentProgress).toBe(1);
-    });
-
-    // Cycle 7
-    it('lança WRONG_SLOT quando slotId não confere com o par declarado', () => {
-        const taskId = seedItemTask({
-            targetCount: 2,
-            pairs: [
-                { itemId: 'caixa-ti', slotId: 'estante-ti' },
-                { itemId: 'caixa-rh', slotId: 'estante-rh' },
-            ],
-        });
-
-        const err = rejectionFrom(() => service.incrementProgress('p1', taskId, 'caixa-ti', 'estante-rh'));
-
-        expect(err.code).toBe('WRONG_SLOT');
-        expect(service.getAssignedTasks('r1', 'p1')[0].currentProgress).toBe(0);
-    });
-
-    // Cycle 8
-    it('lança UNKNOWN_ITEM quando itemId não está em pairs', () => {
-        const taskId = seedItemTask({
-            targetCount: 2,
-            pairs: [{ itemId: 'caixa-ti', slotId: 'estante-ti' }],
-        });
-
-        const err = rejectionFrom(() => service.incrementProgress('p1', taskId, 'caixa-intrusa', 'estante-ti'));
-
-        expect(err.code).toBe('UNKNOWN_ITEM');
-    });
-
-    // Cycle 9
-    it('lança NOT_ASSIGNED quando o jogador não tem a task', () => {
-        seedItemTask({ targetCount: 2, items: ['papel-01'] });
-
-        const semTasks = rejectionFrom(() => service.incrementProgress('p-fantasma', 'coleta-1', 'papel-01'));
-        expect(semTasks.code).toBe('NOT_ASSIGNED');
-
-        const taskErrada = rejectionFrom(() => service.incrementProgress('p1', 'task-que-nao-existe', 'papel-01'));
-        expect(taskErrada.code).toBe('NOT_ASSIGNED');
-    });
-
-    // Cycle 10
-    it('lança INVALID_STATUS quando a task já está completed', () => {
-        const taskId = seedItemTask({ targetCount: 1, items: ['papel-01', 'papel-02'] });
-        service.incrementProgress('p1', taskId, 'papel-01'); // → completed
-
-        const err = rejectionFrom(() => service.incrementProgress('p1', taskId, 'papel-02'));
-
-        expect(err.code).toBe('INVALID_STATUS');
-    });
-
-    // Cycle 11
     it('TaskRejectionError expõe code e é instanceof ApiError', () => {
-        const taskId = seedItemTask({ targetCount: 2, items: ['papel-01'] });
-
-        const err = rejectionFrom(() => service.incrementProgress('p1', taskId, 'intruso'));
-
-        // instanceof ApiError garante que os `catch` antigos continuam funcionando
+        const err = new TaskRejectionError('WRONG_SLOT', 'm');
         expect(err).toBeInstanceOf(ApiError);
-        expect(err).toBeInstanceOf(TaskRejectionError);
-        expect(err.statusCode).toBe(400);
-        expect(typeof err.message).toBe('string');
-        expect(err.message.length).toBeGreaterThan(0);
-    });
-
-    // Cycle 12
-    it('clearRoom limpa assignedRoom e collectedItems — mesmo itemId volta a contar após reset', () => {
-        const taskId = seedItemTask({ targetCount: 4, items: ['papel-01', 'papel-02'] });
-        service.incrementProgress('p1', taskId, 'papel-01');
-
-        service.clearRoom(['p1']);
-
-        // Re-atribuição após o reset: o mesmo item é aceito de novo
-        service.assignRandomTasks('r1', 'p1');
-        const result = service.incrementProgress('p1', taskId, 'papel-01');
-
-        expect(result.currentProgress).toBe(1);
+        expect(err.code).toBe('WRONG_SLOT');
     });
 });
 
 // ────────────────────────────────────────────────────────────
-// TaskService — getTotalTaskCount (alimenta "Tarefa X de N" na HUD)
-// ────────────────────────────────────────────────────────────
-describe('TaskService — getTotalTaskCount', () => {
-    let service: TaskService;
-
-    beforeEach(() => {
-        service = makeService();
-        seedCatalog(service);
-    });
-
-    it('jogador sem atribuição tem total 0', () => {
-        expect(service.getTotalTaskCount('ninguem')).toBe(0);
-    });
-
-    it('total = atribuídas + fila, logo após o sorteio', () => {
-        service.assignRandomTasks('r1', 'p1');
-
-        expect(service.getTotalTaskCount('p1')).toBe(5);
-    });
-
-    it('total não muda conforme a fila avança', () => {
-        service.assignRandomTasks('r1', 'p1');
-        const primeira = service.getAssignedTasks('r1', 'p1')[0];
-        service.startTask('p1', primeira.id);
-        service.resolveTask('p1', primeira.id, true);
-        service.advanceQueue('p1');
-
-        expect(service.getAssignedTasks('r1', 'p1')).toHaveLength(2);
-        expect(service.getTotalTaskCount('p1')).toBe(5);
-    });
-
-    it('clearRoom zera o total', () => {
-        service.assignRandomTasks('r1', 'p1');
-        service.clearRoom(['p1']);
-
-        expect(service.getTotalTaskCount('p1')).toBe(0);
-    });
-});
-
-// ────────────────────────────────────────────────────────────
-// TaskService — tarefas do Financeiro (3º andar)
-//
-// Nenhuma lógica nova no servidor: estes casos fixam o contrato que o cliente usa.
-//   - Tarefa 6 (cofres): `items` = os dois cofres; cada recolhimento de 10 s manda
-//     um task_progress com o itemId do cofre. A senha é conferida no cliente.
-//   - Tarefa 7 (e-mail): par start_interaction → complete_attempt { success: true }.
+// Tarefas do Financeiro (contrato usado pelo cliente)
 // ────────────────────────────────────────────────────────────
 describe('TaskService — tarefas do Financeiro', () => {
     let service: TaskService;
 
     beforeEach(() => {
-        service = makeService();
+        service = new TaskService();
+        service.registerCatalog('r1', [
+            { id: 'task-cofres-01', description: 'Cofres', type: 'open_safe_collect_money', targetCount: 2, items: ['cofre-direito', 'cofre-esquerdo'] },
+            { id: 'task-enviar-email-01', description: 'E-mail', type: 'send_email_upload', targetCount: 1 },
+        ]);
     });
 
     it('cofres: conta cada cofre uma vez e completa com os dois', () => {
-        service.registerCatalog('r1', [
-            {
-                id: 'task-cofres-01',
-                description: '(3º andar) Abra os cofres e recolha o dinheiro',
-                type: 'open_safe_collect_money',
-                targetCount: 2,
-                items: ['cofre-direito', 'cofre-esquerdo'],
-            },
-        ]);
-        service.assignRandomTasks('r1', 'p1');
-
-        const primeiro = service.incrementProgress('p1', 'task-cofres-01', 'cofre-direito', 'cofre');
-        expect(primeiro.currentProgress).toBe(1);
-        expect(primeiro.status).toBe('in_progress');
-
-        let repetido: unknown;
-        try {
-            service.incrementProgress('p1', 'task-cofres-01', 'cofre-direito', 'cofre');
-        } catch (err) {
-            repetido = err;
-        }
-        expect(repetido).toBeInstanceOf(TaskRejectionError);
-        expect((repetido as TaskRejectionError).code).toBe('ALREADY_COUNTED');
-
-        const segundo = service.incrementProgress('p1', 'task-cofres-01', 'cofre-esquerdo', 'cofre');
-        expect(segundo.currentProgress).toBe(2);
-        expect(segundo.status).toBe('completed');
+        service.assignRandomTasks('r1', 'A');
+        expect(service.incrementProgress('A', 'task-cofres-01', 'cofre-direito', 'cofre').status).toBe('in_progress');
+        expect(() => service.incrementProgress('A', 'task-cofres-01', 'cofre-direito', 'cofre')).toThrow(TaskRejectionError);
+        expect(service.incrementProgress('A', 'task-cofres-01', 'cofre-esquerdo', 'cofre'))
+            .toMatchObject({ status: 'completed', ci: ['cofre-direito', 'cofre-esquerdo'] });
     });
 
     it('e-mail: start → complete_attempt(true) conclui a tarefa', () => {
-        service.registerCatalog('r1', [
-            {
-                id: 'task-enviar-email-01',
-                description: '(3º andar) Envie o e-mail pendente no computador do Financeiro',
-                type: 'send_email_upload',
-                targetCount: 1,
-            },
-        ]);
-        service.assignRandomTasks('r1', 'p1');
-
-        expect(service.startTask('p1', 'task-enviar-email-01').status).toBe('in_progress');
-
-        const resolvida = service.resolveTask('p1', 'task-enviar-email-01', true);
-        expect(resolvida.status).toBe('completed');
-        expect(resolvida.currentProgress).toBe(1);
+        service.assignRandomTasks('r1', 'A');
+        service.assignRandomTasks('r1', 'B'); // B pega o e-mail
+        service.startTask('B', 'task-enviar-email-01');
+        expect(service.resolveTask('B', 'task-enviar-email-01', true)).toMatchObject({ status: 'completed', currentProgress: 1 });
     });
 });

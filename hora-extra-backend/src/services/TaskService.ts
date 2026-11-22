@@ -29,12 +29,12 @@ export interface TaskEntry {
  * Diferente de erro de protocolo (payload malformado), que responde ERROR genérico.
  */
 export type TaskRejectionCode =
-    | 'NOT_ASSIGNED'      // jogador não tem a task
+    | 'NOT_ASSIGNED'      // jogador não é o dono da task
     | 'INVALID_STATUS'    // task já completed/failed
     | 'MISSING_ITEM'      // catálogo exige itemId e o payload não mandou
     | 'UNKNOWN_ITEM'      // itemId não pertence a esta task
     | 'WRONG_SLOT'        // par (itemId, slotId) não confere
-    | 'ALREADY_COUNTED';  // itemId já contabilizado nesta atribuição
+    | 'ALREADY_COUNTED';  // itemId já contabilizado nesta task
 
 /**
  * Recusa de gameplay tipada.
@@ -55,59 +55,74 @@ export class TaskRejectionError extends ApiError {
     }
 }
 
-/** Tarefa atribuída a um jogador com estado de progresso. */
+export type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'failed';
+
+/** Tarefa como o jogador a enxerga (payload de task_assigned). */
 export interface AssignedTask {
     id: string;
     description: string;
     type: string;
     targetCount: number;
     currentProgress: number;
-    status: 'pending' | 'in_progress' | 'completed' | 'failed';
+    status: TaskStatus;
+    /** Itens já contados nesta tarefa (nível sala). Usado pelo cliente para o mundo refletir. */
+    ci: string[];
 }
 
+/** Linha do retrato da sala (evento room_state, chaves compactas). */
+export interface RoomTaskSnapshot {
+    id: string;
+    s: TaskStatus;
+    p: number;
+    ci: string[];
+    /** Dono atual (tarefa aberta) ou quem concluiu (tarefa encerrada). null = livre. */
+    h: string | null;
+}
+
+/** Estado de uma tarefa NA SALA — único lugar onde progresso e itens moram. */
+interface RoomTaskState {
+    entry: TaskEntry;
+    status: TaskStatus;
+    currentProgress: number;
+    collected: Set<string>;
+    /** Quem está com a tarefa (aberta) ou quem a encerrou. null = livre no pool. */
+    holder: string | null;
+}
+
+interface RoomTasks {
+    catalog: TaskEntry[];
+    tasks: Map<string, RoomTaskState>;
+}
+
+const isOpen = (s: TaskStatus) => s === 'pending' || s === 'in_progress';
+
 /**
- * TaskService: gerencia o catálogo de tarefas e atribuições por jogador (in-memory).
+ * TaskService: tarefas COMPARTILHADAS da sala (in-memory).
  *
- * O catálogo é organizado POR SALA: cada sala tem seu próprio conjunto de tasks.
- * `assignRandomTasks` embaralha o catálogo DA SALA via Fisher-Yates e enfileira
- * todas as tarefas, entregando UMA por vez conforme o jogador conclui.
- * Idempotência silenciosa: segunda solicitação do mesmo jogador retorna [].
- * Sem persistência — estado é resetado ao reiniciar o servidor.
+ * Cada sala tem um catálogo e um estado por tarefa. Cada tarefa é feita UMA vez pela
+ * sala: o jogador recebe uma tarefa por vez entre as que ninguém fez nem está fazendo
+ * (`assignRandomTasks` / `advanceQueue`). Progresso e itens contados ficam na sala, então
+ * se o dono sai (`releasePlayer`) a tarefa volta ao pool com o progresso que tinha, e
+ * quem entra no meio da partida só recebe o que sobrou.
+ *
+ * A primeira entrada do catálogo (ordem de autoria na cena) tem prioridade enquanto
+ * estiver livre — permite fixar uma tarefa "sempre primeiro" durante o desenvolvimento.
+ * Sem persistência — estado é resetado ao reiniciar o servidor ou quando a sala morre.
  */
 export class TaskService {
-    /** Catálogo por sala: roomId → TaskEntry[]. Substituído por registerCatalog. */
-    private catalog = new Map<string, TaskEntry[]>();
+    private rooms = new Map<string, RoomTasks>();
 
-    /** assignments: playerId → AssignedTask[] */
-    private assignments = new Map<string, AssignedTask[]>();
-
-    /**
-     * playerId → roomId da atribuição.
-     * incrementProgress só recebe playerId, mas o catálogo é POR SALA — este mapa é
-     * o que permite localizar a TaskEntry certa para validar items/pairs.
-     */
-    private assignedRoom = new Map<string, string>();
-
-    /** `${playerId}:${taskId}` → itemIds já contabilizados (deduplicação). */
-    private collectedItems = new Map<string, Set<string>>();
-
-    /**
-     * playerId → tarefas sorteadas que ainda NÃO foram atribuídas.
-     *
-     * O jogador recebe uma por vez: `assignRandomTasks` sorteia o lote, entrega a
-     * primeira e guarda o resto aqui; `advanceQueue` libera a seguinte quando a atual
-     * termina. Evita o jogador encarar várias tarefas simultâneas sem saber por onde começar.
-     */
-    private taskQueue = new Map<string, TaskEntry[]>();
+    /** playerId → sala em que o jogador pega tarefas. */
+    private playerRoom = new Map<string, string>();
 
     // ──────────────────────────────────────────────
-    // Public API
+    // Catálogo
     // ──────────────────────────────────────────────
 
     /**
-     * Substitui o catálogo de tarefas da sala `roomId` pelas entradas fornecidas.
-     * Chamado quando o cliente envia task_catalog_register.
-     * As tarefas fornecidas não incluem npcId (campo removido nesta versão).
+     * Registra o catálogo da sala. Só vale na PRIMEIRA vez: todo cliente manda o
+     * catálogo ao conectar, e o segundo jogador não pode zerar o progresso do primeiro.
+     * Devolve `true` quando registrou agora.
      */
     public registerCatalog(
         roomId: string,
@@ -119,122 +134,163 @@ export class TaskService {
             items?: string[];
             pairs?: TaskItemPair[];
         }>,
-    ): void {
-        const entries: TaskEntry[] = tasks.map(t => ({ ...t, roomId }));
-        this.catalog.set(roomId, entries);
+    ): boolean {
+        const existente = this.rooms.get(roomId);
+        if (existente && existente.catalog.length > 0) {
+            logger.info(`TaskService.registerCatalog: sala ${roomId} já tem catálogo (${existente.catalog.length}) — ignorado`, { module: 'GAME' });
+            return false;
+        }
+
+        const catalog: TaskEntry[] = tasks.map(t => ({ ...t, roomId }));
+        const estado = new Map<string, RoomTaskState>();
+        for (const entry of catalog) {
+            estado.set(entry.id, {
+                entry,
+                status: 'pending',
+                currentProgress: 0,
+                collected: new Set<string>(),
+                holder: null,
+            });
+        }
+        this.rooms.set(roomId, { catalog, tasks: estado });
         logger.info(`TaskService.registerCatalog: ${tasks.length} tarefas registradas para sala ${roomId}`, { module: 'GAME' });
+        return true;
     }
 
+    // ──────────────────────────────────────────────
+    // Atribuição
+    // ──────────────────────────────────────────────
+
     /**
-     * Embaralha o catálogo DA SALA, atribui a primeira tarefa ao jogador e enfileira o
-     * restante (ver `advanceQueue`). Não há teto: a fila acompanha o tamanho do catálogo,
-     * então acrescentar uma tarefa nova ao catálogo já passa a valer.
+     * Primeira atribuição do jogador na sala: entrega UMA tarefa livre.
      *
-     * Idempotente: se o jogador já tem tasks atribuídas, loga warn e retorna [].
+     * Idempotente: se o jogador já está com uma tarefa aberta, devolve [] (o cliente
+     * recupera a dele pelo room_state). Também devolve [] quando não sobrou tarefa livre.
      * Lança ApiError se o catálogo da sala estiver vazio ou não existir.
      */
     public assignRandomTasks(roomId: string, playerId: string): AssignedTask[] {
-        const roomCatalog = this.catalog.get(roomId);
-        if (!roomCatalog || roomCatalog.length === 0) {
+        const room = this.rooms.get(roomId);
+        if (!room || room.catalog.length === 0) {
             throw ApiError.badRequest(`Catálogo da sala '${roomId}' está vazio — não é possível atribuir tasks`);
         }
 
-        // Idempotência silenciosa
-        if (this.assignments.has(playerId) && (this.assignments.get(playerId)!.length > 0)) {
-            logger.warn(`TaskService.assignRandomTasks: jogador '${playerId}' já tem tasks atribuídas — ignorando`, { module: 'GAME' });
+        this.playerRoom.set(playerId, roomId);
+
+        if (this.hasOpenTask(playerId)) {
+            logger.warn(`TaskService.assignRandomTasks: jogador '${playerId}' já tem tarefa aberta — ignorando`, { module: 'GAME' });
             return [];
         }
 
-        // A primeira entrada do catálogo (ordem de autoria na cena) é sempre a primeira
-        // task atribuída — só o RESTO é embaralhado. Existe para permitir fixar uma task
-        // "sempre primeiro" (ex: durante o desenvolvimento de uma feature nova, sem
-        // precisar completar o resto da fila aleatória pra chegar nela a cada teste).
-        // Sem teto fixo: a fila leva o catálogo INTEIRO da sala. Acrescentar uma tarefa
-        // nova ao catálogo passa a valer sozinho, sem tocar no servidor.
-        const [primeira, ...demais] = roomCatalog;
-        const resto = this.fisherYates([...demais]);
-        const assigned = [this.toAssigned(primeira)];
-
-        this.assignments.set(playerId, assigned);
-        this.assignedRoom.set(playerId, roomId);
-        this.taskQueue.set(playerId, resto);
-
-        logger.info(`TaskService: task '${primeira.id}' atribuída ao jogador '${playerId}' na sala '${roomId}' (${resto.length} na fila)`, { module: 'GAME' });
-        return assigned;
+        const proxima = this.takeNext(room, playerId);
+        return proxima ? [proxima] : [];
     }
 
     /**
-     * Libera a próxima tarefa da fila, se o jogador não tiver nenhuma aberta.
-     * Devolve null quando ainda há tarefa em andamento ou quando a fila secou.
-     *
-     * Chamado pelos handlers logo após uma conclusão, para que o jogador nunca fique
-     * sem o que fazer — e nunca com duas coisas ao mesmo tempo.
+     * Entrega a próxima tarefa livre se o jogador não tiver nenhuma aberta.
+     * Devolve null quando ainda há tarefa em andamento ou quando não sobrou nenhuma livre.
      */
     public advanceQueue(playerId: string): AssignedTask | null {
-        const atribuidas = this.assignments.get(playerId);
-        if (!atribuidas) return null;
-
-        const temAberta = atribuidas.some(t => t.status === 'pending' || t.status === 'in_progress');
-        if (temAberta) return null;
-
-        const fila = this.taskQueue.get(playerId);
-        if (!fila || fila.length === 0) return null;
-
-        const proxima = this.toAssigned(fila.shift()!);
-        atribuidas.push(proxima);
-
-        logger.info(`TaskService.advanceQueue: task '${proxima.id}' liberada para '${playerId}' (${fila.length} restantes na fila)`, { module: 'GAME' });
-        return proxima;
+        const room = this.roomOf(playerId);
+        if (!room) return null;
+        if (this.hasOpenTask(playerId)) return null;
+        return this.takeNext(room, playerId);
     }
 
-    /** Converte uma entrada de catálogo na forma atribuída ao jogador. */
-    private toAssigned(entry: TaskEntry): AssignedTask {
-        return {
-            id: entry.id,
-            description: entry.description,
-            type: entry.type,
-            targetCount: entry.targetCount,
-            currentProgress: 0,
-            status: 'pending',
-        };
+    /** Escolhe a tarefa livre (1ª do catálogo tem prioridade, o resto é sorteado). */
+    private takeNext(room: RoomTasks, playerId: string): AssignedTask | null {
+        const livres = room.catalog
+            .map(e => room.tasks.get(e.id)!)
+            .filter(t => isOpen(t.status) && t.holder === null);
+
+        if (livres.length === 0) {
+            logger.info(`TaskService: nenhuma tarefa livre para '${playerId}'`, { module: 'GAME' });
+            return null;
+        }
+
+        const primeira = room.tasks.get(room.catalog[0].id)!;
+        const escolhida = livres.includes(primeira)
+            ? primeira
+            : livres[Math.floor(Math.random() * livres.length)];
+
+        escolhida.holder = playerId;
+        logger.info(`TaskService: task '${escolhida.entry.id}' atribuída a '${playerId}' (${livres.length - 1} livres)`, { module: 'GAME' });
+        return this.toAssigned(escolhida);
+    }
+
+    /** O jogador está com alguma tarefa aberta? */
+    public hasOpenTask(playerId: string): boolean {
+        const room = this.roomOf(playerId);
+        if (!room) return false;
+        for (const t of room.tasks.values()) {
+            if (t.holder === playerId && isOpen(t.status)) return true;
+        }
+        return false;
     }
 
     /**
-     * Retorna as tasks atribuídas ao jogador, ou [] se não houver.
+     * Devolve ao pool as tarefas abertas do jogador (ele saiu da sala). O progresso e os
+     * itens contados continuam — o próximo dono continua de onde parou. Tarefa aberta sem
+     * progresso volta a 'pending' (o QTE do próximo dono começa com task_start_interaction).
+     * Retorna os ids devolvidos.
      */
-    public getAssignedTasks(roomId: string, playerId: string): AssignedTask[] {
-        return this.assignments.get(playerId) ?? [];
+    public releasePlayer(playerId: string): string[] {
+        const room = this.roomOf(playerId);
+        this.playerRoom.delete(playerId);
+        if (!room) return [];
+
+        const devolvidas: string[] = [];
+        for (const t of room.tasks.values()) {
+            if (t.holder !== playerId || !isOpen(t.status)) continue;
+            t.holder = null;
+            if (t.currentProgress === 0) t.status = 'pending';
+            devolvidas.push(t.entry.id);
+        }
+        if (devolvidas.length > 0) {
+            logger.info(`TaskService.releasePlayer: '${playerId}' saiu — devolvidas ao pool: ${devolvidas.join(', ')}`, { module: 'GAME' });
+        }
+        return devolvidas;
     }
 
     /**
-     * Total de tarefas do jogador nesta partida: já atribuídas + ainda na fila.
-     * Constante desde o sorteio — é o "N" de "Tarefa X de N" na HUD. 0 sem atribuição.
+     * Tarefas que pertencem ao jogador: a aberta e as que ele encerrou.
      */
+    public getAssignedTasks(_roomId: string, playerId: string): AssignedTask[] {
+        const room = this.roomOf(playerId);
+        if (!room) return [];
+        return [...room.tasks.values()].filter(t => t.holder === playerId).map(t => this.toAssigned(t));
+    }
+
+    /** Tamanho do catálogo da sala do jogador (o "N" de "Tarefa X de N" da equipe). */
     public getTotalTaskCount(playerId: string): number {
-        const atribuidas = this.assignments.get(playerId)?.length ?? 0;
-        const naFila = this.taskQueue.get(playerId)?.length ?? 0;
-        return atribuidas + naFila;
+        return this.roomOf(playerId)?.catalog.length ?? 0;
     }
+
+    /** Retrato das tarefas da sala para quem acabou de entrar (room_state). */
+    public getRoomSnapshot(roomId: string): RoomTaskSnapshot[] {
+        const room = this.rooms.get(roomId);
+        if (!room) return [];
+        return room.catalog.map(e => {
+            const t = room.tasks.get(e.id)!;
+            return { id: e.id, s: t.status, p: t.currentProgress, ci: [...t.collected], h: t.holder };
+        });
+    }
+
+    // ──────────────────────────────────────────────
+    // Progresso
+    // ──────────────────────────────────────────────
 
     /**
      * Muda o status de uma task de 'pending' para 'in_progress'.
-     * Lança ApiError se: jogador sem tasks, taskId não encontrado, status != pending.
+     * Lança ApiError se: jogador não é o dono, taskId não encontrado, status != pending.
      */
     public startTask(playerId: string, taskId: string): AssignedTask {
-        const playerTasks = this.assignments.get(playerId);
-        if (!playerTasks || playerTasks.length === 0) {
-            throw ApiError.badRequest(`Jogador '${playerId}' não tem tasks atribuídas`);
-        }
-        const task = playerTasks.find(t => t.id === taskId);
-        if (!task) {
-            throw ApiError.badRequest(`Task '${taskId}' não encontrada para jogador '${playerId}'`);
-        }
+        const task = this.ownedTask(playerId, taskId, msg => ApiError.badRequest(msg));
         if (task.status !== 'pending') {
             throw ApiError.badRequest(`Transição inválida: task '${taskId}' está '${task.status}', esperado 'pending'`);
         }
         task.status = 'in_progress';
         logger.info(`TaskService.startTask: task '${taskId}' iniciada pelo jogador '${playerId}'`, { module: 'GAME' });
-        return task;
+        return this.toAssigned(task);
     }
 
     /**
@@ -242,119 +298,101 @@ export class TaskService {
      * success=false → 'failed'. Lança ApiError se status != 'in_progress' ou taskId inválido.
      */
     public resolveTask(playerId: string, taskId: string, success: boolean): AssignedTask {
-        const playerTasks = this.assignments.get(playerId);
-        if (!playerTasks || playerTasks.length === 0) {
-            throw ApiError.badRequest(`Jogador '${playerId}' não tem tasks atribuídas`);
-        }
-        const task = playerTasks.find(t => t.id === taskId);
-        if (!task) {
-            throw ApiError.badRequest(`Task '${taskId}' não encontrada para jogador '${playerId}'`);
-        }
+        const task = this.ownedTask(playerId, taskId, msg => ApiError.badRequest(msg));
         if (task.status !== 'in_progress') {
             throw ApiError.badRequest(`Transição inválida: task '${taskId}' está '${task.status}', esperado 'in_progress'`);
         }
         if (success) {
             task.status = 'completed';
-            task.currentProgress = task.targetCount;
+            task.currentProgress = task.entry.targetCount;
         } else {
             task.status = 'failed';
         }
         logger.info(`TaskService.resolveTask: task '${taskId}' do jogador '${playerId}' → '${task.status}'`, { module: 'GAME' });
-        return task;
+        return this.toAssigned(task);
     }
 
     /**
-     * Incrementa o progresso de uma task de coleta (ex: 'collect') em +1.
-     * Usado por objetos coletáveis (papéis) que somam progresso a cada interação,
-     * em vez do fluxo binário start → resolve do QTE.
+     * Incrementa o progresso de uma task incremental em +1.
      *
      * Transições:
-     *   - 'pending' → 'in_progress' automaticamente no primeiro incremento
-     *     (coletáveis não têm passo separado de task_start_interaction).
-     *   - cada chamada faz currentProgress += 1 (clampeado em targetCount).
-     *   - ao atingir targetCount → status 'completed'.
+     *   - 'pending' → 'in_progress' automaticamente no primeiro incremento;
+     *   - ao atingir targetCount → 'completed'.
      *
      * Quando a entrada de catálogo declara `items` ou `pairs`, o incremento passa a
-     * exigir `itemId` e a validar pertencimento, pareamento e não-repetição. Entradas
-     * sem esses campos mantêm a contagem cega (retrocompatível).
-     *
+     * exigir `itemId` e a validar pertencimento, pareamento e não-repetição (na sala).
      * Lança TaskRejectionError (subclasse de ApiError) com o `code` correspondente.
      */
     public incrementProgress(playerId: string, taskId: string, itemId?: string, slotId?: string): AssignedTask {
-        const playerTasks = this.assignments.get(playerId);
-        if (!playerTasks || playerTasks.length === 0) {
-            throw new TaskRejectionError('NOT_ASSIGNED', `Jogador '${playerId}' não tem tasks atribuídas`);
-        }
-        const task = playerTasks.find(t => t.id === taskId);
-        if (!task) {
-            throw new TaskRejectionError('NOT_ASSIGNED', `Task '${taskId}' não encontrada para jogador '${playerId}'`);
-        }
-        if (task.status !== 'pending' && task.status !== 'in_progress') {
+        const task = this.ownedTask(playerId, taskId, msg => new TaskRejectionError('NOT_ASSIGNED', msg));
+        if (!isOpen(task.status)) {
             throw new TaskRejectionError('INVALID_STATUS', `Transição inválida: task '${taskId}' está '${task.status}', esperado 'pending' ou 'in_progress'`);
         }
 
-        // Validação de identidade do item — só para entradas que a declaram.
-        const entry = this.findEntry(playerId, taskId);
-        const collectedKey = `${playerId}:${taskId}`;
-        const declaresItems = !!(entry && (entry.items || entry.pairs));
-
-        if (declaresItems) {
-            this.validateItem(entry!, collectedKey, itemId, slotId);
+        if (task.entry.items || task.entry.pairs) {
+            this.validateItem(task, itemId, slotId);
         }
+        if (itemId) task.collected.add(itemId);
 
-        if (itemId) {
-            const collected = this.collectedItems.get(collectedKey) ?? new Set<string>();
-            collected.add(itemId);
-            this.collectedItems.set(collectedKey, collected);
-        }
-
-        if (task.status === 'pending') {
-            task.status = 'in_progress';
-        }
+        if (task.status === 'pending') task.status = 'in_progress';
 
         task.currentProgress += 1;
-        if (task.currentProgress >= task.targetCount) {
-            task.currentProgress = task.targetCount;
+        if (task.currentProgress >= task.entry.targetCount) {
+            task.currentProgress = task.entry.targetCount;
             task.status = 'completed';
         }
 
-        logger.info(`TaskService.incrementProgress: task '${taskId}' do jogador '${playerId}' → ${task.currentProgress}/${task.targetCount} (${task.status})`, { module: 'GAME' });
-        return task;
+        logger.info(`TaskService.incrementProgress: task '${taskId}' do jogador '${playerId}' → ${task.currentProgress}/${task.entry.targetCount} (${task.status})`, { module: 'GAME' });
+        return this.toAssigned(task);
     }
 
-    /**
-     * Remove todas as entradas de atribuição dos playerIds fornecidos.
-     * Chamado por UdpSocketManager.resetRoomState.
-     */
-    public clearRoom(playerIds: string[]): void {
-        for (const pid of playerIds) {
-            const tasks = this.assignments.get(pid) ?? [];
-            for (const task of tasks) {
-                this.collectedItems.delete(`${pid}:${task.id}`);
-            }
-            this.assignments.delete(pid);
-            this.assignedRoom.delete(pid);
-            this.taskQueue.delete(pid);
+    /** Descarta todo o estado de tarefas da sala (sala morreu). */
+    public clearRoom(roomId: string): void {
+        this.rooms.delete(roomId);
+        for (const [pid, rid] of [...this.playerRoom.entries()]) {
+            if (rid === roomId) this.playerRoom.delete(pid);
         }
-        logger.info(`TaskService.clearRoom: ${playerIds.length} atribuições removidas`, { module: 'GAME' });
+        logger.info(`TaskService.clearRoom: estado de tarefas da sala '${roomId}' descartado`, { module: 'GAME' });
     }
 
     // ──────────────────────────────────────────────
     // Private helpers
     // ──────────────────────────────────────────────
 
-    /** Localiza a entrada de catálogo da task, usando a sala em que o jogador foi atribuído. */
-    private findEntry(playerId: string, taskId: string): TaskEntry | undefined {
-        const roomId = this.assignedRoom.get(playerId);
-        if (!roomId) return undefined;
-        return this.catalog.get(roomId)?.find(e => e.id === taskId);
+    private roomOf(playerId: string): RoomTasks | undefined {
+        const roomId = this.playerRoom.get(playerId);
+        return roomId ? this.rooms.get(roomId) : undefined;
+    }
+
+    /** Localiza a task e garante que o jogador é o dono. */
+    private ownedTask(playerId: string, taskId: string, erro: (msg: string) => Error): RoomTaskState {
+        const room = this.roomOf(playerId);
+        if (!room) throw erro(`Jogador '${playerId}' não tem tasks atribuídas`);
+        const task = room.tasks.get(taskId);
+        if (!task || task.holder !== playerId) {
+            throw erro(`Task '${taskId}' não encontrada para jogador '${playerId}'`);
+        }
+        return task;
+    }
+
+    private toAssigned(t: RoomTaskState): AssignedTask {
+        return {
+            id: t.entry.id,
+            description: t.entry.description,
+            type: t.entry.type,
+            targetCount: t.entry.targetCount,
+            currentProgress: t.currentProgress,
+            status: t.status,
+            ci: [...t.collected],
+        };
     }
 
     /**
      * Valida itemId/slotId contra a entrada de catálogo. Lança TaskRejectionError na
      * primeira violação. Chamado apenas quando a entrada declara `items` ou `pairs`.
      */
-    private validateItem(entry: TaskEntry, collectedKey: string, itemId?: string, slotId?: string): void {
+    private validateItem(task: RoomTaskState, itemId?: string, slotId?: string): void {
+        const entry = task.entry;
         if (!itemId || itemId.trim() === '') {
             throw new TaskRejectionError('MISSING_ITEM', `Task '${entry.id}' exige identificar o item entregue`);
         }
@@ -373,18 +411,9 @@ export class TaskService {
             }
         }
 
-        if (this.collectedItems.get(collectedKey)?.has(itemId)) {
+        if (task.collected.has(itemId)) {
             throw new TaskRejectionError('ALREADY_COUNTED', `Item '${itemId}' já foi contabilizado nesta tarefa`);
         }
-    }
-
-    /** Fisher-Yates in-place shuffle, returns the array for chaining. */
-    private fisherYates<T>(arr: T[]): T[] {
-        for (let i = arr.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [arr[i], arr[j]] = [arr[j], arr[i]];
-        }
-        return arr;
     }
 }
 

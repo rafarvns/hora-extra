@@ -1,17 +1,19 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-// Capture the message handler registered via socket.on('message', ...)
-// Use an object so the vi.mock factory (hoisted) can mutate it safely.
+// Socket mockado + serviços reais trocados a cada teste (via ServiceFactory mockada).
 const state = vi.hoisted(() => ({
-    capturedMessageHandler: null as ((msg: Buffer, rinfo: any) => void) | null,
+    capturedMessageHandler: null as ((msg: Buffer, rinfo: any) => Promise<void> | void) | null,
     send: null as any,
+    registry: null as any,
+    tasks: null as any,
+    clock: null as any,
 }));
 
 vi.mock('dgram', () => {
     const mockSocket = {
         on: vi.fn((event: string, handler: any) => {
             if (event === 'message') state.capturedMessageHandler = handler;
-            if (event === 'listening') handler(); // fire 'listening' immediately
+            if (event === 'listening') handler();
         }),
         bind: vi.fn(),
         send: (state.send = vi.fn()),
@@ -19,89 +21,82 @@ vi.mock('dgram', () => {
         address: vi.fn().mockReturnValue({ address: '0.0.0.0', port: 5001 }),
     };
     return {
-        default: {
-            createSocket: vi.fn().mockReturnValue(mockSocket),
-        },
+        default: { createSocket: vi.fn().mockReturnValue(mockSocket) },
         createSocket: vi.fn().mockReturnValue(mockSocket),
     };
 });
 
 vi.mock('../services/authService.js', () => ({
-    default: {
-        verifyToken: vi.fn(),
-        generateToken: vi.fn(),
-    },
-}));
-
-vi.mock('./factories/SocketHandler.Factory.js', () => ({
-    SocketHandlerFactory: {
-        createHandler: vi.fn().mockReturnValue(null),
-    },
-}));
-
-vi.mock('./handlers/NpcRegister.Handler.js', () => ({
-    NpcRegisterHandler: {
-        clearRoomState: vi.fn(),
-    },
+    default: { verifyToken: vi.fn(), generateToken: vi.fn() },
 }));
 
 vi.mock('../core/factories/Service.Factory.js', () => ({
     ServiceFactory: {
-        getTaskService: vi.fn().mockReturnValue({
-            clearRoom: vi.fn(),
-            assignRandomTasks: vi.fn(),
-            getAssignedTasks: vi.fn(),
-        }),
-        getShiftClockService: vi.fn().mockReturnValue({
-            resetRoom: vi.fn(),
-        }),
+        getRoomRegistry: () => state.registry,
+        getTaskService: () => state.tasks,
+        getShiftClockService: () => state.clock,
     },
 }));
 
 vi.mock('../utils/Logger.js', () => ({
-    default: {
-        info: vi.fn(),
-        warn: vi.fn(),
-        error: vi.fn(),
-        debug: vi.fn(),
-    },
+    default: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
 
 import authService from '../services/authService.js';
+import { RoomRegistry, EMPTY_ROOM_TTL_MS } from '../services/RoomRegistry.js';
+import { TaskService } from '../services/TaskService.js';
 import { NpcRegisterHandler } from './handlers/NpcRegister.Handler.js';
-import { ServiceFactory } from '../core/factories/Service.Factory.js';
 import { UdpSocketManager } from './UdpSocketManager.js';
 
-// Helper: simulate a CONN packet arriving from a remote client
-async function simulateCONN(
-    _manager: UdpSocketManager,
-    token: string,
-    address: string,
-    port: number,
-    extraData: Record<string, unknown> = {},
-) {
-    const packet = JSON.stringify({ e: 'CONN', token, d: extraData });
-    const rinfo = { address, port, family: 'IPv4', size: 0 };
-    await state.capturedMessageHandler!(Buffer.from(packet), rinfo);
+// ────────────────────────────────────────────────────────────
+// Helpers
+// ────────────────────────────────────────────────────────────
+
+const rinfoOf = (port: number, address = '10.0.0.1') => ({ address, port, family: 'IPv4', size: 0 }) as any;
+
+/** Tokens do teste: "tok:<id>:<nome>" → claims. */
+function mockTokens() {
+    (authService.verifyToken as any).mockImplementation((token: string) => {
+        const [prefix, id, n] = token.split(':');
+        return prefix === 'tok' ? { id, n } : null;
+    });
 }
 
-/** Pacotes enviados pelo socket mockado, decodificados: { e, d, port, address }. */
-function sentPackets(eventName?: string): Array<{ e: string; d: any; port: number; address: string }> {
+async function send(port: number, e: string, d: any = {}, token?: string) {
+    const packet = JSON.stringify({ e, d, token });
+    await state.capturedMessageHandler!(Buffer.from(packet), rinfoOf(port));
+}
+
+const conn = (port: number, id: string, nome: string, roomId: string) =>
+    send(port, 'CONN', { roomId }, `tok:${id}:${nome}`);
+
+/** Pacotes enviados pelo socket mockado: { e, d, port }. */
+function sent(eventName?: string, port?: number): Array<{ e: string; d: any; port: number }> {
     return state.send.mock.calls
-        .map((c: any[]) => ({ ...JSON.parse(c[0].toString()), port: c[1], address: c[2] }))
-        .filter((p: any) => !eventName || p.e === eventName);
+        .map((c: any[]) => ({ ...JSON.parse(c[0].toString()), port: c[1] }))
+        .filter((p: any) => (!eventName || p.e === eventName) && (port === undefined || p.port === port));
 }
 
-describe('UdpSocketManager — guest path', () => {
+const CATALOGO = [
+    { id: 't1', description: 'T1', type: 'collect', targetCount: 2, items: ['a', 'b'] },
+    { id: 't2', description: 'T2', type: 'collect', targetCount: 1 },
+    { id: 't3', description: 'T3', type: 'collect', targetCount: 1 },
+];
+
+describe('UdpSocketManager — salas', () => {
     let manager: UdpSocketManager;
+    let roomId: string;
 
     beforeEach(() => {
-        // Reset singleton so each test gets a fresh manager
         (UdpSocketManager as any).instance = undefined;
         state.capturedMessageHandler = null;
         vi.clearAllMocks();
-
+        mockTokens();
+        state.registry = new RoomRegistry();
+        state.tasks = new TaskService();
+        state.clock = { resetRoom: vi.fn() };
         manager = UdpSocketManager.initialize(9998);
+        roomId = state.registry.create('Sala do A').id;
     });
 
     afterEach(() => {
@@ -109,189 +104,201 @@ describe('UdpSocketManager — guest path', () => {
         (UdpSocketManager as any).instance = undefined;
     });
 
-    it('getRoomSessionCount retorna 0 quando não há sessions na sala', () => {
-        const count = manager.getRoomSessionCount('guest-room');
-        expect(count).toBe(0);
+    // ── CONN ───────────────────────────────────────────────
+
+    it('CONN válido cria sessão na sala com o nome do token', async () => {
+        await conn(4000, 'A', 'Ana', roomId);
+
+        const s = manager.getSession(rinfoOf(4000))!;
+        expect(s).toMatchObject({ id: 'A', playerName: 'Ana', roomId, floor: 1 });
+        expect(sent('CONN_SUCCESS', 4000)[0].d).toMatchObject({ id: 'A', roomId, n: 'Ana' });
     });
 
-    it('handshake com JWT guest cria session com roomId = "guest-room"', async () => {
-        (authService.verifyToken as any).mockReturnValue({ id: 'guest-ab1c2d3e' });
-
-        await simulateCONN(manager, 'valid-guest-jwt', '10.0.0.1', 4000);
-
-        const session = manager.getSession({ address: '10.0.0.1', port: 4000, family: 'IPv4', size: 0 });
-
-        expect(session).toBeDefined();
-        expect(session!.id).toBe('guest-ab1c2d3e');
-        expect(session!.roomId).toBe('guest-room');
+    it('o nome vem do token, não do payload', async () => {
+        await send(4000, 'CONN', { roomId, playerName: 'Impostor' }, 'tok:A:Ana');
+        expect(manager.getSession(rinfoOf(4000))!.playerName).toBe('Ana');
     });
 
-    it('lazy reset: CONN guest em sala vazia chama NpcRegisterHandler.clearRoomState("guest-room")', async () => {
-        (authService.verifyToken as any).mockReturnValue({ id: 'guest-newguest1' });
-
-        // Sala vazia (nenhuma session em guest-room) → deve chamar clearRoomState
-        expect(manager.getRoomSessionCount('guest-room')).toBe(0);
-
-        await simulateCONN(manager, 'jwt-for-new-guest', '10.0.0.2', 4001);
-
-        expect(NpcRegisterHandler.clearRoomState).toHaveBeenCalledWith('guest-room');
+    it('token inválido → CONN_ERROR INVALID_TOKEN', async () => {
+        await send(4000, 'CONN', { roomId }, 'lixo');
+        expect(sent('CONN_ERROR', 4000)[0].d.code).toBe('INVALID_TOKEN');
+        expect(manager.getSession(rinfoOf(4000))).toBeUndefined();
     });
 
-    it('cleanupSessions limpa NPC state de guest-room quando a sala fica vazia após expiração', async () => {
-        (authService.verifyToken as any).mockReturnValue({ id: 'guest-expiring1' });
-
-        // Guest conecta
-        await simulateCONN(manager, 'expiring-jwt', '10.0.0.3', 4002);
-        expect(manager.getRoomSessionCount('guest-room')).toBe(1);
-
-        vi.clearAllMocks(); // reset call count after lazy-reset from CONN
-
-        // Simular session expirada: forçar lastSeen > 30s atrás
-        const session = manager.getSession({ address: '10.0.0.3', port: 4002, family: 'IPv4', size: 0 });
-        expect(session).toBeDefined();
-        session!.lastSeen = Date.now() - 35000;
-
-        // Invocar cleanupSessions via o método público exposto (vamos chamá-lo via cast)
-        (manager as any).cleanupSessions();
-
-        expect(manager.getRoomSessionCount('guest-room')).toBe(0);
-        expect(NpcRegisterHandler.clearRoomState).toHaveBeenCalledWith('guest-room');
+    it('sala inexistente → CONN_ERROR ROOM_NOT_FOUND', async () => {
+        await conn(4000, 'A', 'Ana', 'nao-existe');
+        expect(sent('CONN_ERROR', 4000)[0].d.code).toBe('ROOM_NOT_FOUND');
     });
 
-    it('resetRoom chama TaskService.clearRoom com playerIds da sala', async () => {
-        // Setup: dois jogadores dev entram em dev-room via dev bypass
-        process.env.NODE_ENV = 'development';
-        process.env.DEV_TEST_TOKEN = 'dev-token';
-        process.env.DEV_TEST_USER_ID = 'dev-player-A';
+    it('3º jogador → CONN_ERROR ROOM_FULL', async () => {
+        await conn(4000, 'A', 'Ana', roomId);
+        await conn(4001, 'B', 'Bia', roomId);
+        await conn(4002, 'C', 'Caio', roomId);
 
-        await simulateCONN(manager, 'dev-token', '10.0.2.1', 4200);
-        // Second dev CONN from different address (different session) — but DEV_TEST_USER_ID is the same
-        // So we need two different player IDs: use JWT sessions for them instead
-        (authService.verifyToken as any).mockReturnValueOnce({ id: 'player-B' });
-        await simulateCONN(manager, 'jwt-b', '10.0.2.2', 4201);
-
-        // player-B is NOT in dev-room (no auto-join), so manually set roomId
-        const sessionB = manager.getSession({ address: '10.0.2.2', port: 4201, family: 'IPv4', size: 0 });
-        if (sessionB) sessionB.roomId = 'dev-room';
-
-        expect(manager.getRoomSessionCount('dev-room')).toBeGreaterThanOrEqual(1);
-
-        // Re-mock taskService to capture call
-        const mockTaskService = { clearRoom: vi.fn(), assignRandomTasks: vi.fn() };
-        (ServiceFactory.getTaskService as any).mockReturnValue(mockTaskService);
-
-        // Trigger resetRoomState via dev CONN with resetRoom:true from a NEW address
-        await simulateCONN(manager, 'dev-token', '10.0.2.3', 4202, { resetRoom: true });
-
-        expect(mockTaskService.clearRoom).toHaveBeenCalled();
-        // clearRoom was called with an array (may include dev-player-A and/or player-B)
-        const [calledWith] = mockTaskService.clearRoom.mock.calls[0] as [string[]];
-        expect(Array.isArray(calledWith)).toBe(true);
+        expect(sent('CONN_ERROR', 4002)[0].d.code).toBe('ROOM_FULL');
+        expect(manager.getRoomSessionCount(roomId)).toBe(2);
     });
 
-    it('resetRoom limpa sessões da sala após clearRoom', async () => {
-        // Dev player connects → auto-join dev-room
-        process.env.NODE_ENV = 'development';
-        process.env.DEV_TEST_TOKEN = 'dev-tok';
-        process.env.DEV_TEST_USER_ID = 'dev-player-C';
-
-        await simulateCONN(manager, 'dev-tok', '10.0.3.1', 4300);
-        expect(manager.getRoomSessionCount('dev-room')).toBe(1);
-
-        // Re-mock taskService to capture calls
-        const mockTaskService = { clearRoom: vi.fn(), assignRandomTasks: vi.fn() };
-        (ServiceFactory.getTaskService as any).mockReturnValue(mockTaskService);
-
-        // Trigger reset from a new address
-        await simulateCONN(manager, 'dev-tok', '10.0.3.2', 4301, { resetRoom: true });
-
-        // The previous session (10.0.3.1) should have been removed
-        const removedSession = manager.getSession({ address: '10.0.3.1', port: 4300, family: 'IPv4', size: 0 });
-        expect(removedSession).toBeUndefined();
-    });
-});
-
-describe('UdpSocketManager — room_roster', () => {
-    let manager: UdpSocketManager;
-    const rinfoOf = (address: string, port: number) => ({ address, port, family: 'IPv4', size: 0 }) as any;
-
-    beforeEach(() => {
-        (UdpSocketManager as any).instance = undefined;
-        state.capturedMessageHandler = null;
-        vi.clearAllMocks();
-        manager = UdpSocketManager.initialize(9997);
-    });
-
-    afterEach(() => {
-        manager.close();
-        (UdpSocketManager as any).instance = undefined;
-    });
-
-    it('getRoomRoster lista só os jogadores da sala, com id e nome', async () => {
-        (authService.verifyToken as any).mockReturnValueOnce({ id: 'guest-ana' });
-        await simulateCONN(manager, 'jwt-a', '10.1.0.1', 5100, { playerName: 'Ana' });
-        (authService.verifyToken as any).mockReturnValueOnce({ id: 'guest-bia' });
-        await simulateCONN(manager, 'jwt-b', '10.1.0.2', 5101, { playerName: 'Bia' });
-        (authService.verifyToken as any).mockReturnValueOnce({ id: 'player-fora' });
-        await simulateCONN(manager, 'jwt-c', '10.1.0.3', 5102); // sem auto-join
-
-        expect(manager.getRoomRoster('guest-room')).toEqual([
-            { id: 'guest-ana', n: 'Ana' },
-            { id: 'guest-bia', n: 'Bia' },
-        ]);
-    });
-
-    it('CONN com auto-join faz broadcast room_roster para a sala', async () => {
-        (authService.verifyToken as any).mockReturnValueOnce({ id: 'guest-ana' });
-        await simulateCONN(manager, 'jwt-a', '10.1.1.1', 5200, { playerName: 'Ana' });
-        (authService.verifyToken as any).mockReturnValueOnce({ id: 'guest-bia' });
-        await simulateCONN(manager, 'jwt-b', '10.1.1.2', 5201, { playerName: 'Bia' });
-
-        const paraAna = sentPackets('room_roster').filter(p => p.port === 5200);
-        const ultimo = paraAna[paraAna.length - 1];
-        expect(ultimo.d).toEqual({ p: [{ id: 'guest-ana', n: 'Ana' }, { id: 'guest-bia', n: 'Bia' }] });
-    });
-
-    it('CONN sem sala não envia room_roster', async () => {
-        (authService.verifyToken as any).mockReturnValueOnce({ id: 'player-solo' });
-        await simulateCONN(manager, 'jwt-solo', '10.1.2.1', 5300);
-
-        expect(sentPackets('room_roster')).toHaveLength(0);
-    });
-
-    it('cleanupSessions reenvia room_roster aos jogadores que ficaram', async () => {
-        (authService.verifyToken as any).mockReturnValueOnce({ id: 'guest-ana' });
-        await simulateCONN(manager, 'jwt-a', '10.1.3.1', 5400, { playerName: 'Ana' });
-        (authService.verifyToken as any).mockReturnValueOnce({ id: 'guest-bia' });
-        await simulateCONN(manager, 'jwt-b', '10.1.3.2', 5401, { playerName: 'Bia' });
+    it('reconexão do mesmo jogador (outra porta) não ocupa vaga nem anuncia de novo', async () => {
+        await conn(4000, 'A', 'Ana', roomId);
+        await conn(4001, 'B', 'Bia', roomId);
         state.send.mockClear();
 
-        manager.getSession(rinfoOf('10.1.3.2', 5401))!.lastSeen = Date.now() - 35000;
-        (manager as any).cleanupSessions();
+        await conn(4005, 'A', 'Ana', roomId);
 
-        const rosters = sentPackets('room_roster');
-        expect(rosters).toHaveLength(1);
-        expect(rosters[0].port).toBe(5400);
-        expect(rosters[0].d).toEqual({ p: [{ id: 'guest-ana', n: 'Ana' }] });
+        expect(sent('CONN_SUCCESS', 4005)).toHaveLength(1);
+        expect(manager.getRoomSessionCount(roomId)).toBe(2);
+        expect(manager.getSession(rinfoOf(4000))).toBeUndefined();
+        expect(sent('player_joined')).toHaveLength(0);
+        expect(sent('player_disconnected')).toHaveLength(0);
     });
 
-    it('cleanupSessions descarta o relógio do expediente quando a guest-room esvazia', async () => {
-        (authService.verifyToken as any).mockReturnValueOnce({ id: 'guest-ana' });
-        await simulateCONN(manager, 'jwt-a', '10.1.4.1', 5500);
+    it('quem entra recebe player_joined dos outros e o roster vai para todos', async () => {
+        await conn(4000, 'A', 'Ana', roomId);
+        await conn(4001, 'B', 'Bia', roomId);
 
-        manager.getSession(rinfoOf('10.1.4.1', 5500))!.lastSeen = Date.now() - 35000;
-        (manager as any).cleanupSessions();
-
-        expect(ServiceFactory.getShiftClockService().resetRoom).toHaveBeenCalledWith('guest-room');
+        expect(sent('player_joined', 4000)[0].d).toEqual({ id: 'B', name: 'Bia' });
+        expect(sent('player_joined', 4001)).toHaveLength(0);
+        const rosterA = sent('room_roster', 4000).pop()!;
+        expect(rosterA.d).toEqual({ p: [{ id: 'A', n: 'Ana' }, { id: 'B', n: 'Bia' }] });
     });
 
-    it('resetRoom descarta o relógio do expediente da sala', async () => {
-        process.env.NODE_ENV = 'development';
-        process.env.DEV_TEST_TOKEN = 'dev-tok-clock';
-        process.env.DEV_TEST_USER_ID = 'dev-player-clock';
+    // ── room_state ─────────────────────────────────────────
 
-        await simulateCONN(manager, 'dev-tok-clock', '10.1.5.1', 5600, { resetRoom: true });
+    it('room_state traz os outros jogadores com posição e andar', async () => {
+        await conn(4000, 'A', 'Ana', roomId);
+        await send(4000, 'player_move', { p: [1, 2, 3], r: 90, f: 2 });
+        await conn(4001, 'B', 'Bia', roomId);
 
-        expect(ServiceFactory.getShiftClockService().resetRoom).toHaveBeenCalledWith('dev-room');
+        const rs = sent('room_state', 4001)[0].d;
+        expect(rs.pl).toEqual([{ id: 'A', n: 'Ana', p: [1, 2, 3], r: 90, f: 2 }]);
+    });
+
+    it('room_state traz o estado das tarefas da sala (dono, progresso e itens)', async () => {
+        await conn(4000, 'A', 'Ana', roomId);
+        await send(4000, 'task_catalog_register', { tasks: CATALOGO });
+        await send(4000, 'task_assign_request');
+        await send(4000, 'task_progress', { taskId: 't1', itemId: 'a' });
+
+        await conn(4001, 'B', 'Bia', roomId);
+        const t1 = sent('room_state', 4001)[0].d.t.find((t: any) => t.id === 't1');
+        expect(t1).toEqual({ id: 't1', s: 'in_progress', p: 1, ci: ['a'], h: 'A' });
+    });
+
+    // ── Tarefas compartilhadas ─────────────────────────────
+
+    it('o 2º jogador não sobrescreve o catálogo e recebe outra tarefa', async () => {
+        await conn(4000, 'A', 'Ana', roomId);
+        await send(4000, 'task_catalog_register', { tasks: CATALOGO });
+        await send(4000, 'task_assign_request');
+
+        await conn(4001, 'B', 'Bia', roomId);
+        await send(4001, 'task_catalog_register', { tasks: [{ id: 'outra', description: 'X', type: 'collect', targetCount: 1 }] });
+        await send(4001, 'task_assign_request');
+
+        const deA = sent('task_assigned').find(p => p.d.playerId === 'A')!.d.tasks[0].id;
+        const deB = sent('task_assigned').find(p => p.d.playerId === 'B')!.d.tasks[0].id;
+        expect(deA).toBe('t1');
+        expect(['t2', 't3']).toContain(deB);
+    });
+
+    it('task_updated leva os itens contados (ci)', async () => {
+        await conn(4000, 'A', 'Ana', roomId);
+        await send(4000, 'task_catalog_register', { tasks: CATALOGO });
+        await send(4000, 'task_assign_request');
+        await send(4000, 'task_progress', { taskId: 't1', itemId: 'a' });
+
+        expect(sent('task_updated', 4000)[0].d).toMatchObject({ taskId: 't1', ci: ['a'] });
+    });
+
+    // ── Saída ──────────────────────────────────────────────
+
+    it('leave_room libera a vaga na hora e avisa quem ficou', async () => {
+        await conn(4000, 'A', 'Ana', roomId);
+        await conn(4001, 'B', 'Bia', roomId);
+        state.send.mockClear();
+
+        await send(4001, 'leave_room');
+
+        expect(manager.getSession(rinfoOf(4001))).toBeUndefined();
+        expect(sent('player_disconnected', 4000)[0].d).toEqual({ id: 'B' });
+        expect(sent('room_roster', 4000)[0].d).toEqual({ p: [{ id: 'A', n: 'Ana' }] });
+        expect(state.registry.canJoin(roomId, 'C')).toBe('OK');
+    });
+
+    it('a tarefa de quem saiu vai para o jogador que estava sem tarefa', async () => {
+        state.registry = new RoomRegistry();
+        roomId = state.registry.create('Sala').id;
+        await conn(4000, 'A', 'Ana', roomId);
+        await send(4000, 'task_catalog_register', { tasks: [CATALOGO[0]] }); // só 1 tarefa
+        await send(4000, 'task_assign_request');
+        await send(4000, 'task_progress', { taskId: 't1', itemId: 'a' });
+        await conn(4001, 'B', 'Bia', roomId);
+        await send(4001, 'task_assign_request'); // nada livre
+        expect(sent('task_assigned').filter(p => p.d.playerId === 'B')).toHaveLength(0);
+
+        await send(4000, 'leave_room');
+
+        const paraB = sent('task_assigned', 4001).filter(p => p.d.playerId === 'B');
+        expect(paraB).toHaveLength(1);
+        expect(paraB[0].d.tasks[0]).toMatchObject({ id: 't1', currentProgress: 1, ci: ['a'] });
+    });
+
+    it('sessão inativa é removida como uma saída normal', async () => {
+        await conn(4000, 'A', 'Ana', roomId);
+        await conn(4001, 'B', 'Bia', roomId);
+        state.send.mockClear();
+
+        manager.getSession(rinfoOf(4001))!.lastSeen = Date.now() - 35_000;
+        (manager as any).cleanupSessions();
+
+        expect(manager.getRoomSessionCount(roomId)).toBe(1);
+        expect(sent('player_disconnected', 4000)[0].d).toEqual({ id: 'B' });
+    });
+
+    it('sala vazia além do TTL some e o estado dela é descartado', async () => {
+        await conn(4000, 'A', 'Ana', roomId);
+        await send(4000, 'task_catalog_register', { tasks: CATALOGO });
+        await send(4000, 'leave_room');
+
+        (manager as any).cleanupSessions(Date.now() + EMPTY_ROOM_TTL_MS + 1000);
+
+        expect(state.registry.get(roomId)).toBeUndefined();
+        expect(state.tasks.getRoomSnapshot(roomId)).toEqual([]);
+        expect(state.clock.resetRoom).toHaveBeenCalledWith(roomId);
+    });
+
+    // ── Andar e NPC ────────────────────────────────────────
+
+    it('player_move repassa o andar para os outros', async () => {
+        await conn(4000, 'A', 'Ana', roomId);
+        await conn(4001, 'B', 'Bia', roomId);
+        await send(4000, 'player_move', { p: [0, 0, 0], r: 0, f: 3 });
+
+        expect(sent('player_move', 4001)[0].d).toEqual({ id: 'A', p: [0, 0, 0], r: 0, f: 3 });
+    });
+
+    it('mestre do NPC passa para quem ficou no andar quando o mestre sai', async () => {
+        await conn(4000, 'A', 'Ana', roomId);
+        await conn(4001, 'B', 'Bia', roomId);
+        await send(4000, 'npc_register', { id: 'chefe', type: 'boss', p: [0, 0, 0], r: 0, f: 1 });
+        await send(4001, 'npc_register', { id: 'chefe', type: 'boss', p: [0, 0, 0], r: 0, f: 1 });
+        expect(NpcRegisterHandler.getMaster(roomId, 'chefe')).toBe('A');
+        state.send.mockClear();
+
+        await send(4000, 'leave_room');
+
+        expect(NpcRegisterHandler.getMaster(roomId, 'chefe')).toBe('B');
+        expect(sent('npc_registered', 4001)[0].d).toMatchObject({ id: 'chefe', isMaster: true });
+    });
+
+    it('mestre do NPC que sobe de andar passa a vez para quem ficou', async () => {
+        await conn(4000, 'A', 'Ana', roomId);
+        await conn(4001, 'B', 'Bia', roomId);
+        await send(4000, 'npc_register', { id: 'chefe', type: 'boss', p: [0, 0, 0], r: 0, f: 1 });
+
+        await send(4000, 'player_move', { p: [0, 0, 0], r: 0, f: 2 });
+
+        expect(NpcRegisterHandler.getMaster(roomId, 'chefe')).toBe('B');
     });
 });
