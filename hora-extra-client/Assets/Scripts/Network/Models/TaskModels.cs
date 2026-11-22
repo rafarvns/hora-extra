@@ -72,6 +72,9 @@ namespace HoraExtra.Network.Models
         [JsonProperty("targetCount")]     public int    TargetCount;
         [JsonProperty("currentProgress")] public int    CurrentProgress;
         [JsonProperty("status")]          public string Status;
+
+        /// <summary>Itens já contados nesta tarefa (nível sala) — continua de onde o outro parou.</summary>
+        [JsonProperty("ci")] public List<string> CollectedItems = new List<string>();
     }
 
     /// <summary>
@@ -168,5 +171,47 @@ namespace HoraExtra.Network.Models
         [JsonProperty("taskId")]          public string TaskId;
         [JsonProperty("currentProgress")] public int    CurrentProgress;
         [JsonProperty("status")]          public string Status;
+
+        /// <summary>Itens contados na tarefa (nível sala). Pode faltar em start/complete.</summary>
+        [JsonProperty("ci")] public List<string> CollectedItems;
+    }
+
+    /// <summary>
+    /// Linha do retrato da sala (room_state.t). Estado COMPARTILHADO de uma tarefa.
+    /// Shape: { id, s: status, p: progresso, ci: itens contados, h: dono|null }
+    /// </summary>
+    [Serializable]
+    public class RoomTaskState
+    {
+        [JsonProperty("id")] public string Id;
+        [JsonProperty("s")]  public string Status;
+        [JsonProperty("p")]  public int    Progress;
+        [JsonProperty("ci")] public List<string> CollectedItems = new List<string>();
+        [JsonProperty("h")]  public string Holder;
+
+        public bool IsClosed => Status == "completed" || Status == "failed";
+    }
+
+    /// <summary>Jogador já presente na sala (room_state.pl).</summary>
+    [Serializable]
+    public class RoomPlayerState
+    {
+        [JsonProperty("id")] public string Id;
+        [JsonProperty("n")]  public string Name;
+        /// <summary>Última posição conhecida; null se ele ainda não andou.</summary>
+        [JsonProperty("p")]  public float[] Position;
+        [JsonProperty("r")]  public float  RotationY;
+        [JsonProperty("f")]  public int    Floor = 1;
+    }
+
+    /// <summary>
+    /// Retrato da sala enviado a quem acabou de entrar (S→C unicast, logo após CONN_SUCCESS).
+    /// Shape: { t: RoomTaskState[], pl: RoomPlayerState[] }
+    /// </summary>
+    [Serializable]
+    public class RoomStatePayload
+    {
+        [JsonProperty("t")]  public List<RoomTaskState>   Tasks   = new List<RoomTaskState>();
+        [JsonProperty("pl")] public List<RoomPlayerState> Players = new List<RoomPlayerState>();
     }
 }

@@ -26,7 +26,7 @@ namespace HoraExtra.Settings
         /// <summary>Disparado depois de qualquer alteração (já salva e aplicada).</summary>
         public static event Action OnChanged;
 
-        /// <summary>Apelido exibido para os colegas. Vazio = nome aleatório.</summary>
+        /// <summary>Último nome digitado ao entrar numa sala (pré-preenche o campo do menu).</summary>
         public static string Nickname
         {
             get => PlayerPrefs.GetString(KEY_NICKNAME, string.Empty);
@@ -77,17 +77,6 @@ namespace HoraExtra.Settings
         {
             get => PlayerPrefs.GetString(KEY_SERVER, string.Empty);
             set { SetString(KEY_SERVER, value ?? string.Empty); BackendConfig.ApplyPreset(ServerPreset); }
-        }
-
-        /// <summary>Nome a mandar no handshake: conta logada → apelido → null (o chamador sorteia).</summary>
-        public static string ResolvePlayerName()
-        {
-            var session = SessionManager.Instance;
-            if (session != null && session.IsLoggedIn && session.CurrentPlayer != null
-                && !string.IsNullOrWhiteSpace(session.CurrentPlayer.Nome))
-                return session.CurrentPlayer.Nome;
-
-            return string.IsNullOrWhiteSpace(Nickname) ? null : Nickname;
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]

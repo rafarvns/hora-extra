@@ -25,5 +25,7 @@ namespace HoraExtra.Network.Models
         public float r;
         public string name;
         public bool isMaster;
+        /// <summary>Andar do NPC (1/2/3): o mestre é sempre alguém no mesmo andar.</summary>
+        public int f;
     }
 }

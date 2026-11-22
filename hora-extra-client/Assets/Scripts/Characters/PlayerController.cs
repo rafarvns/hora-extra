@@ -55,6 +55,9 @@ namespace HoraExtra.Characters
         private bool _canMove = true;
         private bool _isSprinting = false;
 
+        /// <summary>Envia a posição no próximo tick mesmo parado (chegada no andar, teleporte).</summary>
+        private bool _forceSend;
+
         public float CurrentStamina => _playerStamina != null ? _playerStamina.CurrentStamina : 100f;
         public float MaxStamina => _playerStamina != null ? _playerStamina.MaxStamina : 100f;
         
@@ -88,30 +91,43 @@ namespace HoraExtra.Characters
             // o GameObject do SocketManager pré-configurado: no fluxo normal ele já veio do
             // menu via DontDestroyOnLoad, mas abrir a cena direto no Editor deixaria Instance
             // nulo e esta linha lançaria NullReferenceException antes do jogador andar.
-            SocketManager.EnsureExists().On(NetworkEvents.PLAYER_MOVE, (data) => {
-                if (!_onlyMoveViaNetwork) return;
-                
-                string id = data["id"]?.ToString();
-                if (id == SocketManager.Instance.LocalPlayerId) {
-                    var pos = data["p"];
-                    Vector3 serverPos = new Vector3((float)pos[0], (float)pos[1], (float)pos[2]);
-                    
-                    if (Vector3.Distance(transform.position, serverPos) > _reconciliationThreshold)
-                    {
-                        Debug.Log($"[NETWORK] Reconciliação necessária: Diff {Vector3.Distance(transform.position, serverPos):F2}m. Snapping.");
-                        _characterController.enabled = false;
-                        transform.position = serverPos;
-                        _characterController.enabled = true;
-                    }
-                }
-            });
+            // Handler nomeado (e removido no OnDestroy): uma lambda aqui ficava presa no
+            // SocketManager a cada troca de andar e quebrava ao acessar o Player destruído.
+            SocketManager.EnsureExists().On(NetworkEvents.PLAYER_MOVE, OnServerMove);
 
             // Inicializa última posição para evitar salto no primeiro frame
             _lastSentPosition = transform.position;
             _lastSentRotation = transform.eulerAngles.y;
 
+            // Acabou de chegar no andar: anuncia posição e andar já, mesmo parado.
+            _forceSend = true;
+
             // Tenta aterrar o player no início para evitar o bug de "flutuar" na cena
             SnapToGround();
+        }
+
+        private void OnDestroy()
+        {
+            SocketManager.Instance?.Off(NetworkEvents.PLAYER_MOVE, OnServerMove);
+        }
+
+        /// <summary>Reconciliação: o servidor devolveu a nossa própria posição.</summary>
+        private void OnServerMove(Newtonsoft.Json.Linq.JToken data)
+        {
+            if (!_onlyMoveViaNetwork || this == null) return;
+
+            string id = data["id"]?.ToString();
+            if (id != SocketManager.Instance.LocalPlayerId) return;
+
+            var pos = data["p"];
+            Vector3 serverPos = new Vector3((float)pos[0], (float)pos[1], (float)pos[2]);
+            if (Vector3.Distance(transform.position, serverPos) > _reconciliationThreshold)
+            {
+                Debug.Log($"[NETWORK] Reconciliação necessária: Diff {Vector3.Distance(transform.position, serverPos):F2}m. Snapping.");
+                _characterController.enabled = false;
+                transform.position = serverPos;
+                _characterController.enabled = true;
+            }
         }
 
         /// <summary>
@@ -155,8 +171,9 @@ namespace HoraExtra.Characters
             bool hasMoved = Vector3.Distance(transform.position, _lastSentPosition) > 0.05f;
             bool hasRotated = Mathf.Abs(transform.eulerAngles.y - _lastSentRotation) > 0.5f;
 
-            if (hasMoved || hasRotated)
+            if (hasMoved || hasRotated || _forceSend)
             {
+                _forceSend = false;
                 EmitMovement();
                 _nextNetworkTick = Time.time + (1f / _networkTickRate);
                 _lastSentPosition = transform.position;
@@ -170,13 +187,11 @@ namespace HoraExtra.Characters
             var payload = new
             {
                 p = new float[] { transform.position.x, transform.position.y, transform.position.z },
-                r = transform.eulerAngles.y
+                r = transform.eulerAngles.y,
+                f = HoraExtra.Network.FloorTracker.CurrentFloor, // andar: o colega só nos vê no mesmo andar
             };
 
-            // SocketManager deve ser o Singleton central
-            // Usamos System.Action ou chamada direta se o SocketManager expuser.
-            // Conforme client-design-pattern.md: SocketManager.Instance.Emit
-            SocketManager.Instance.Emit(NetworkEvents.PLAYER_MOVE, payload);
+            SocketManager.Instance?.Emit(NetworkEvents.PLAYER_MOVE, payload);
         }
 
         /// <summary>
@@ -283,6 +298,7 @@ namespace HoraExtra.Characters
             _lastSentPosition = position;
             _lastSentRotation = transform.eulerAngles.y;
             _characterController.enabled = true;
+            _forceSend = true; // o colega precisa saber da posição nova
         }
 
         /// <summary>

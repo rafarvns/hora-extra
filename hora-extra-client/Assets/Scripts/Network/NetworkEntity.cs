@@ -43,11 +43,21 @@ namespace HoraExtra.Network
             if (string.IsNullOrEmpty(_networkId))
                 _networkId = gameObject.name; // Usar apenas o nome para consistência entre clientes
 
+            // Sem conexão (cena aberta direto no Editor): o NPC roda só local.
+            if (SocketManager.Instance == null) { _isMaster = true; return; }
+
             // Sincronizar com o SocketManager
             SocketManager.Instance.On(NetworkEvents.NPC_MOVE, OnMoveReceived);
             SocketManager.Instance.On(NetworkEvents.NPC_REGISTERED, OnRegistered); // Usar handler específico para registro
-            
+
             RegisterOnServer();
+        }
+
+        private void OnDestroy()
+        {
+            // Sem isto os handlers ficavam presos no SocketManager a cada troca de andar.
+            SocketManager.Instance?.Off(NetworkEvents.NPC_MOVE, OnMoveReceived);
+            SocketManager.Instance?.Off(NetworkEvents.NPC_REGISTERED, OnRegistered);
         }
 
         private void RegisterOnServer()
@@ -58,7 +68,8 @@ namespace HoraExtra.Network
                 type = _entityType,
                 p = new float[] { transform.position.x, transform.position.y, transform.position.z },
                 r = transform.eulerAngles.y,
-                name = gameObject.name
+                name = gameObject.name,
+                f = FloorTracker.FloorOf(gameObject.scene.name),
             };
 
             SocketManager.Instance.Emit(NetworkEvents.NPC_REGISTER, payload);
@@ -70,15 +81,23 @@ namespace HoraExtra.Network
             string receivedId = data["id"]?.ToString();
             if (receivedId != _networkId) return;
 
-            // Define se eu sou o Mestre deste NPC (autoridade de IA)
-            _isMaster = data["isMaster"]?.Value<bool>() ?? false;
-            
+            // Define se eu sou o Mestre deste NPC (autoridade de IA). O servidor também manda
+            // isMaster:true quando o mestre anterior sai ou troca de andar.
+            if (data["isMaster"] != null)
+                _isMaster = data["isMaster"].Value<bool>();
+
             if (_isMaster)
                 Debug.Log($"[NETWORK] Eu sou o MASTER para {_networkId}. Controlando IA local.");
             else
                 Debug.Log($"[NETWORK] {_networkId} registrado. Sincronia passiva ativada.");
 
-            // Sincroniza a posição inicial vinda do servidor
+            // Virou mestre no meio do caminho: continua de onde o NPC está, sem voltar ao início.
+            if (_isMaster && data["p"] == null)
+            {
+                _targetPosition = transform.position;
+                _targetRotation = transform.eulerAngles.y;
+            }
+
             UpdateTargetFromToken(data);
         }
 

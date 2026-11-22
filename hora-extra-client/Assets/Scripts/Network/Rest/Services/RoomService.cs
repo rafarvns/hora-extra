@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -6,53 +5,34 @@ using HoraExtra.Network.Models;
 
 namespace HoraExtra.Network.Rest.Services
 {
-    /**
-     * Serviço responsável pela comunicação com os endpoints de Salas (/rooms).
-     */
-    public class RoomService
+    /// <summary>
+    /// Endpoints de entrada no jogo: sessão só com o nome (/session) e salas (/rooms).
+    /// Não há cadastro nem login.
+    /// </summary>
+    public static class RoomService
     {
-        private const string RoomsEndpoint = "/rooms";
+        private const string ROOMS = "/rooms";
+        private const string SESSION = "/session";
 
-        /// <summary>
-        /// Obtém a lista de salas abertas do servidor.
-        /// </summary>
-        public async Task<ApiResponse<List<RoomData>>> GetRooms()
+        /// <summary>Lista as salas abertas (mais novas primeiro).</summary>
+        public static Task<ApiResponse<List<RoomData>>> GetRooms()
         {
-            try
-            {
-                Debug.Log("[RoomService] Buscando lista de salas...");
-                var response = await ApiClient.Get<List<RoomData>>(RoomsEndpoint);
-                return response;
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"[RoomService] Erro ao buscar salas: {ex.Message}");
-                return null;
-            }
+            Debug.Log("[NETWORK] RoomService — buscando salas...");
+            return ApiClient.Get<List<RoomData>>(ROOMS);
         }
 
-        /// <summary>
-        /// Solicita a criação de uma nova sala.
-        /// </summary>
-        public async Task<ApiResponse<RoomData>> CreateRoom(string roomName, string hostId)
+        /// <summary>Cria uma sala vazia; quem cria entra em seguida pelo CONN.</summary>
+        public static Task<ApiResponse<RoomData>> CreateRoom(string nome)
         {
-            try
-            {
-                var requestBody = new CreateRoomRequest
-                {
-                    Nome = roomName,
-                    HostId = hostId
-                };
+            Debug.Log($"[NETWORK] RoomService — criando sala '{nome}'...");
+            return ApiClient.Post<RoomData>(ROOMS, new NomeRequest { Nome = nome });
+        }
 
-                Debug.Log($"[RoomService] Criando sala: {roomName}...");
-                var response = await ApiClient.Post<RoomData>(RoomsEndpoint, requestBody);
-                return response;
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"[RoomService] Erro ao criar sala: {ex.Message}");
-                return null;
-            }
+        /// <summary>Abre a sessão do jogador com o nome digitado e devolve o token.</summary>
+        public static Task<ApiResponse<SessionData>> CreateSession(string nome)
+        {
+            Debug.Log($"[NETWORK] RoomService — abrindo sessão para '{nome}'...");
+            return ApiClient.Post<SessionData>(SESSION, new NomeRequest { Nome = nome });
         }
     }
 }

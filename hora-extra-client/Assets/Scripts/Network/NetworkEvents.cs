@@ -1,23 +1,17 @@
 /**
  * NetworkEvents: Centraliza os nomes dos eventos do Socket de forma estática.
  *
- * Fluxo Guest Mode (2-player sem cadastro):
- *   1. UI chama GuestService.JoinAsGuest() → POST /api/auth/guest → recebe { token, guestId, roomId }.
- *   2. UI seta GuestSession.IsGuestMode = true e GuestSession.GuestRoomId = roomId.
- *   3. UI chama SocketManager.Instance.SetAuthTokenAndReconnect(token).
- *   4. SocketManager envia CONN com o JWT guest.
- *   5. Servidor detecta prefixo "guest-" no decoded.id e auto-joina "guest-room".
- *   6. Servidor responde CONN_SUCCESS + room_joined automaticamente.
- *   7. Nenhum evento novo é necessário — todos os eventos abaixo são reaproveitados.
- *
- * Nenhuma constante nova foi adicionada para o fluxo guest; os eventos existentes
- * (CONN_SUCCESS, ROOM_JOINED, PLAYER_JOINED, PLAYER_MOVE, etc.) cobrem todo o ciclo.
+ * Entrada numa partida (ver MatchJoinFlow e COMMUNICATION.md):
+ *   1. POST /api/session { nome } → { token, playerId, nome }.
+ *   2. POST /api/rooms { nome } (só quem cria) → { id }.
+ *   3. CONN { token, d: { roomId } } → CONN_SUCCESS + ROOM_STATE, ou CONN_ERROR { code }.
+ *   4. Ao sair: LEAVE_ROOM (libera a vaga na hora).
  */
 public static class NetworkEvents
 {
     // Cliente -> Servidor
-    public const string JOIN_ROOM = "join_room";
-    public const string PLAYER_INPUT = "player_input";
+    public const string CONN = "CONN";
+    public const string LEAVE_ROOM = "leave_room";
     public const string PLAYER_MOVE = "player_move";
     public const string PLAYER_SPRINT = "player_sprint";
     public const string NPC_REGISTER = "npc_register";
@@ -36,10 +30,19 @@ public static class NetworkEvents
     public const string SHIFT_CLOCK_REQUEST = "shift_clock_request";
 
     // Servidor -> Cliente
+    public const string CONN_SUCCESS = "CONN_SUCCESS";
+    public const string CONN_ERROR = "CONN_ERROR";
+
+    /// <summary>Evento local (disparado pelo SocketManager) quando o CONN é aceito.</summary>
     public const string CONNECTION_SUCCESS = "connection_success";
-    public const string ROOM_JOINED = "room_joined";
+
+    /// <summary>
+    /// Retrato da sala para quem acabou de entrar (unicast, logo após CONN_SUCCESS).
+    /// Payload: { t: [{ id, s, p, ci, h }], pl: [{ id, n, p, r, f }] } — ver RoomStatePayload.
+    /// </summary>
+    public const string ROOM_STATE = "room_state";
+
     public const string PLAYER_JOINED = "player_joined";
-    public const string STATE_UPDATE = "state_update";
     public const string NPC_MOVE = "npc_move";
     public const string NPC_REGISTERED = "npc_registered";
     public const string PLAYER_DISCONNECTED = "player_disconnected";

@@ -1,38 +1,37 @@
 using System;
 using Newtonsoft.Json;
-using System.Collections.Generic;
 
 namespace HoraExtra.Network.Models
 {
+    /// <summary>
+    /// Sala na lista do menu (GET /api/rooms).
+    /// Shape: { id, nome, jogadores, max, emAndamento }
+    /// </summary>
     [Serializable]
     public class RoomData
     {
-        [JsonProperty("id")]
-        public string Id;
+        [JsonProperty("id")]          public string Id;
+        [JsonProperty("nome")]        public string Nome;
+        [JsonProperty("jogadores")]   public int    Jogadores;
+        [JsonProperty("max")]         public int    Max;
+        [JsonProperty("emAndamento")] public bool   EmAndamento;
 
-        [JsonProperty("nome")]
-        public string Nome;
-
-        [JsonProperty("hostId")]
-        public string HostId;
-
-        [JsonProperty("playerCount")]
-        public int PlayerCount;
-
-        [JsonProperty("maxPlayers")]
-        public int MaxPlayers;
-
-        [JsonProperty("status")]
-        public string Status;
+        public bool Cheia => Jogadores >= Max;
     }
 
+    /// <summary>Corpo de POST /api/rooms e de POST /api/session: { nome }.</summary>
     [Serializable]
-    public class CreateRoomRequest
+    public class NomeRequest
     {
-        [JsonProperty("nome")]
-        public string Nome;
+        [JsonProperty("nome")] public string Nome;
+    }
 
-        [JsonProperty("hostId")]
-        public string HostId;
+    /// <summary>Resposta de POST /api/session: { token, playerId, nome }.</summary>
+    [Serializable]
+    public class SessionData
+    {
+        [JsonProperty("token")]    public string Token;
+        [JsonProperty("playerId")] public string PlayerId;
+        [JsonProperty("nome")]     public string Nome;
     }
 }
