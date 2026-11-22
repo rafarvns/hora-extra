@@ -702,3 +702,67 @@ describe('TaskService — getTotalTaskCount', () => {
         expect(service.getTotalTaskCount('p1')).toBe(0);
     });
 });
+
+// ────────────────────────────────────────────────────────────
+// TaskService — tarefas do Financeiro (3º andar)
+//
+// Nenhuma lógica nova no servidor: estes casos fixam o contrato que o cliente usa.
+//   - Tarefa 6 (cofres): `items` = os dois cofres; cada recolhimento de 10 s manda
+//     um task_progress com o itemId do cofre. A senha é conferida no cliente.
+//   - Tarefa 7 (e-mail): par start_interaction → complete_attempt { success: true }.
+// ────────────────────────────────────────────────────────────
+describe('TaskService — tarefas do Financeiro', () => {
+    let service: TaskService;
+
+    beforeEach(() => {
+        service = makeService();
+    });
+
+    it('cofres: conta cada cofre uma vez e completa com os dois', () => {
+        service.registerCatalog('r1', [
+            {
+                id: 'task-cofres-01',
+                description: '(3º andar) Abra os cofres e recolha o dinheiro',
+                type: 'open_safe_collect_money',
+                targetCount: 2,
+                items: ['cofre-direito', 'cofre-esquerdo'],
+            },
+        ]);
+        service.assignRandomTasks('r1', 'p1');
+
+        const primeiro = service.incrementProgress('p1', 'task-cofres-01', 'cofre-direito', 'cofre');
+        expect(primeiro.currentProgress).toBe(1);
+        expect(primeiro.status).toBe('in_progress');
+
+        let repetido: unknown;
+        try {
+            service.incrementProgress('p1', 'task-cofres-01', 'cofre-direito', 'cofre');
+        } catch (err) {
+            repetido = err;
+        }
+        expect(repetido).toBeInstanceOf(TaskRejectionError);
+        expect((repetido as TaskRejectionError).code).toBe('ALREADY_COUNTED');
+
+        const segundo = service.incrementProgress('p1', 'task-cofres-01', 'cofre-esquerdo', 'cofre');
+        expect(segundo.currentProgress).toBe(2);
+        expect(segundo.status).toBe('completed');
+    });
+
+    it('e-mail: start → complete_attempt(true) conclui a tarefa', () => {
+        service.registerCatalog('r1', [
+            {
+                id: 'task-enviar-email-01',
+                description: '(3º andar) Envie o e-mail pendente no computador do Financeiro',
+                type: 'send_email_upload',
+                targetCount: 1,
+            },
+        ]);
+        service.assignRandomTasks('r1', 'p1');
+
+        expect(service.startTask('p1', 'task-enviar-email-01').status).toBe('in_progress');
+
+        const resolvida = service.resolveTask('p1', 'task-enviar-email-01', true);
+        expect(resolvida.status).toBe('completed');
+        expect(resolvida.currentProgress).toBe(1);
+    });
+});
