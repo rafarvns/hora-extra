@@ -131,6 +131,20 @@ sem nenhuma tarefa):
 | `pairs` com entrada sem `itemId` ou sem `slotId` | entrada filtrada + `warn` |
 | filtragem esvazia o campo | campo inteiro descartado + `warn` (lista vazia é indistinguível de ausente) |
 
+#### Exemplos: tarefas do Financeiro (3º andar)
+
+O servidor não restringe os valores de `type`; eles só precisam bater com o cliente
+(`TaskPresentation`). As duas tarefas do Financeiro usam os eventos já existentes, sem payload novo:
+
+| `id` | `type` | `targetCount` | `items` | Fluxo |
+| :--- | :----- | :------------ | :------ | :---- |
+| `task-cofres-01` | `open_safe_collect_money` | 2 | `cofre-direito`, `cofre-esquerdo` | um `task_progress { taskId, itemId, slotId: "cofre" }` ao fim de cada recolhimento (~10 s) |
+| `task-enviar-email-01` | `send_email_upload` | 1 | — | `task_start_interaction` ao abrir o computador (se `pending`) → `task_complete_attempt { success: true }` ao fim da barra de envio |
+
+Limitação conhecida e aceita: a **senha do cofre** (1512 / 2803) e os **10 s de recolhimento**
+são conferidos só no cliente. O servidor garante apenas que cada cofre conta uma vez
+(`ALREADY_COUNTED`) e que só cofres declarados contam (`UNKNOWN_ITEM`).
+
 ### TaskRejectionCode (campo `code` em `task_rejected`)
 
 ```ts
