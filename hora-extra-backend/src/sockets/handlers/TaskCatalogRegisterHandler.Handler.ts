@@ -49,12 +49,13 @@ export class TaskCatalogRegisterHandler implements ISocketHandler {
             return;
         }
 
-        // 3. Sanitizar items/pairs e registrar catálogo via TaskService (payload sem npcId)
+        // 3. Sanitizar items/pairs e registrar catálogo via TaskService (payload sem npcId).
+        //    Só o primeiro catálogo da sala vale — quem entra depois não zera o progresso.
         const taskService = ServiceFactory.getTaskService();
         const sanitized = data.tasks.map(task => this.sanitizeEntry(task, session.roomId));
-        taskService.registerCatalog(session.roomId, sanitized);
+        const registrou = taskService.registerCatalog(session.roomId, sanitized);
 
-        logger.info(`[UDP_SOCKET] task_catalog_register recebido: ${data.tasks.length} tarefas para sala ${session.roomId}`, { module: 'UDP_SOCKET' });
+        logger.info(`[UDP_SOCKET] task_catalog_register: ${data.tasks.length} tarefas para sala ${session.roomId}${registrou ? '' : ' (já havia catálogo — mantido)'}`, { module: 'UDP_SOCKET' });
     }
 
     /**

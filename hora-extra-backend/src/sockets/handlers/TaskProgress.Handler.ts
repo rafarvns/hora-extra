@@ -86,6 +86,7 @@ export class TaskProgressHandler implements ISocketHandler {
             taskId: task.id,
             currentProgress: task.currentProgress,
             status: task.status,
+            ci: task.ci, // itens contados (nível sala) — o mundo dos outros reflete
         };
         server.broadcastToRoom(session.roomId, 'task_updated', broadcastPayload);
 

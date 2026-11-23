@@ -53,6 +53,10 @@ namespace HoraExtra.Audio
 
             _instance = this;
 
+            // Sobrevive à troca de cena: o clique de "Criar sala" toca no mesmo frame em que o
+            // menu carrega o 1º andar, e um tocador preso à cena antiga cortaria o som.
+            DontDestroyOnLoad(gameObject);
+
             _source = GetComponent<AudioSource>();
             if (_source == null)
                 _source = gameObject.AddComponent<AudioSource>();

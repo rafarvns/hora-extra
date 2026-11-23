@@ -50,6 +50,7 @@ export class TaskStartInteractionHandler implements ISocketHandler {
             taskId: task.id,
             currentProgress: task.currentProgress,
             status: task.status,
+            ci: task.ci,
         };
         server.broadcastToRoom(session.roomId, 'task_updated', broadcastPayload);
 

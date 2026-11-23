@@ -27,6 +27,8 @@ namespace HoraExtra.Interactions
         /// </summary>
         public static bool InteractPressed()
         {
+            if (PlayerActionLock.IsBusy) return false;
+
 #if ENABLE_INPUT_SYSTEM
             if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
                 return true;
@@ -46,6 +48,8 @@ namespace HoraExtra.Interactions
         /// </summary>
         public static bool InteractHeld()
         {
+            if (PlayerActionLock.IsBusy) return false;
+
 #if ENABLE_INPUT_SYSTEM
             if (Keyboard.current != null && Keyboard.current.eKey.isPressed)
                 return true;
@@ -67,6 +71,8 @@ namespace HoraExtra.Interactions
         /// </summary>
         public static bool DropPressed()
         {
+            if (PlayerActionLock.IsBusy) return false;
+
 #if ENABLE_INPUT_SYSTEM
             if (Keyboard.current != null && Keyboard.current.qKey.wasPressedThisFrame)
                 return true;
@@ -86,6 +92,8 @@ namespace HoraExtra.Interactions
         /// </summary>
         public static bool ThrowPressed()
         {
+            if (PlayerActionLock.IsBusy) return false;
+
 #if ENABLE_INPUT_SYSTEM
             if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
                 return true;
@@ -105,6 +113,8 @@ namespace HoraExtra.Interactions
         /// </summary>
         public static bool InteractReleased()
         {
+            if (PlayerActionLock.IsBusy) return false;
+
 #if ENABLE_INPUT_SYSTEM
             if (Keyboard.current != null && Keyboard.current.eKey.wasReleasedThisFrame)
                 return true;
@@ -117,5 +127,100 @@ namespace HoraExtra.Interactions
 
             return false;
         }
+
+        // =====================================================================
+        // Leituras de UI (teclado do cofre, painel do computador, elevador).
+        // NÃO passam pelo bloqueio da PlayerActionLock: quem está com a trava é
+        // justamente quem precisa ler estas teclas.
+        // =====================================================================
+
+        /// <summary>
+        /// True no frame em que um dígito 0–9 foi pressionado (linha de cima ou numpad).
+        /// </summary>
+        public static bool DigitPressed(out int digit)
+        {
+#if ENABLE_INPUT_SYSTEM
+            var kb = Keyboard.current;
+            if (kb != null)
+            {
+                for (int i = 0; i <= 9; i++)
+                {
+                    if (kb[DigitKey(i)].wasPressedThisFrame || kb[NumpadKey(i)].wasPressedThisFrame)
+                    {
+                        digit = i;
+                        return true;
+                    }
+                }
+            }
+#endif
+
+#if ENABLE_LEGACY_INPUT_MANAGER
+            for (int i = 0; i <= 9; i++)
+            {
+                if (Input.GetKeyDown(KeyCode.Alpha0 + i) || Input.GetKeyDown(KeyCode.Keypad0 + i))
+                {
+                    digit = i;
+                    return true;
+                }
+            }
+#endif
+
+            digit = -1;
+            return false;
+        }
+
+        /// <summary>True no frame em que [Backspace] foi pressionada.</summary>
+        public static bool BackspacePressed()
+        {
+#if ENABLE_INPUT_SYSTEM
+            if (Keyboard.current != null && Keyboard.current.backspaceKey.wasPressedThisFrame)
+                return true;
+#endif
+
+#if ENABLE_LEGACY_INPUT_MANAGER
+            if (Input.GetKeyDown(KeyCode.Backspace))
+                return true;
+#endif
+
+            return false;
+        }
+
+        /// <summary>True no frame em que [Enter] (ou o Enter do numpad) foi pressionado.</summary>
+        public static bool SubmitPressed()
+        {
+#if ENABLE_INPUT_SYSTEM
+            if (Keyboard.current != null &&
+                (Keyboard.current.enterKey.wasPressedThisFrame || Keyboard.current.numpadEnterKey.wasPressedThisFrame))
+                return true;
+#endif
+
+#if ENABLE_LEGACY_INPUT_MANAGER
+            if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
+                return true;
+#endif
+
+            return false;
+        }
+
+        /// <summary>True no frame em que [Esc] foi pressionada — fechar painel.</summary>
+        public static bool CancelPressed()
+        {
+#if ENABLE_INPUT_SYSTEM
+            if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+                return true;
+#endif
+
+#if ENABLE_LEGACY_INPUT_MANAGER
+            if (Input.GetKeyDown(KeyCode.Escape))
+                return true;
+#endif
+
+            return false;
+        }
+
+#if ENABLE_INPUT_SYSTEM
+        private static Key DigitKey(int i) => i == 0 ? Key.Digit0 : Key.Digit1 + (i - 1);
+        private static Key NumpadKey(int i) => Key.Numpad0 + i;
+#endif
     }
 }

@@ -5,22 +5,33 @@ import { NpcRegisterHandler } from './handlers/NpcRegister.Handler.js';
 import { ServiceFactory } from '../core/factories/Service.Factory.js';
 import logger from '../utils/Logger.js';
 
-interface PlayerSession {
-    id: string; // ID do jogador (do banco de dados)
+export interface PlayerSession {
+    id: string; // ID do jogador (gerado em POST /api/session)
     address: string;
     port: number;
-    roomId?: string;
-    playerName?: string;
+    roomId: string;
+    playerName: string;
     lastPosition?: number[];
     lastRotation?: number;
+    /** Andar atual (1/2/3). Todos começam no 1º. */
+    floor: number;
     lastSeen: number;
     movePacketCount: number; // Contador para log não poluído
-    isSprinting?: boolean; // Novo campo para estado de corrida
+    isSprinting?: boolean;
 }
+
+/** Códigos de recusa do CONN (CONN_ERROR.code). */
+export type ConnErrorCode = 'INVALID_TOKEN' | 'ROOM_NOT_FOUND' | 'ROOM_FULL';
+
+/** Inatividade (ms) que derruba uma sessão. */
+const SESSION_TIMEOUT_MS = 30_000;
 
 /**
  * UdpSocketManager: Gerencia comunicações via UDP Datagram.
- * Substitui o Socket.IO para maior performance em sincronização de movimento.
+ *
+ * O primeiro pacote é sempre `CONN { token, d: { roomId } }`. O servidor confere o
+ * token (id + nome do jogador), a sala e a vaga (máx. 2 por sala) antes de criar a
+ * sessão. Quem entra recebe `room_state` com o retrato da sala (tarefas e jogadores).
  */
 export class UdpSocketManager {
     private static instance: UdpSocketManager;
@@ -45,8 +56,8 @@ export class UdpSocketManager {
         });
 
         this.server.bind(port);
-        
-        // Limpeza de sessões inativas (Timeout de 30 segundos)
+
+        // Limpeza de sessões inativas e salas vazias
         setInterval(() => this.cleanupSessions(), 10000);
     }
 
@@ -70,18 +81,15 @@ export class UdpSocketManager {
             const packet = JSON.parse(rawData);
             const { e: eventName, d: data, token } = packet;
 
-            const sessionKey = `${rinfo.address}:${rinfo.port}`;
-            let session = this.sessions.get(sessionKey);
-
             // 1. Autenticação/Handshake (Evento 'CONN')
             if (eventName === 'CONN') {
-                await this.handleConnection(rinfo, token, data);
+                this.handleConnection(rinfo, token, data);
                 return;
             }
 
             // 2. Verificar se a sessão existe para outros eventos
+            const session = this.sessions.get(this.keyOf(rinfo));
             if (!session) {
-                // Se não houver sessão, enviar erro de não autenticado
                 this.sendTo(rinfo, 'ERROR', { message: 'Not authenticated. Send CONN first.' });
                 return;
             }
@@ -92,12 +100,6 @@ export class UdpSocketManager {
             // 3. Roteamento para Handlers
             const handler = SocketHandlerFactory.createHandler(eventName);
             if (handler) {
-                if (eventName === 'player_move' && !session.roomId) {
-                    // Log silencioso ou esporádico para evitar flood se estiver enviando muito rápido sem sala
-                    if (session.movePacketCount % 100 === 0) {
-                        logger.warn(`Movimento ignorado: Jogador ${session.id} ainda não entrou em uma sala.`, { module: 'UDP_SOCKET' });
-                    }
-                }
                 await handler.handle(this, rinfo, data);
             } else {
                 logger.warn(`Evento desconhecido recebido via UDP: ${eventName}`, { module: 'UDP_SOCKET' });
@@ -107,86 +109,89 @@ export class UdpSocketManager {
         }
     }
 
-    private async handleConnection(rinfo: RemoteInfo, token: string, data: any): Promise<void> {
-        const sessionKey = `${rinfo.address}:${rinfo.port}`;
+    private handleConnection(rinfo: RemoteInfo, token: string, data: any): void {
+        const sessionKey = this.keyOf(rinfo);
 
-        if (!token) {
-            this.sendTo(rinfo, 'CONN_ERROR', { message: 'Token missing.' });
+        const claims = token ? authService.verifyToken(token) : null;
+        if (!claims || !claims.n) {
+            this.connError(rinfo, 'INVALID_TOKEN', 'Sessão inválida. Volte ao menu e entre de novo.');
             return;
         }
 
-        // --- BYPASS DE TESTE ---
-        const isDev = process.env.NODE_ENV === 'development';
-        const devToken = process.env.DEV_TEST_TOKEN;
-        const devPlayerId = process.env.DEV_TEST_USER_ID || 'dev-test-player';
+        const roomId = typeof data?.roomId === 'string' ? data.roomId : '';
+        const registry = ServiceFactory.getRoomRegistry();
+        const check = registry.canJoin(roomId, claims.id);
+        if (check === 'ROOM_NOT_FOUND') {
+            this.connError(rinfo, check, 'A sala não existe mais.');
+            return;
+        }
+        if (check === 'ROOM_FULL') {
+            this.connError(rinfo, check, 'A sala está cheia.');
+            return;
+        }
 
-        let playerId: string;
-
-        if (isDev && devToken && token === devToken) {
-            playerId = devPlayerId;
-        } else {
-            const decoded = authService.verifyToken(token);
-            if (!decoded) {
-                this.sendTo(rinfo, 'CONN_ERROR', { message: 'Invalid token.' });
-                return;
+        // Reconexão: a mesma pessoa (mesmo playerId) substitui a sessão antiga sem ocupar
+        // outra vaga e sem devolver a tarefa dela. Se a sessão antiga era de outra sala,
+        // é uma saída normal daquela sala.
+        let reconexao = false;
+        for (const [key, s] of [...this.sessions.entries()]) {
+            if (s.id !== claims.id) continue;
+            if (s.roomId === roomId) {
+                this.sessions.delete(key);
+                reconexao = true;
+            } else {
+                this.removeSession(key, 'trocou de sala');
             }
-            playerId = decoded.id;
         }
+        // Outro jogador usando o mesmo endereço:porta (cliente reiniciado) sai antes.
+        const ocupante = this.sessions.get(sessionKey);
+        if (ocupante) this.removeSession(sessionKey, 'endereço reutilizado');
 
-        // Determinar sala de auto-join
-        const isDevSession = isDev && devToken && token === devToken;
-        const isGuestSession = playerId.startsWith('guest-');
-
-        let autoJoinRoomId: string | undefined;
-        if (isDevSession) {
-            autoJoinRoomId = 'dev-room';
-        } else if (isGuestSession) {
-            autoJoinRoomId = 'guest-room';
-        }
-
-        // --- LAZY RESET para sala guest: se sala vazia, limpa estado de NPCs órfãos ---
-        if (isGuestSession && this.getRoomSessionCount('guest-room') === 0) {
-            logger.info(`[UDP_SOCKET] Sala guest-room vazia — executando lazy reset antes de ${playerId}`, { module: 'UDP_SOCKET' });
-            NpcRegisterHandler.clearRoomState('guest-room');
-        }
-
-        // Criar ou atualizar sessão
         const session: PlayerSession = {
-            id: playerId,
+            id: claims.id,
             address: rinfo.address,
             port: rinfo.port,
-            playerName: data?.playerName || (isDevSession ? 'DevPlayer' : 'Player'),
+            roomId,
+            playerName: claims.n,
+            floor: 1,
             lastSeen: Date.now(),
             movePacketCount: 0,
-            roomId: autoJoinRoomId,
         };
-
-        // --- LOGICA DE RESET para dev-room via campo resetRoom ---
-        if (data?.resetRoom && isDevSession) {
-            const roomIdToReset = session.roomId || 'dev-room';
-            logger.info(`[UDP_SOCKET] Solicitado RESET da sala '${roomIdToReset}' pelo jogador ${playerId}`, { module: 'UDP_SOCKET' });
-            this.resetRoomState(roomIdToReset);
-        }
-
         this.sessions.set(sessionKey, session);
+        registry.join(roomId, claims.id);
 
-        const wasHost = isGuestSession && session.roomId === 'guest-room';
-        logger.info(
-            `Sessão UDP iniciada: ${playerId} em ${sessionKey}${session.roomId ? ` (Auto-Join: ${session.roomId})` : ''}${isGuestSession ? ` [guest, host=${wasHost}]` : ''}`,
-            { module: 'UDP_SOCKET' },
-        );
+        logger.info(`Sessão UDP iniciada: ${claims.id} (${claims.n}) em ${sessionKey} → sala ${roomId}${reconexao ? ' [reconexão]' : ''}`, { module: 'UDP_SOCKET' });
 
-        this.sendTo(rinfo, 'CONN_SUCCESS', { id: playerId, sessionKey });
+        this.sendTo(rinfo, 'CONN_SUCCESS', { id: claims.id, sessionKey, roomId, n: claims.n });
+        this.sendTo(rinfo, 'room_state', this.buildRoomState(roomId, claims.id));
 
-        // Se for auto-join, confirmar para o cliente também
-        if (session.roomId) {
-            this.sendTo(rinfo, 'room_joined', {
-                roomId: session.roomId,
-                playerId: session.id,
-                message: isGuestSession ? 'Auto-joined guest-room.' : 'Auto-joined dev room.',
-            });
-            this.broadcastRoster(session.roomId);
+        if (!reconexao) {
+            this.broadcastToRoom(roomId, 'player_joined', { id: claims.id, name: claims.n }, rinfo);
         }
+        this.broadcastRoster(roomId);
+    }
+
+    private connError(rinfo: RemoteInfo, code: ConnErrorCode, message: string): void {
+        logger.info(`CONN recusado (${code}) para ${rinfo.address}:${rinfo.port}`, { module: 'UDP_SOCKET' });
+        this.sendTo(rinfo, 'CONN_ERROR', { code, message });
+    }
+
+    /**
+     * Retrato da sala para quem acabou de entrar: estado de todas as tarefas e os
+     * outros jogadores com a última posição e andar conhecidos.
+     */
+    public buildRoomState(roomId: string, exceptPlayerId?: string) {
+        const t = ServiceFactory.getTaskService().getRoomSnapshot(roomId);
+        const pl = this.getRoomSessions(roomId)
+            .filter(s => s.id !== exceptPlayerId)
+            .map(s => ({
+                id: s.id,
+                n: s.playerName,
+                p: s.lastPosition ?? null,
+                r: s.lastRotation ?? 0,
+                f: s.floor,
+            }));
+        return { t, pl };
     }
 
     /**
@@ -203,7 +208,7 @@ export class UdpSocketManager {
     /**
      * Broadcast para todos os jogadores em uma sala específica.
      */
-    public broadcastToRoom(roomId: string, eventName: string, data: any, exceptRinfo?: RemoteInfo): void {
+    public broadcastToRoom(roomId: string, eventName: string, data: any, exceptRinfo?: { address: string; port: number }): void {
         this.sessions.forEach(session => {
             if (session.roomId === roomId) {
                 if (exceptRinfo && session.address === exceptRinfo.address && session.port === exceptRinfo.port) {
@@ -217,37 +222,32 @@ export class UdpSocketManager {
     /**
      * Retorna a sessão associada a um endereço remoto.
      */
-    public getSession(rinfo: RemoteInfo): PlayerSession | undefined {
-        return this.sessions.get(`${rinfo.address}:${rinfo.port}`);
+    public getSession(rinfo: { address: string; port: number }): PlayerSession | undefined {
+        return this.sessions.get(this.keyOf(rinfo));
+    }
+
+    /** Sessões ativas de uma sala. */
+    public getRoomSessions(roomId: string): PlayerSession[] {
+        return [...this.sessions.values()].filter(s => s.roomId === roomId);
     }
 
     /**
      * Retorna o número de sessões ativas em uma sala.
      */
     public getRoomSessionCount(roomId: string): number {
-        let count = 0;
-        this.sessions.forEach(session => {
-            if (session.roomId === roomId) count++;
-        });
-        return count;
+        return this.getRoomSessions(roomId).length;
     }
 
     /**
      * Lista de jogadores de uma sala, no formato compacto do evento room_roster.
      */
     public getRoomRoster(roomId: string): Array<{ id: string; n: string }> {
-        const roster: Array<{ id: string; n: string }> = [];
-        this.sessions.forEach(session => {
-            if (session.roomId === roomId) {
-                roster.push({ id: session.id, n: session.playerName ?? session.id });
-            }
-        });
-        return roster;
+        return this.getRoomSessions(roomId).map(s => ({ id: s.id, n: s.playerName }));
     }
 
     /**
      * Envia o roster atual para todos da sala (room_roster). Chamado sempre que a
-     * composição muda: entrada (CONN auto-join / join_room) e saída (expiração).
+     * composição muda: entrada (CONN) e saída (leave_room / expiração).
      */
     public broadcastRoster(roomId: string): void {
         const roster = this.getRoomRoster(roomId);
@@ -255,63 +255,78 @@ export class UdpSocketManager {
         this.broadcastToRoom(roomId, 'room_roster', { p: roster });
     }
 
-    private cleanupSessions(): void {
-        const now = Date.now();
-        const timeout = 30000; // 30 segundos de inatividade
-        const affectedRooms = new Set<string>();
-
-        this.sessions.forEach((session, key) => {
-            if (now - session.lastSeen > timeout) {
-                logger.info(`Sessão expirada: ${session.id} (${key})`, { module: 'UDP_SOCKET' });
-                if (session.roomId) affectedRooms.add(session.roomId);
-                this.sessions.delete(key);
-            }
-        });
-
-        // Para cada sala que perdeu sessões, verificar se ficou vazia
-        affectedRooms.forEach(roomId => {
-            if (roomId === 'guest-room' && this.getRoomSessionCount(roomId) === 0) {
-                logger.info(`[UDP_SOCKET] guest-room ficou vazia após cleanup — limpando estado de NPCs`, { module: 'UDP_SOCKET' });
-                NpcRegisterHandler.clearRoomState(roomId);
-                ServiceFactory.getShiftClockService().resetRoom(roomId);
-                return;
-            }
-            this.broadcastRoster(roomId);
-        });
+    /** Saída pedida pelo próprio cliente (leave_room). */
+    public removeSessionAt(rinfo: { address: string; port: number }, motivo: string): void {
+        this.removeSession(this.keyOf(rinfo), motivo);
     }
 
     /**
-     * Limpa completamente o estado de uma sala (Sessões, NPCs e Tasks).
+     * Único caminho de saída de um jogador: avisa quem ficou, devolve a tarefa aberta
+     * ao pool (e a entrega a quem estiver sem tarefa), troca o mestre dos NPCs e libera
+     * a vaga na sala.
      */
-    private resetRoomState(roomId: string): void {
-        // 1. Coletar playerIds da sala antes de limpar sessões
-        const playerIds: string[] = [];
-        this.sessions.forEach((session) => {
-            if (session.roomId === roomId) {
-                playerIds.push(session.id);
-            }
-        });
+    private removeSession(key: string, motivo: string): void {
+        const session = this.sessions.get(key);
+        if (!session) return;
+        this.sessions.delete(key);
 
-        // 2. Limpar Sessões (Remover outros jogadores da memória)
-        let count = 0;
-        this.sessions.forEach((session, key) => {
-            if (session.roomId === roomId) {
-                this.sessions.delete(key);
-                count++;
-            }
-        });
+        const { roomId, id } = session;
+        logger.info(`Jogador ${id} saiu da sala ${roomId} (${motivo})`, { module: 'UDP_SOCKET' });
 
-        // 3. Limpar NPCs
-        NpcRegisterHandler.clearRoomState(roomId);
+        // A mesma pessoa pode ter outra sessão viva (reconectou por outra porta).
+        const aindaNaSala = this.getRoomSessions(roomId).some(s => s.id === id);
+        if (aindaNaSala) return;
 
-        // 4. Limpar Tasks
+        ServiceFactory.getRoomRegistry().leave(roomId, id);
+        this.broadcastToRoom(roomId, 'player_disconnected', { id });
+        this.broadcastRoster(roomId);
+
+        NpcRegisterHandler.onPlayerGone(this, roomId, id);
+
         const taskService = ServiceFactory.getTaskService();
-        taskService.clearRoom(playerIds);
+        const devolvidas = taskService.releasePlayer(id);
+        if (devolvidas.length > 0) this.giveTasksToIdlePlayers(roomId);
+    }
 
-        // 5. Reiniciar o relógio do expediente
+    /** Entrega uma tarefa livre a cada jogador da sala que está sem tarefa aberta. */
+    private giveTasksToIdlePlayers(roomId: string): void {
+        const taskService = ServiceFactory.getTaskService();
+        for (const s of this.getRoomSessions(roomId)) {
+            if (taskService.hasOpenTask(s.id)) continue;
+            const proxima = taskService.advanceQueue(s.id);
+            if (!proxima) continue;
+            this.broadcastToRoom(roomId, 'task_assigned', {
+                playerId: s.id,
+                tasks: [proxima],
+                totalTasks: taskService.getTotalTaskCount(s.id),
+            });
+            logger.info(`[UDP_SOCKET] task_assigned (devolvida): '${proxima.id}' para '${s.id}'`, { module: 'UDP_SOCKET' });
+        }
+    }
+
+    private cleanupSessions(now: number = Date.now()): void {
+        for (const [key, session] of [...this.sessions.entries()]) {
+            if (now - session.lastSeen > SESSION_TIMEOUT_MS) {
+                this.removeSession(key, 'inatividade');
+            }
+        }
+
+        // Salas vazias há mais que o TTL morrem junto com o estado delas.
+        for (const roomId of ServiceFactory.getRoomRegistry().collectExpired(now)) {
+            this.clearRoomState(roomId);
+        }
+    }
+
+    /** Descarta tarefas, relógio e NPCs de uma sala que deixou de existir. */
+    private clearRoomState(roomId: string): void {
+        NpcRegisterHandler.clearRoomState(roomId);
+        ServiceFactory.getTaskService().clearRoom(roomId);
         ServiceFactory.getShiftClockService().resetRoom(roomId);
+        logger.info(`[UDP_SOCKET] Estado da sala '${roomId}' descartado.`, { module: 'UDP_SOCKET' });
+    }
 
-        logger.info(`[UDP_SOCKET] Sala '${roomId}' reiniciada. ${count} sessões removidas.`, { module: 'UDP_SOCKET' });
+    private keyOf(rinfo: { address: string; port: number }): string {
+        return `${rinfo.address}:${rinfo.port}`;
     }
 
     /**

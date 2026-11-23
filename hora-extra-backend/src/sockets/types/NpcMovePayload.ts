@@ -17,4 +17,6 @@ export interface INpcRegisterPayload {
     r: number;
     name?: string;
     isMaster?: boolean;
+    /** Andar em que o NPC vive (1/2/3). Ausente = andar atual do jogador que registrou. */
+    f?: number;
 }

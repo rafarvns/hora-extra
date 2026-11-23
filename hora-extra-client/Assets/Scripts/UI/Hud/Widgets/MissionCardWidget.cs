@@ -17,7 +17,7 @@ namespace HoraExtra.UI.Hud.Widgets
     ///     vermelho = falhou, âmbar = atual, apagado = ainda na fila do servidor);
     ///   - segurar [Tab] mostra a lista de todas as tarefas já liberadas.
     ///
-    /// Dados: TaskSystemBridge (GetMyTasks + MyTotalTasks). Nada é contado localmente.
+    /// Dados: TaskSystemBridge (GetMyTasks + progresso da equipe). Nada é contado localmente.
     /// </summary>
     public class MissionCardWidget : HudWidget
     {
@@ -99,6 +99,7 @@ namespace HoraExtra.UI.Hud.Widgets
         {
             TaskSystemBridge.OnTaskAssigned += HandleAssigned;
             TaskSystemBridge.OnTaskUpdated += HandleUpdated;
+            TaskSystemBridge.OnRoomStateChanged += Refresh;
             Refresh();
         }
 
@@ -106,6 +107,7 @@ namespace HoraExtra.UI.Hud.Widgets
         {
             TaskSystemBridge.OnTaskAssigned -= HandleAssigned;
             TaskSystemBridge.OnTaskUpdated -= HandleUpdated;
+            TaskSystemBridge.OnRoomStateChanged -= Refresh;
         }
 
         private void Update()
@@ -136,35 +138,33 @@ namespace HoraExtra.UI.Hud.Widgets
         {
             var bridge = TaskSystemBridge.Instance;
             List<AssignedTask> tasks = bridge != null ? bridge.GetMyTasks() : new List<AssignedTask>();
-            int total = bridge != null ? bridge.MyTotalTasks : 0;
 
-            int terminadas = 0;
-            foreach (var t in tasks)
-                if (TaskPresentation.IsFinished(t)) terminadas++;
+            // As tarefas são da SALA: cada uma é feita uma vez, por quem pegar. O progresso
+            // mostrado é o da equipe.
+            int total = bridge != null ? bridge.TeamTotalCount : 0;
+            int feitasEquipe = bridge != null ? bridge.TeamDoneCount : 0;
+            bool equipeTerminou = total > 0 && feitasEquipe >= total;
 
             AssignedTask ativa = TaskPresentation.FindActive(tasks);
-            int indiceAtiva = ativa != null ? tasks.IndexOf(ativa) + 1 : terminadas;
 
-            RebuildSegments(tasks, total);
+            RebuildSegments(total, feitasEquipe, ativa != null);
             RebuildHistory(tasks);
-
-            if (tasks.Count == 0)
-            {
-                ShowMessage("AGUARDANDO", "Aguardando tarefas…", Theme.Text, "O supervisor está distribuindo o trabalho.");
-                return;
-            }
 
             if (ativa == null)
             {
-                bool tudo = total == 0 || terminadas >= total;
-                ShowMessage(tudo ? "EXPEDIENTE EM DIA" : "AGUARDANDO",
-                    tudo ? "Todas as tarefas concluídas!" : "Próxima tarefa a caminho…",
-                    tudo ? Theme.Success : Theme.Text,
-                    tudo ? $"{terminadas} de {Mathf.Max(total, terminadas)} tarefas finalizadas." : null);
+                if (equipeTerminou)
+                    ShowMessage("EXPEDIENTE EM DIA", "Todas as tarefas concluídas!", Theme.Success,
+                        $"A equipe finalizou as {total} tarefas.");
+                else if (bridge != null && tasks.Count > 0 && bridge.IsWaitingForTeammate)
+                    ShowMessage("AGUARDANDO", "Sem tarefa livre agora", Theme.Text,
+                        "As que faltam estão com o colega. Se ele sair, a tarefa dele vem para você.");
+                else
+                    ShowMessage("AGUARDANDO", tasks.Count == 0 ? "Aguardando tarefas…" : "Próxima tarefa a caminho…",
+                        Theme.Text, tasks.Count == 0 ? "O supervisor está distribuindo o trabalho." : null);
                 return;
             }
 
-            _header.text = total > 0 ? $"TAREFA {indiceAtiva} DE {total}" : "TAREFA ATUAL";
+            _header.text = total > 0 ? $"TAREFA ATUAL  ·  EQUIPE {feitasEquipe}/{total}" : "TAREFA ATUAL";
             _header.color = Theme.Accent;
 
             var categoria = TaskPresentation.GetCategory(ativa.Type);
@@ -197,10 +197,10 @@ namespace HoraExtra.UI.Hud.Widgets
             _howTo.gameObject.SetActive(!string.IsNullOrEmpty(body));
         }
 
-        /// <summary>Uma fatia por tarefa da partida, incluindo as que ainda estão na fila do servidor.</summary>
-        private void RebuildSegments(List<AssignedTask> tasks, int total)
+        /// <summary>Uma fatia por tarefa da sala: verde = feitas pela equipe, âmbar = a nossa atual.</summary>
+        private void RebuildSegments(int total, int feitas, bool temAtiva)
         {
-            int n = Mathf.Max(total, tasks.Count);
+            int n = total;
             _segments.gameObject.SetActive(n > 1);
 
             while (_segmentImages.Count < n)
@@ -213,17 +213,11 @@ namespace HoraExtra.UI.Hud.Widgets
             for (int i = 0; i < _segmentImages.Count; i++)
                 _segmentImages[i].gameObject.SetActive(i < n);
 
-            var ativa = TaskPresentation.FindActive(tasks);
             for (int i = 0; i < n; i++)
             {
                 Color c = Theme.Track;
-                if (i < tasks.Count)
-                {
-                    var t = tasks[i];
-                    if (t.Status == TaskPresentation.STATUS_COMPLETED) c = Theme.Success;
-                    else if (t.Status == TaskPresentation.STATUS_FAILED) c = Theme.Danger;
-                    else if (t == ativa) c = Theme.Accent;
-                }
+                if (i < feitas) c = Theme.Success;
+                else if (i == feitas && temAtiva) c = Theme.Accent;
                 _segmentImages[i].color = c;
             }
         }
@@ -265,11 +259,11 @@ namespace HoraExtra.UI.Hud.Widgets
             }
 
             var bridge = TaskSystemBridge.Instance;
-            int naFila = bridge != null ? bridge.MyTotalTasks - tasks.Count : 0;
-            if (naFila > 0)
+            int faltamEquipe = bridge != null ? bridge.TeamTotalCount - bridge.TeamDoneCount : 0;
+            if (faltamEquipe > 0)
             {
                 var fila = HudFactory.Label(_history, "Queue", Theme, Theme.SmallSize, Theme.TextMuted);
-                fila.text = naFila == 1 ? "+ 1 tarefa ainda por liberar" : $"+ {naFila} tarefas ainda por liberar";
+                fila.text = faltamEquipe == 1 ? "Falta 1 tarefa para a equipe" : $"Faltam {faltamEquipe} tarefas para a equipe";
             }
         }
 

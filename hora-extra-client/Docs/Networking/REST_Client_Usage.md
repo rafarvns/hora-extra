@@ -51,28 +51,21 @@ public class MyService {
 
 ---
 
-## 4. Exemplo Completo: Autenticação e Sessão
-Para fluxos de autenticação, o padrão recomendado é usar um serviço para a chamada e o `SessionManager` para persistência:
+## 4. Exemplo: sessão e salas
+
+Não há cadastro: o jogador só digita o nome. Os três endpoints ficam em `RoomService`:
 
 ```csharp
-// 1. Chamada de Login
-var authService = new AuthService();
-var response = await authService.Login(email, senha);
-
-if (response.Success) {
-    // 2. Salva na sessão global para persistência entre cenas
-    SessionManager.Instance.SetSession(response.Data);
-    
-    // 3. Navega para a tela principal
-    SceneManager.LoadScene("MainMenuScene");
-}
+var sessao = await RoomService.CreateSession("Ana");        // { token, playerId, nome }
+var salas  = await RoomService.GetRooms();                  // [{ id, nome, jogadores, max, emAndamento }]
+var sala   = await RoomService.CreateRoom("Sala da Ana");   // { id, nome }
 ```
+
+Na prática, use `MatchJoinFlow.CreateAndJoin` / `MatchJoinFlow.Join`, que também conectam o UDP e
+carregam o 1º andar. Ver [MULTIPLAYER.md](../Mechanics/MULTIPLAYER.md).
 
 ---
 
 ## 5. Exemplos Implementados
-- **HealthCheck**: Veja o arquivo `HealthService.cs` para um exemplo real de verificação de status.
-- **Autenticação**: Veja o arquivo `AuthService.cs` para o contrato de cadastro e login.
-- **Sessão**: Veja `SessionManager.cs` para entender como os dados do jogador são mantidos.
-
-Consulte também a documentação específica de [Gestão de Sessão](SESSION_MANAGEMENT.md).
+- **HealthCheck**: `HealthService.cs`.
+- **Sessão e salas**: `RoomService.cs` + `MatchJoinFlow.cs`.

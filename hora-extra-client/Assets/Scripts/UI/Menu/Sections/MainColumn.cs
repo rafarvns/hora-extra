@@ -7,15 +7,14 @@ using HoraExtra.UI.Hud;
 namespace HoraExtra.UI.Menu.Sections
 {
     /// <summary>
-    /// Coluna principal: logo, tagline e as ações do menu. A disponibilidade dos botões
-    /// acompanha o servidor (offline bloqueia jogar) e a sessão (salas exigem login).
+    /// Coluna principal: logo, tagline e as ações do menu. "Jogar" fica indisponível com o
+    /// servidor offline.
     /// </summary>
     public class MainColumn : MenuWidget
     {
         private const float WIDTH = 520f;
 
         private MenuButton _play;
-        private MenuButton _rooms;
         private TextMeshProUGUI _status;
 
         protected override void Build()
@@ -35,8 +34,7 @@ namespace HoraExtra.UI.Menu.Sections
 
             HudFactory.Fixed(HudFactory.Rect("Spacer", Root).gameObject, -1f, 36f);
 
-            _play = MenuFactory.Button(Root, Theme, "JOGAR AGORA", Menu.PlayAsGuest, primary: true, height: 70f, subLabel: "como convidado");
-            _rooms = MenuFactory.Button(Root, Theme, "SALAS ONLINE", () => Menu.LoadScene(MainMenuRoot.LOBBY_SCENE));
+            _play = MenuFactory.Button(Root, Theme, "JOGAR", () => Menu.OpenPanel<PlayPanel>(), primary: true, height: 70f, subLabel: "criar ou entrar numa sala");
             MenuFactory.Button(Root, Theme, "COMO JOGAR", () => Menu.OpenPanel<HowToPlayPanel>());
             MenuFactory.Button(Root, Theme, "CONFIGURAÇÕES", () => Menu.OpenPanel<SettingsPanel>());
             MenuFactory.Button(Root, Theme, "CRÉDITOS", () => Menu.OpenPanel<CreditsPanel>());
@@ -51,8 +49,6 @@ namespace HoraExtra.UI.Menu.Sections
         {
             Menu.OnServerStatusChanged += Refresh;
             Menu.OnBusyChanged += HandleBusy;
-            var session = SessionManager.Instance;
-            if (session != null) session.OnSessionUpdated += Refresh;
             Refresh();
         }
 
@@ -60,8 +56,6 @@ namespace HoraExtra.UI.Menu.Sections
         {
             Menu.OnServerStatusChanged -= Refresh;
             Menu.OnBusyChanged -= HandleBusy;
-            var session = SessionManager.Instance;
-            if (session != null) session.OnSessionUpdated -= Refresh;
         }
 
         private void Start()
@@ -74,15 +68,10 @@ namespace HoraExtra.UI.Menu.Sections
         private void Refresh()
         {
             bool offline = Menu.ServerOnline == false;
-            bool logado = SessionManager.Instance != null && SessionManager.Instance.IsLoggedIn;
 
             if (Menu.IsBusy) _play.SetAvailable(false, "conectando…");
             else if (offline) _play.SetAvailable(false, "servidor offline");
             else _play.SetAvailable(true);
-
-            if (!logado) _rooms.SetAvailable(false, "entre na sua conta");
-            else if (offline) _rooms.SetAvailable(false, "servidor offline");
-            else _rooms.SetAvailable(true);
         }
 
         private void HandleBusy(bool busy, string message)

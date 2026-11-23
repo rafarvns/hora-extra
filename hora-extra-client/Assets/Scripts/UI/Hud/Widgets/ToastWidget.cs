@@ -44,6 +44,7 @@ namespace HoraExtra.UI.Hud.Widgets
         {
             TaskSystemBridge.OnTaskAssigned += HandleAssigned;
             TaskSystemBridge.OnTaskUpdated += HandleUpdated;
+            TaskSystemBridge.OnRoomStateChanged += HandleRoomState;
             if (RoomRoster.Instance != null)
             {
                 RoomRoster.Instance.OnPlayerJoined += HandleJoined;
@@ -60,6 +61,7 @@ namespace HoraExtra.UI.Hud.Widgets
         {
             TaskSystemBridge.OnTaskAssigned -= HandleAssigned;
             TaskSystemBridge.OnTaskUpdated -= HandleUpdated;
+            TaskSystemBridge.OnRoomStateChanged -= HandleRoomState;
             if (RoomRoster.Instance != null)
             {
                 RoomRoster.Instance.OnPlayerJoined -= HandleJoined;
@@ -80,7 +82,7 @@ namespace HoraExtra.UI.Hud.Widgets
             if (_connectionKnown && conectado != _wasConnected)
             {
                 if (conectado) Show(Kind.Success, "Conexão restabelecida");
-                else Show(Kind.Danger, "Conexão perdida", "Tentando reconectar ao servidor…");
+                else Show(Kind.Danger, "Conexão perdida", "Voltando ao menu…");
             }
             _wasConnected = conectado;
             _connectionKnown |= conectado;
@@ -120,16 +122,15 @@ namespace HoraExtra.UI.Hud.Widgets
                 Show(Kind.Success, "Tarefa concluída", TaskPresentation.GetSummary(task));
             else if (task.Status == TaskPresentation.STATUS_FAILED)
                 Show(Kind.Danger, "Tarefa falhou", TaskPresentation.GetSummary(task));
-            else
-                return;
+        }
 
+        /// <summary>A equipe (qualquer jogador) acabou a última tarefa da sala.</summary>
+        private void HandleRoomState()
+        {
             var bridge = TaskSystemBridge.Instance;
             if (bridge == null || _allDoneShown) return;
-            var minhas = bridge.GetMyTasks();
-            int terminadas = 0;
-            foreach (var t in minhas)
-                if (TaskPresentation.IsFinished(t)) terminadas++;
-            if (bridge.MyTotalTasks > 0 && terminadas >= bridge.MyTotalTasks)
+            int total = bridge.TeamTotalCount;
+            if (total > 0 && bridge.TeamDoneCount >= total && bridge.GetMyTasks().Count > 0)
             {
                 _allDoneShown = true;
                 Show(Kind.Success, "Todas as tarefas concluídas!", "Bom trabalho — o escritório está em ordem.");

@@ -26,7 +26,7 @@ namespace HoraExtra.Settings
         /// <summary>Disparado depois de qualquer alteração (já salva e aplicada).</summary>
         public static event Action OnChanged;
 
-        /// <summary>Apelido exibido para os colegas. Vazio = nome aleatório.</summary>
+        /// <summary>Último nome digitado ao entrar numa sala (pré-preenche o campo do menu).</summary>
         public static string Nickname
         {
             get => PlayerPrefs.GetString(KEY_NICKNAME, string.Empty);
@@ -79,22 +79,18 @@ namespace HoraExtra.Settings
             set { SetString(KEY_SERVER, value ?? string.Empty); BackendConfig.ApplyPreset(ServerPreset); }
         }
 
-        /// <summary>Nome a mandar no handshake: conta logada → apelido → null (o chamador sorteia).</summary>
-        public static string ResolvePlayerName()
-        {
-            var session = SessionManager.Instance;
-            if (session != null && session.IsLoggedIn && session.CurrentPlayer != null
-                && !string.IsNullOrWhiteSpace(session.CurrentPlayer.Nome))
-                return session.CurrentPlayer.Nome;
-
-            return string.IsNullOrWhiteSpace(Nickname) ? null : Nickname;
-        }
-
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void ApplyOnBoot()
         {
             AudioListener.volume = MasterVolume;
+#if UNITY_EDITOR
+            // No Editor o jogo sempre começa no backend desta máquina (npm run dev). O preset
+            // salvo é ignorado só no boot: dá para trocar de servidor pelo menu durante a sessão.
+            BackendConfig.Host = "127.0.0.1";
+            Debug.Log("[NETWORK] Editor — backend local (127.0.0.1). Troque em Configurações → Servidor se precisar.");
+#else
             BackendConfig.ApplyPreset(ServerPreset);
+#endif
             // No Editor a "tela" é a Game View; mexer em resolução lá só atrapalha.
             if (!Application.isEditor) ApplyDisplay();
         }

@@ -22,33 +22,41 @@ Esta documentação define o contrato de comunicação entre o cliente Unity e o
 
 ---
 
-## 2. Fluxo de Conexão (Handshake)
+## 2. Entrada numa sala (sessão → sala → CONN)
+
+Não há cadastro nem login: o jogador só digita o nome. Salas vivem em memória
+(`RoomRegistry`) com **no máximo 2 jogadores**.
 
 ```
-Cliente                         Servidor
-  |                                |
-  |── CONN { token: "<jwt>" } ───► |  (1º pacote obrigatório)
-  |                                |  valida JWT → cria PlayerSession
-  |◄── CONN_SUCCESS { id, sessionKey } ──|
-  |◄── room_joined { roomId, playerId }  |  (se auto-join ocorreu)
-  |                                |
-  | (a partir daqui: eventos normais)
+Cliente                                  Servidor
+  |── POST /api/session { nome } ─────────►|  valida nome (2–16) → gera playerId "p-…"
+  |◄── 201 { token, playerId, nome } ──────|  JWT { id, n }
+  |── POST /api/rooms { nome } ───────────►|  (só quem cria) sala vazia, reservada 60 s
+  |◄── 201 { id, nome } ───────────────────|
+  |── CONN { token, d: { roomId } } ──────►|  valida token, sala e vaga
+  |◄── CONN_SUCCESS { id, sessionKey, roomId, n }
+  |◄── room_state { t, pl } ───────────────|  retrato da sala (quem entra no meio)
+  |    (os outros recebem player_joined + room_roster)
+  |── leave_room ─────────────────────────►|  ao sair: libera a vaga na hora
 ```
 
-- O **primeiro** pacote de qualquer cliente deve ser `e: "CONN"` com `token`.
-- Pacotes subsequentes sem sessão ativa recebem `e: "ERROR"`.
-- Sessões inativas por >30 s são removidas automaticamente (tick de limpeza a cada 10 s).
+| REST | Entrada | Saída |
+| :--- | :------ | :---- |
+| `POST /api/session` | `{ nome }` (2–16 caracteres, espaços colapsados) | `{ token, playerId, nome }` — 400 se o nome for inválido |
+| `GET /api/rooms` | — | `[{ id, nome, jogadores, max: 2, emAndamento }]`, mais novas primeiro |
+| `POST /api/rooms` | `{ nome }` (2–24) | `{ id, nome }` |
 
-### 2.1 Bypass de desenvolvimento
-
-Quando `NODE_ENV=development` e o cliente envia `token === DEV_TEST_TOKEN` (valor em `.env`):
-- Sessão criada com `playerId = DEV_TEST_USER_ID`.
-- Auto-join na sala `"dev-room"`.
-- Campo opcional `data.resetRoom: true` apaga todas as sessões e NPCs da dev-room — útil ao reiniciar o Play Mode no editor.
-
-### 2.2 Guest Mode (acesso anônimo)
-
-Ver §7 — Guest Mode para o fluxo completo.
+Regras:
+- O **primeiro** pacote UDP deve ser `CONN`. Pacotes sem sessão recebem `ERROR`.
+- O **nome vem do token**; o servidor ignora qualquer nome no payload.
+- `CONN_ERROR { code, message }` com `code`: `INVALID_TOKEN`, `ROOM_NOT_FOUND`, `ROOM_FULL`.
+- O limite conta **playerIds distintos**: o mesmo jogador reconectando (outra porta) substitui a
+  sessão antiga, sem ocupar vaga e sem anunciar entrada de novo.
+- Saída = `leave_room` ou 30 s sem pacotes. Na saída o servidor avisa `player_disconnected` +
+  `room_roster`, devolve a tarefa aberta do jogador ao pool (com o progresso que tinha), a
+  entrega a quem estiver sem tarefa (`task_assigned` sem pedido) e passa o mestre dos NPCs.
+- Sala vazia há mais de 60 s é apagada junto com tarefas, relógio e NPCs dela.
+- Todos começam no 1º andar, inclusive quem entra no meio da partida.
 
 ---
 
@@ -56,15 +64,15 @@ Ver §7 — Guest Mode para o fluxo completo.
 
 | Evento              | Payload                                                                 | Descrição                                                          |
 | :------------------ | :---------------------------------------------------------------------- | :----------------------------------------------------------------- |
-| `CONN`              | `{ token: string, playerName?: string, resetRoom?: boolean }`           | Handshake inicial. `resetRoom` só válido no bypass de dev.         |
-| `join_room`         | `{ roomId: string, playerName?: string }`                               | Entrar em uma sala (jogadores autenticados com conta real).        |
-| `player_move`       | `{ p: number[], r: number }`                                            | Posição `[x,y,z]` e rotação (yaw) do jogador local.               |
+| `CONN`              | `{ e: "CONN", token: string, d: { roomId: string } }`                   | Handshake: entra na sala `roomId` (ver §2). O cliente reenvia até 3× sem resposta. |
+| `leave_room`        | `{}`                                                                    | Saiu da partida (menu ou fechou o jogo). Libera a vaga na hora.    |
+| `player_move`       | `{ p: number[], r: number, f?: number }`                                | Posição `[x,y,z]`, rotação (yaw) e andar `f` (1/2/3). Enviado também ao chegar num andar, mesmo parado. |
 | `player_sprint`     | `{ s: boolean }`                                                        | Ativar/desativar corrida.                                          |
-| `npc_register`      | `{ id: string, type: string }`                                          | Registrar NPC presente na cena. Servidor decide mastership.        |
+| `npc_register`      | `{ id: string, type: string, p, r, f?: number }`                        | Registrar NPC presente na cena; `f` = andar do NPC. Servidor decide mastership (§6). |
 | `npc_move_request`  | `{ id: string, p: number[], r: number }`                                | Master do NPC envia nova posição autoritativa.                     |
 | `ping`              | `{ timestamp: number }`                                                 | Mede latência RTT.                                                 |
-| `task_catalog_register` | `{ tasks: TaskEntry[] }` — ver schema na §5 | Registra o catálogo de tarefas disponíveis para a sala. Sobrescreve a pool anterior. `npcId` removido — catálogo é da sala, não vinculado a NPC. Cada entrada aceita `items?` e `pairs?` (opcionais); campo malformado é descartado com `warn` e o resto do catálogo é registrado. |
-| `task_assign_request`   | `{}` (sem campos)                                                   | Solicita ao servidor que embaralhe o catálogo da sala e atribua as tarefas ao jogador. `playerId` vem da sessão — não é enviado no payload. **A resposta traz apenas a PRIMEIRA**: as demais ficam numa fila e são liberadas uma a uma conforme o jogador conclui (ver §4, `task_assigned`). |
+| `task_catalog_register` | `{ tasks: TaskEntry[] }` — ver schema na §5 | Registra o catálogo de tarefas da sala. **Só o primeiro registro da sala vale**: quem entra depois manda o mesmo catálogo e ele é ignorado (não zera o progresso). `npcId` removido — catálogo é da sala, não vinculado a NPC. Cada entrada aceita `items?` e `pairs?` (opcionais); campo malformado é descartado com `warn` e o resto do catálogo é registrado. |
+| `task_assign_request`   | `{}` (sem campos)                                                   | Pede uma tarefa. As tarefas são **da sala**: cada uma é feita uma vez, por quem pegar. O jogador recebe UMA tarefa livre (não concluída e sem dono; a 1ª do catálogo tem prioridade, o resto é sorteado). Com tarefa aberta, ou sem nenhuma livre, não há resposta. `playerId` vem da sessão. |
 | `task_start_interaction` | `{ taskId: string }`                                               | Jogador inicia interação com objeto de task. Servidor valida posse e transição `pending → in_progress`. |
 | `task_complete_attempt`  | `{ taskId: string, success: boolean }`                             | Jogador reporta resultado do minigame QTE. Servidor determina status final autoritativamente. |
 | `task_progress`          | `{ taskId: string, itemId?: string, slotId?: string }`             | Jogador entregou +1 item de uma task incremental (ex: `collect`). Servidor soma +1, faz `pending → in_progress` no primeiro incremento e `completed` ao atingir `targetCount`. Nunca confia em contagem do cliente. `itemId` identifica **qual** item e `slotId` **onde** foi entregue; ambos são opcionais e só validados quando a entrada de catálogo declara `items`/`pairs`. Recusa de gameplay responde `task_rejected`; `itemId`/`slotId` de tipo errado respondem `ERROR` (falha de protocolo). |
@@ -76,20 +84,21 @@ Ver §7 — Guest Mode para o fluxo completo.
 
 | Evento              | Payload                                                                 | Descrição                                                          |
 | :------------------ | :---------------------------------------------------------------------- | :----------------------------------------------------------------- |
-| `CONN_SUCCESS`      | `{ id: string, sessionKey: string }`                                    | Handshake aceito. `id` = playerId (ou guestId).                    |
-| `CONN_ERROR`        | `{ message: string }`                                                   | Handshake rejeitado (token inválido ou ausente).                   |
-| `room_joined`       | `{ roomId: string, playerId: string, message: string }`                 | Confirmação de entrada na sala (auto-join ou `join_room`).         |
-| `player_joined`     | `{ id: string, name: string }`                                          | Broadcast para a sala: novo jogador entrou (só via `join_room`; auto-join de guest/dev não emite — use `room_roster`). |
-| `room_roster`       | `{ p: Array<{ id: string, n: string }> }`                               | Broadcast para a sala com a lista **completa** de jogadores (`id` + nome `n`). Emitido sempre que a composição muda: CONN com auto-join, `join_room` (também para a sala antiga, se trocou) e expiração de sessão. O cliente **substitui** a lista inteira; entrada/saída = diff com a anterior. |
-| `shift_clock`       | `{ m: number, s: number, e: number, k: number, st: "idle" \| "running" \| "ended" }` | Relógio do expediente da sala (autoritativo). `m` = minuto de jogo atual (minutos desde 00:00, fracionário), `s`/`e` = início/fim do expediente (480 = 08:00, 1080 = 18:00), `k` = minutos de jogo por segundo real (0 quando parado). O cliente extrapola `m + k·Δt` desde o recebimento — **sem timestamps**, para não depender do relógio local. **Broadcast** quando o pedido iniciou o expediente; **unicast** nas sincronizações. Escala: `SHIFT_DURATION_SECONDS` (padrão 900 s reais para 08:00→18:00). Zerado em reset de sala e quando a `guest-room` esvazia. |
-| `player_move`       | `{ id: string, p: number[], r: number }`                                | Broadcast da posição de outro jogador.                             |
+| `CONN_SUCCESS`      | `{ id: string, sessionKey: string, roomId: string, n: string }`         | Handshake aceito. `id` = playerId, `n` = nome.                     |
+| `CONN_ERROR`        | `{ code: "INVALID_TOKEN" \| "ROOM_NOT_FOUND" \| "ROOM_FULL", message: string }` | Handshake recusado.                                   |
+| `room_state`        | `{ t: RoomTaskSnapshot[], pl: Array<{ id, n, p: number[] \| null, r, f }> }` | **Unicast** a quem acabou de entrar (logo após `CONN_SUCCESS`): estado de todas as tarefas da sala (§5) e os outros jogadores com última posição e andar. É assim que quem entra no meio vê o mundo como está. |
+| `player_joined`     | `{ id: string, name: string }`                                          | Para os outros da sala: novo jogador entrou (não é enviado em reconexão). |
+| `player_disconnected` | `{ id: string }`                                                      | Para os que ficaram: o jogador saiu (`leave_room` ou timeout).     |
+| `room_roster`       | `{ p: Array<{ id: string, n: string }> }`                               | Broadcast para a sala com a lista **completa** de jogadores (`id` + nome `n`), a cada entrada e saída. O cliente **substitui** a lista inteira. |
+| `shift_clock`       | `{ m: number, s: number, e: number, k: number, st: "idle" \| "running" \| "ended" }` | Relógio do expediente da sala (autoritativo). `m` = minuto de jogo atual (minutos desde 00:00, fracionário), `s`/`e` = início/fim do expediente (480 = 08:00, 1080 = 18:00), `k` = minutos de jogo por segundo real (0 quando parado). O cliente extrapola `m + k·Δt` desde o recebimento — **sem timestamps**, para não depender do relógio local. **Broadcast** quando o pedido iniciou o expediente; **unicast** nas sincronizações. Escala: `SHIFT_DURATION_SECONDS` (padrão 900 s reais para 08:00→18:00). Descartado quando a sala morre (vazia por 60 s). |
+| `player_move`       | `{ id: string, p: number[], r: number, f: number }`                     | Broadcast da posição de outro jogador; `f` = andar. O cliente só mostra quem está no mesmo andar. |
 | `player_sprint`     | `{ id: string, s: boolean }`                                            | Broadcast do estado de sprint de outro jogador.                    |
-| `npc_registered`    | `{ id: string, type: string, isMaster: boolean }`                       | Resposta ao `npc_register`. `isMaster=true` = este cliente controla a IA deste NPC. |
+| `npc_registered`    | `{ id: string, type: string, isMaster: boolean }`                       | Unicast: resposta ao `npc_register`, ou aviso de que este cliente **virou mestre** (o anterior saiu ou trocou de andar; nesse caso sem `p`). `isMaster=true` = este cliente controla a IA. |
 | `npc_move`          | `{ id: string, p: number[], r: number }`                                | Broadcast da posição autoritativa do NPC (emitido pelo master).    |
 | `pong`              | `{ timestamp: number }`                                                 | Resposta ao `ping` para cálculo de latência.                       |
 | `ERROR`             | `{ message: string }`                                                   | Erro genérico (ex.: pacote recebido sem sessão ativa).             |
-| `task_assigned`     | `{ playerId: string, tasks: AssignedTask[], totalTasks: number }`       | Broadcast para a sala com a(s) task(s) atribuída(s) ao jogador. `tasks[]` tem shape: `{ id, description, type, targetCount, currentProgress: 0, status: "pending" }`. `totalTasks` = total de tarefas do jogador na partida (já atribuídas + fila), constante desde o sorteio — é o "N" de "Tarefa X de N" na HUD; todas concluídas/falhas quando o número de tarefas terminadas chega a `totalTasks`.<br><br>**Fila sequencial:** o jogador recebe UMA tarefa por vez. Este evento é emitido (a) na resposta ao `task_assign_request` e (b) **de novo, a cada tarefa concluída**, com a próxima da fila — sempre com `tasks` de um único elemento. O cliente deve **mesclar** pelo `id`, nunca substituir a lista: substituir apaga o histórico das já concluídas. A fila cobre o catálogo INTEIRO da sala (sem teto fixo): acrescentar uma entrada ao catálogo aumenta a fila sozinho. Quando a última conclui, a fila seca e nenhum evento novo é emitido. |
-| `task_updated`      | `{ playerId: string, taskId: string, currentProgress: number, status: string }` | Broadcast para todos na sala quando o status **ou o progresso** de uma task muda (via `task_start_interaction`, `task_complete_attempt` ou cada `task_progress`). Status possíveis: `in_progress`, `completed`, `failed`. Construído pelo servidor — não reflete campos crus do cliente. **Nunca** carrega `itemId`/`slotId`. |
+| `task_assigned`     | `{ playerId: string, tasks: AssignedTask[], totalTasks: number }`       | Broadcast para a sala: a tarefa entregue ao jogador (sempre **uma**). Emitido (a) na resposta ao `task_assign_request`, (b) a cada tarefa concluída, com a próxima livre, e (c) **sem pedido**, quando a tarefa de quem saiu volta ao pool e este jogador estava sem tarefa. Pode vir com progresso e `ci` (continuação de quem saiu). `totalTasks` = tamanho do catálogo da sala. O cliente **mescla** pelo `id`. |
+| `task_updated`      | `{ playerId: string, taskId: string, currentProgress: number, status: string, ci: string[] }` | Broadcast para todos na sala quando o status **ou o progresso** de uma task muda (via `task_start_interaction`, `task_complete_attempt` ou cada `task_progress`). Status: `in_progress`, `completed`, `failed`. `ci` = itens já contados na tarefa (nível sala): o mundo dos outros jogadores usa isso para refletir (mancha limpa some, cofre esvaziado). Construído pelo servidor. |
 | `task_rejected`     | `{ taskId: string, code: TaskRejectionCode, message: string, itemId?: string }` | **Unicast ao remetente** (não broadcast): o servidor recusou um `task_progress` por regra de gameplay. `message` é texto em pt-BR pronto para exibir. `itemId` volta quando veio no pedido, para o cliente saber qual item devolver à mão. Ver `TaskRejectionCode` na §5. |
 
 ---
@@ -131,16 +140,30 @@ sem nenhuma tarefa):
 | `pairs` com entrada sem `itemId` ou sem `slotId` | entrada filtrada + `warn` |
 | filtragem esvazia o campo | campo inteiro descartado + `warn` (lista vazia é indistinguível de ausente) |
 
+#### Exemplos: tarefas do Financeiro (3º andar)
+
+O servidor não restringe os valores de `type`; eles só precisam bater com o cliente
+(`TaskPresentation`). As duas tarefas do Financeiro usam os eventos já existentes, sem payload novo:
+
+| `id` | `type` | `targetCount` | `items` | Fluxo |
+| :--- | :----- | :------------ | :------ | :---- |
+| `task-cofres-01` | `open_safe_collect_money` | 2 | `cofre-direito`, `cofre-esquerdo` | um `task_progress { taskId, itemId, slotId: "cofre" }` ao fim de cada recolhimento (~10 s) |
+| `task-enviar-email-01` | `send_email_upload` | 1 | — | `task_start_interaction` ao abrir o computador (se `pending`) → `task_complete_attempt { success: true }` ao fim da barra de envio |
+
+Limitação conhecida e aceita: a **senha do cofre** (1512 / 2803) e os **10 s de recolhimento**
+são conferidos só no cliente. O servidor garante apenas que cada cofre conta uma vez
+(`ALREADY_COUNTED`) e que só cofres declarados contam (`UNKNOWN_ITEM`).
+
 ### TaskRejectionCode (campo `code` em `task_rejected`)
 
 ```ts
 type TaskRejectionCode =
-    | 'NOT_ASSIGNED'      // jogador não tem a task (ou o taskId não é dele)
+    | 'NOT_ASSIGNED'      // o jogador não é o dono da task
     | 'INVALID_STATUS'    // task já completed/failed
     | 'MISSING_ITEM'      // catálogo exige itemId e o payload não mandou
     | 'UNKNOWN_ITEM'      // itemId não pertence a esta task
     | 'WRONG_SLOT'        // par (itemId, slotId) não confere com o catálogo
-    | 'ALREADY_COUNTED';  // itemId já contabilizado nesta atribuição
+    | 'ALREADY_COUNTED';  // itemId já contabilizado nesta task (por qualquer dono)
 ```
 
 Ordem de avaliação em `incrementProgress` (a primeira violação encerra):
@@ -155,12 +178,25 @@ está malformado" e indica bug de cliente. Os dois usam canais distintos de prop
 
 ```ts
 interface AssignedTask {
-    id: string;              // identificador da task (ex: "task-collect-docs")
-    description: string;     // descrição legível
-    type: string;            // categoria ("collect" | "deliver" | "repair" | "escort")
-    targetCount: number;     // quantidade alvo para conclusão
-    currentProgress: number; // sempre 0 na atribuição inicial
-    status: "pending" | "in_progress" | "completed" | "failed"; // sempre "pending" na atribuição inicial; "failed" é terminal
+    id: string;
+    description: string;
+    type: string;
+    targetCount: number;
+    currentProgress: number; // pode ser > 0 quando a tarefa veio de quem saiu
+    status: "pending" | "in_progress" | "completed" | "failed"; // "failed" é terminal
+    ci: string[];            // itens já contados (nível sala)
+}
+```
+
+### RoomTaskSnapshot (linhas de `room_state.t`)
+
+```ts
+interface RoomTaskSnapshot {
+    id: string;
+    s: "pending" | "in_progress" | "completed" | "failed";
+    p: number;          // progresso
+    ci: string[];       // itens contados
+    h: string | null;   // dono atual (aberta) ou quem encerrou; null = livre
 }
 ```
 
@@ -168,13 +204,14 @@ interface AssignedTask {
 
 ```ts
 interface PlayerSession {
-    id: string;           // playerId (DB) ou guestId ("guest-<uuid8>")
+    id: string;           // playerId ("p-…", gerado em POST /api/session)
     address: string;
     port: number;
-    roomId?: string;      // undefined até join_room ou auto-join
-    playerName?: string;
+    roomId: string;
+    playerName: string;   // vem do token
     lastPosition?: number[];
     lastRotation?: number;
+    floor: number;        // 1/2/3 — todos começam no 1º
     lastSeen: number;     // timestamp ms — base do timeout de 30s
     movePacketCount: number;
     isSprinting?: boolean;
@@ -191,70 +228,20 @@ interface PlayerSession {
 
 ## 6. NPC Mastership
 
-Cada NPC tem exatamente um "master" por sala — o cliente que o registrou primeiro via `npc_register`.
+Cada NPC tem exatamente um "master" por sala: um jogador que está **no mesmo andar** do NPC
+(é na cena dele que a IA roda).
 
-- O master executa a IA localmente e envia `npc_move_request` para o servidor.
-- O servidor valida e broadcast `npc_move` para todos os outros da sala.
-- Outros clientes interpolam a posição recebida (sem rodar IA).
+- O master executa a IA localmente e envia `npc_move_request`; os outros interpolam `npc_move`.
+- O primeiro a registrar (`npc_register`) vira master. Só quem registrou recebe a resposta.
+- Se o master sai da sala ou troca de andar, o servidor passa o NPC para outro jogador naquele
+  andar (`npc_registered { isMaster: true }` só para ele). Sem ninguém no andar, o próximo que
+  registrar assume.
 
-Mapa interno: `roomId:npcId → playerId`. Quando o master desconecta, o NPC fica sem mestre até que outro cliente envie `npc_register` para ele.
-
-No **Guest Mode**, o lazy reset (sala vazia → nova CONN guest) limpa o mapa de mastership, permitindo que o próximo entrante assuma todos os NPCs.
-
----
-
-## 7. Guest Mode
-
-### Fluxo completo
-
-```
-Cliente Unity                      Servidor REST         Servidor UDP
-     |                                  |                      |
-     |── POST /api/auth/guest ─────────►|                      |
-     |◄── 201 { token, guestId,         |                      |
-     |          roomId: "guest-room" } ──|                      |
-     |                                  |                      |
-     |── CONN { token: "<guest-jwt>" } ────────────────────────►|
-     |                                  |         verifica JWT → decoded.id = "guest-<uuid8>"
-     |                                  |         se guest-room vazia: clearRoomState (lazy reset)
-     |                                  |         cria session com roomId = "guest-room"
-     |◄── CONN_SUCCESS { id: "guest-..." } ────────────────────|
-     |◄── room_joined { roomId: "guest-room", ... } ───────────|
-     |                                  |                      |
-     | (eventos normais: player_move, npc_register, etc.)
-```
-
-### Endpoint REST
-
-```
-POST /api/auth/guest
-Content-Type: application/json
-(sem body necessário)
-
-201 Created
-{
-  "success": true,
-  "status": 201,
-  "message": "Acesso guest criado com sucesso",
-  "data": {
-    "token": "<jwt>",
-    "guestId": "guest-<8-hex-chars>",
-    "roomId": "guest-room"
-  }
-}
-```
-
-### Regras da sala guest
-
-1. **Sala única**: todos os guests compartilham `"guest-room"` (in-memory, sem persistência).
-2. **Auto-join**: o servidor detecta `decoded.id.startsWith("guest-")` e atribui `roomId = "guest-room"` automaticamente — o cliente **não precisa** enviar `join_room` separado.
-3. **Lazy reset**: ao processar CONN de um guest, se `getRoomSessionCount("guest-room") === 0`, o servidor chama `NpcRegisterHandler.clearRoomState("guest-room")` antes de criar a sessão. Isso elimina NPCs órfãos de sessões anteriores.
-4. **Mastership automático**: o primeiro guest a enviar `npc_register` para um NPC se torna seu master. Sem eleição explícita.
-5. **Cleanup pós-timeout**: quando a última sessão de `guest-room` expira (30 s de inatividade), `cleanupSessions` chama `NpcRegisterHandler.clearRoomState("guest-room")` automaticamente.
+Mapa interno: `roomId:npcId → { master, floor, type }`. Limpo quando a sala morre.
 
 ---
 
-## 8. Referências de implementação
+## 7. Referências de implementação
 
 | Componente | Arquivo |
 | :--------- | :------ |
@@ -263,7 +250,8 @@ Content-Type: application/json
 | Handler NPC register | `src/sockets/handlers/NpcRegister.Handler.ts` |
 | Relógio do expediente | `src/services/ShiftClockService.ts`, `src/sockets/handlers/ShiftClockRequest.Handler.ts` |
 | Roster da sala | `UdpSocketManager.getRoomRoster` / `broadcastRoster` |
-| Endpoint guest | `src/api/controllers/GuestController.ts` |
-| Service guest | `src/services/guestService.ts` |
+| Salas (memória, limite 2) | `src/services/RoomRegistry.ts`, `src/api/controllers/RoomController.ts` |
+| Sessão só com nome | `src/services/sessionService.ts`, `src/api/controllers/SessionController.ts` |
+| Tarefas da sala | `src/services/TaskService.ts` |
 | Constantes C# (cliente) | `Assets/Scripts/Network/NetworkEvents.cs` |
 | DTOs C# (cliente) | `Assets/Scripts/Network/Models/` |

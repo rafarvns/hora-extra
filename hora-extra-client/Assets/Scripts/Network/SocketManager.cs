@@ -3,49 +3,56 @@ using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading.Tasks;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using HoraExtra.Network;
 
 /**
- * SocketManager (UDP Version): Gerencia a conexão de rede usando UDP Datagram nativo.
- * Substitui o Socket.IO para maior performance e simplicidade.
+ * SocketManager (UDP): conexão de rede com o servidor da partida.
+ *
+ * Ciclo: <see cref="Connect"/>(token, roomId) envia CONN (reenviado até 3× se não houver
+ * resposta) → CONN_SUCCESS (<see cref="OnConnected"/>) ou CONN_ERROR
+ * (<see cref="OnConnectionError"/>, ex: sala cheia). Conectado, manda ping a cada 2 s; sem
+ * nenhum pacote do servidor por <see cref="CONNECTION_LOST_SECONDS"/> dispara
+ * <see cref="OnConnectionLost"/>. <see cref="Disconnect"/> avisa o servidor (leave_room)
+ * para a vaga ser liberada na hora.
  */
 public class SocketManager : MonoBehaviour
 {
     public static SocketManager Instance { get; private set; }
     public string LocalPlayerId { get; private set; }
+    public string RoomId { get; private set; }
     public bool IsConnected => _isConnected;
     public float Latency { get; private set; }
 
-    // Flag estático: impede AutoConnect quando o GO é criado via EnsureExists() em runtime.
-    private static bool _suppressAutoConnect = false;
+    /// <summary>CONN aceito. Parâmetro: id do jogador local.</summary>
+    public event Action<string> OnConnected;
+
+    /// <summary>CONN recusado. Parâmetros: código (ROOM_FULL, ROOM_NOT_FOUND, INVALID_TOKEN, TIMEOUT) e mensagem.</summary>
+    public event Action<string, string> OnConnectionError;
+
+    /// <summary>Conexão caiu (servidor parou de responder).</summary>
+    public event Action OnConnectionLost;
+
+    public const float CONNECTION_LOST_SECONDS = 10f;
+    private const float HANDSHAKE_RETRY_SECONDS = 1.5f;
+    private const int HANDSHAKE_ATTEMPTS = 3;
 
     /// <summary>
-    /// Garante que existe uma instância do SocketManager. Se nao existir na cena,
-    /// cria um GameObject em runtime. Usado pelo flow guest para tolerar cenas que
-    /// nao tem o GameObject pre-configurado no Inspector.
+    /// Garante que existe uma instância do SocketManager (DontDestroyOnLoad). Ela nasce
+    /// desconectada: quem conecta é o <see cref="MatchJoinFlow"/>.
     /// </summary>
     public static SocketManager EnsureExists()
     {
         if (Instance == null)
         {
-            Debug.Log("[NETWORK] SocketManager nao encontrado na cena — criando runtime.");
-            _suppressAutoConnect = true;
+            Debug.Log("[NETWORK] SocketManager nao encontrado — criando runtime.");
             var go = new GameObject("SocketManager (auto-created)");
             go.AddComponent<SocketManager>();
-            // Awake roda imediatamente no AddComponent; Instance ja esta setado aqui.
-            _suppressAutoConnect = false;
         }
         return Instance;
     }
-
-    [Header("Network Settings")]
-    [Tooltip("Host e portas vêm de BackendConfig (fonte única de verdade). " +
-             "Para mudar o servidor, edite BackendConfig.cs — não há IP aqui no Inspector.")]
-    public bool AutoConnect = true;
 
     /// <summary>Host do backend — proxy de leitura para <see cref="BackendConfig.Host"/>.</summary>
     public string ServerIp => BackendConfig.Host;
@@ -53,15 +60,17 @@ public class SocketManager : MonoBehaviour
     /// <summary>Porta UDP do backend — proxy de leitura para <see cref="BackendConfig.UdpPort"/>.</summary>
     public int ServerPort => BackendConfig.UdpPort;
 
-    [Header("Development & Testing")]
-    public bool UseTestToken = true;
-    public string TestToken = "horaextra_dev_test_token_2026";
-
     private UdpClient _udpClient;
     private IPEndPoint _serverEndPoint;
     private bool _isConnected = false;
-    
+
+    private string _token;
+    private bool _handshakePending;
+    private int _handshakeAttempts;
+    private float _handshakeTimer;
+
     private float _lastPingTime;
+    private float _lastPacketTime;
     private const float HeartbeatInterval = 2f;
     private float _heartbeatTimer = 0f;
 
@@ -74,38 +83,11 @@ public class SocketManager : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
-
-            // Host/porta vêm de BackendConfig (fonte única) via as propriedades ServerIp/ServerPort.
-
-            // Modo guest: aguardar SetAuthTokenAndReconnect() — nao autoconectar com TestToken.
-            if (GuestSession.IsGuestMode)
-            {
-                Debug.Log("[NETWORK] Guest mode detectado — aguardando SetAuthTokenAndReconnect().");
-                return;
-            }
-
-            // Criado via EnsureExists(): nao autoconectar — o caller vai chamar SetAuthTokenAndReconnect.
-            if (_suppressAutoConnect)
-            {
-                Debug.Log("[NETWORK] AutoConnect suprimido (runtime create) — aguardando comando explicito.");
-                return;
-            }
-
-            // Inicializar o socket o mais cedo possivel
-            if (AutoConnect)
-            {
-                ConnectToServer();
-            }
         }
         else
         {
             Destroy(gameObject);
         }
-    }
-
-    private void Start()
-    {
-        // Conexão agora é tratada no Awake para garantir prontidão para outros scripts no Start.
     }
 
     private void Update()
@@ -119,14 +101,22 @@ public class SocketManager : MonoBehaviour
             }
         }
 
-        // Heartbeat logic
+        if (_handshakePending) TickHandshake();
+
         if (_isConnected)
         {
-            _heartbeatTimer += Time.deltaTime;
+            _heartbeatTimer += Time.unscaledDeltaTime;
             if (_heartbeatTimer >= HeartbeatInterval)
             {
                 SendPing();
                 _heartbeatTimer = 0f;
+            }
+
+            if (Time.realtimeSinceStartup - _lastPacketTime > CONNECTION_LOST_SECONDS)
+            {
+                Debug.LogWarning("[NETWORK] Servidor parou de responder — conexão perdida.");
+                CloseSocket();
+                OnConnectionLost?.Invoke();
             }
         }
     }
@@ -137,60 +127,99 @@ public class SocketManager : MonoBehaviour
         Emit(NetworkEvents.PING, new { t = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() });
     }
 
-    public void ConnectToServer()
+    // === Conexão ===
+
+    /// <summary>
+    /// Conecta na sala <paramref name="roomId"/> com o token da sessão. Fecha qualquer
+    /// conexão anterior. O resultado chega por <see cref="OnConnected"/> ou
+    /// <see cref="OnConnectionError"/>.
+    /// </summary>
+    public void Connect(string token, string roomId)
     {
+        CloseSocket();
+        _token = token;
+        RoomId = roomId;
+
         try
         {
-            Debug.Log($"[NETWORK] Iniciando Socket UDP para {ServerIp}:{ServerPort}");
-            
+            Debug.Log($"[NETWORK] Conectando em {ServerIp}:{ServerPort} (sala {roomId})");
             _udpClient = new UdpClient();
             _serverEndPoint = new IPEndPoint(IPAddress.Parse(ServerIp), ServerPort);
-            
-            // Iniciar loop de recebimento asíncrono
-            ReceiveLoop();
+            ReceiveLoop(_udpClient);
 
-            // Handshake (Envia Token de Conexão)
-            SendHandshake();
+            _handshakePending = true;
+            _handshakeAttempts = 0;
+            _handshakeTimer = HANDSHAKE_RETRY_SECONDS; // envia já no próximo Update
         }
         catch (Exception e)
         {
             Debug.LogError($"[NETWORK] Erro ao iniciar UDP: {e.Message}");
+            _handshakePending = false;
+            OnConnectionError?.Invoke("NETWORK", "Não foi possível abrir a conexão.");
         }
     }
 
-    private void SendHandshake()
+    /// <summary>Sai da sala (leave_room) e fecha a conexão.</summary>
+    public void Disconnect()
     {
-        string token = UseTestToken ? TestToken : HoraExtra.Network.NetworkSettings.AuthToken;
-        
-        // Protocolo: { "e": "CONN", "token": "...", "d": { "playerName": "..." } }
-        var handshake = new {
-            e = "CONN",
-            token = token,
-            d = new {
-                playerName = HoraExtra.Settings.GameSettings.ResolvePlayerName() ?? "Player_" + UnityEngine.Random.Range(100, 999),
-                resetRoom = UseTestToken // Sinaliza para o servidor resetar a sala se for modo teste
-            }
-        };
-
-        Emit("CONN", handshake); // Emit manual do handshake
-        Debug.Log("[NETWORK] Handshake de conexão enviado.");
+        if (_isConnected) Emit(NetworkEvents.LEAVE_ROOM, new { });
+        CloseSocket();
+        LocalPlayerId = null;
+        RoomId = null;
+        Debug.Log("[NETWORK] Desconectado da sala.");
     }
 
-    private async void ReceiveLoop()
+    private void TickHandshake()
     {
-        while (_udpClient != null)
+        _handshakeTimer += Time.unscaledDeltaTime;
+        if (_handshakeTimer < HANDSHAKE_RETRY_SECONDS) return;
+        _handshakeTimer = 0f;
+
+        if (_handshakeAttempts >= HANDSHAKE_ATTEMPTS)
+        {
+            _handshakePending = false;
+            Debug.LogWarning("[NETWORK] Sem resposta ao CONN.");
+            CloseSocket();
+            OnConnectionError?.Invoke("TIMEOUT", "O servidor não respondeu.");
+            return;
+        }
+
+        _handshakeAttempts++;
+        Emit(NetworkEvents.CONN, new { e = NetworkEvents.CONN, token = _token, d = new { roomId = RoomId } });
+        Debug.Log($"[NETWORK] CONN enviado (tentativa {_handshakeAttempts}/{HANDSHAKE_ATTEMPTS}).");
+    }
+
+    private void CloseSocket()
+    {
+        _handshakePending = false;
+        _isConnected = false;
+        if (_udpClient != null)
+        {
+            _udpClient.Close();
+            _udpClient = null;
+        }
+    }
+
+    private async void ReceiveLoop(UdpClient client)
+    {
+        while (client == _udpClient && client != null)
         {
             try
             {
-                UdpReceiveResult result = await _udpClient.ReceiveAsync();
+                UdpReceiveResult result = await client.ReceiveAsync();
                 string message = Encoding.UTF8.GetString(result.Buffer);
-                
-                // Agendar processamento na thread principal
-                EnqueueAction(() => ProcessMessage(message));
+                EnqueueAction(() => { if (client == _udpClient) ProcessMessage(message); });
             }
             catch (ObjectDisposedException) { break; }
+            catch (SocketException e)
+            {
+                // ICMP "porta inalcançável" (servidor fora do ar) chega aqui no Windows.
+                if (client != _udpClient) break;
+                Debug.LogWarning($"[NETWORK] Erro no Receive UDP: {e.Message}");
+            }
             catch (Exception e)
             {
+                if (client != _udpClient) break;
                 Debug.LogWarning($"[NETWORK] Erro no Receive UDP: {e.Message}");
             }
         }
@@ -201,22 +230,31 @@ public class SocketManager : MonoBehaviour
     {
         try
         {
+            _lastPacketTime = Time.realtimeSinceStartup;
+
             var packet = JsonConvert.DeserializeObject<JObject>(json);
             string eventName = packet["e"]?.ToString();
             JToken data = packet["d"];
 
-            if (eventName == "CONN_SUCCESS")
+            if (eventName == NetworkEvents.CONN_SUCCESS)
             {
+                if (_isConnected) return; // resposta duplicada de um CONN reenviado
+                _handshakePending = false;
                 _isConnected = true;
                 LocalPlayerId = data["id"]?.ToString();
-                Debug.Log($"[NETWORK] Conexão UDP Estabelecida! ID: {LocalPlayerId}");
-                TriggerEvent("connection_success", data);
+                Debug.Log($"[NETWORK] Conectado na sala {RoomId}. ID: {LocalPlayerId}");
+                TriggerEvent(NetworkEvents.CONNECTION_SUCCESS, data);
+                OnConnected?.Invoke(LocalPlayerId);
             }
-            else if (eventName == "CONN_ERROR")
+            else if (eventName == NetworkEvents.CONN_ERROR)
             {
-                Debug.LogError($"[NETWORK] Erro na autenticação UDP: {data["message"]}");
+                string code = data?["code"]?.ToString() ?? "ERROR";
+                string message = data?["message"]?.ToString() ?? "Conexão recusada.";
+                Debug.LogWarning($"[NETWORK] CONN recusado ({code}): {message}");
+                CloseSocket();
+                OnConnectionError?.Invoke(code, message);
             }
-            else if (eventName == "player_move")
+            else if (eventName == NetworkEvents.PLAYER_MOVE)
             {
                 _receivedMovePackets++;
                 if (_receivedMovePackets % 50 == 0) Debug.Log($"[NETWORK] Recebendo movimento de {data["id"]}... ({_receivedMovePackets} total)");
@@ -224,7 +262,7 @@ public class SocketManager : MonoBehaviour
             }
             else if (eventName == NetworkEvents.PONG)
             {
-                Latency = (Time.realtimeSinceStartup - _lastPingTime) * 1000f; // Conversão para ms
+                Latency = (Time.realtimeSinceStartup - _lastPingTime) * 1000f;
             }
             else
             {
@@ -258,9 +296,13 @@ public class SocketManager : MonoBehaviour
 
     private void TriggerEvent(string eventName, JToken data)
     {
-        if (_eventHandlers.ContainsKey(eventName))
+        if (!_eventHandlers.TryGetValue(eventName, out var handlers) || handlers == null) return;
+
+        // Um handler com erro (ex: objeto destruído) não pode impedir os outros de rodar.
+        foreach (Action<JToken> h in handlers.GetInvocationList())
         {
-            _eventHandlers[eventName]?.Invoke(data);
+            try { h(data); }
+            catch (Exception e) { Debug.LogError($"[NETWORK] Erro no handler de '{eventName}': {e}"); }
         }
     }
 
@@ -270,22 +312,15 @@ public class SocketManager : MonoBehaviour
     {
         if (_udpClient == null || _serverEndPoint == null)
         {
-            Debug.LogWarning($"[NETWORK] Tentativa de enviar '{eventName}' antes do Socket estar pronto.");
             return;
         }
 
         try
         {
-            // Se for o handshake (CONN), o payload já inclui o token. 
-            // Para outros eventos, incluímos apenas 'e' e 'd'.
-            object packet;
-            if (eventName == "CONN") {
-                packet = payload;
-            } else {
-                packet = new { e = eventName, d = payload };
-            }
+            // O CONN já vem montado ({ e, token, d }); os demais são { e, d }.
+            object packet = eventName == NetworkEvents.CONN ? payload : new { e = eventName, d = payload };
 
-            if (eventName == "player_move") {
+            if (eventName == NetworkEvents.PLAYER_MOVE) {
                 _sentMovePackets++;
                 if (_sentMovePackets % 50 == 0) Debug.Log($"[NETWORK] Enviando movimento... ({_sentMovePackets} total)");
             }
@@ -308,34 +343,14 @@ public class SocketManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Fecha a conexão atual (se houver), troca para o token informado e reconecta.
-    /// Deve ser chamado pelo controller de UI após GuestService.JoinAsGuest() retornar
-    /// com sucesso — ou após qualquer login real que precise substituir o token em runtime.
-    /// </summary>
-    public void SetAuthTokenAndReconnect(string token)
+    private void OnApplicationQuit()
     {
-        Debug.Log("[NETWORK] SetAuthTokenAndReconnect: encerrando conexão anterior e reconectando...");
-
-        if (_udpClient != null)
-        {
-            _udpClient.Close();
-            _udpClient = null;
-        }
-
-        _isConnected = false;
-        UseTestToken = false;
-        HoraExtra.Network.NetworkSettings.AuthToken = token;
-
-        ConnectToServer();
+        // Fechar o jogo libera a vaga na hora, sem esperar o timeout do servidor.
+        Disconnect();
     }
 
     private void OnDestroy()
     {
-        if (_udpClient != null)
-        {
-            _udpClient.Close();
-            _udpClient = null;
-        }
+        if (Instance == this) CloseSocket();
     }
 }

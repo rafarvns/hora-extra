@@ -1161,6 +1161,7 @@ MonoBehaviour:
   _theme: {fileID: 11400000, guid: c9f5e4fb6a3d4b8cae2f7a4d3b1c2e33, type: 2}
   _guestGameScene: SCN_FirstFloor
   _hideLegacyMenu: 1
+  _clickSound: {fileID: 8300000, guid: f7634a08349a81f4886a842aa7a6587d, type: 3}
 --- !u!1 &924381941
 GameObject:
   m_ObjectHideFlags: 0

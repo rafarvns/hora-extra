@@ -47,6 +47,7 @@ namespace HoraExtra.UI.Hud.Widgets
         {
             TaskSystemBridge.OnTaskAssigned += HandleAssigned;
             TaskSystemBridge.OnTaskUpdated += HandleUpdated;
+            TaskSystemBridge.OnRoomStateChanged += MarkDirty;
             if (RoomRoster.Instance != null) RoomRoster.Instance.OnRosterChanged += MarkDirty;
             _dirty = true;
         }
@@ -55,6 +56,7 @@ namespace HoraExtra.UI.Hud.Widgets
         {
             TaskSystemBridge.OnTaskAssigned -= HandleAssigned;
             TaskSystemBridge.OnTaskUpdated -= HandleUpdated;
+            TaskSystemBridge.OnRoomStateChanged -= MarkDirty;
             if (RoomRoster.Instance != null) RoomRoster.Instance.OnRosterChanged -= MarkDirty;
         }
 
@@ -93,13 +95,15 @@ namespace HoraExtra.UI.Hud.Widgets
         {
             var bridge = TaskSystemBridge.Instance;
             var tasks = bridge != null ? bridge.GetTasksOf(player.Id) : new List<AssignedTask>();
-            int total = bridge != null ? bridge.GetTotalTasksOf(player.Id) : 0;
+            // Tarefas são da sala: "tudo feito" é quando a EQUIPE terminou; o placar de cada
+            // um é quantas ELE fez.
+            int totalEquipe = bridge != null ? bridge.TeamTotalCount : 0;
             int terminadas = 0;
             foreach (var t in tasks)
                 if (TaskPresentation.IsFinished(t)) terminadas++;
             var ativa = TaskPresentation.FindActive(tasks);
             bool local = IsLocalPlayer(player.Id);
-            bool tudoFeito = total > 0 && terminadas >= total;
+            bool tudoFeito = totalEquipe > 0 && bridge.TeamDoneCount >= totalEquipe;
 
             var row = HudFactory.Rect("Row", _rows);
             HudFactory.Row(row.gameObject, 12f, TextAnchor.MiddleLeft);
@@ -122,8 +126,8 @@ namespace HoraExtra.UI.Hud.Widgets
                         : "Sem tarefa no momento";
 
             var placar = HudFactory.Label(row, "Score", Theme, Theme.BodySize, tudoFeito ? Theme.Success : Theme.Text, TextAlignmentOptions.Right, FontStyles.Bold);
-            placar.text = total > 0 ? $"{terminadas}<size=70%><color={HudFactory.Hex(Theme.TextMuted)}>/{total}</color></size>" : "–";
-            HudFactory.Fixed(placar.gameObject, 56f, -1f);
+            placar.text = $"{terminadas}<size=70%><color={HudFactory.Hex(Theme.TextMuted)}> feitas</color></size>";
+            HudFactory.Fixed(placar.gameObject, 96f, -1f);
         }
     }
 }

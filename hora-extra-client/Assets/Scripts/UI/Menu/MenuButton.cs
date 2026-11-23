@@ -3,6 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using HoraExtra.Audio;
 using HoraExtra.UI.Hud;
 
 namespace HoraExtra.UI.Menu
@@ -35,6 +36,14 @@ namespace HoraExtra.UI.Menu
         private float _hover;
 
         public TextMeshProUGUI LabelText => _label;
+
+        /// <summary>
+        /// Som do clique, comum a todos os botões do menu. Os botões são criados em código
+        /// (<see cref="MenuFactory.Button"/>), então o clipe vem da cena pelo
+        /// <see cref="MainMenuRoot"/>. Estático de propósito: vale também para os botões
+        /// criados depois, inclusive fora da MainMenuScene. Null = sem som.
+        /// </summary>
+        public static AudioClip ClickSound { get; set; }
 
         internal void Setup(HudTheme theme, Image bg, RectTransform bar, TextMeshProUGUI label, TextMeshProUGUI sub,
             bool primary, Action onClick)
@@ -106,6 +115,7 @@ namespace HoraExtra.UI.Menu
         private void Press()
         {
             if (!IsActive() || !IsInteractable()) return;
+            InteractionAudio.PlayOneShot(ClickSound);
             _onClick?.Invoke();
         }
 

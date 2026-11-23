@@ -26,7 +26,7 @@ Lida no momento do uso (não na importação), então basta reiniciar o servidor
 ## Ciclo de vida
 
 - Estado só em memória (`Map<roomId, startedAtMs>`).
-- Zerado em `resetRoomState` (dev `resetRoom: true`) e quando a `guest-room` esvazia por timeout.
+- Descartado quando a sala morre (vazia por mais de 60 s). Quem entra no meio recebe o relógio em andamento.
 
 ## Por que `m` e não timestamps?
 

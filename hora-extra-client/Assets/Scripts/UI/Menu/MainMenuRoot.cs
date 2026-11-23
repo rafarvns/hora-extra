@@ -16,32 +16,29 @@ namespace HoraExtra.UI.Menu
 {
     /// <summary>
     /// Raiz do menu principal. Basta UM GameObject com este componente na MainMenuScene: ele
-    /// cria o próprio Canvas, garante EventSystem e SessionManager (restaurando o login salvo)
-    /// e monta todas as seções com o mesmo <see cref="HudTheme"/> da HUD in-game.
+    /// cria o próprio Canvas, garante EventSystem e monta todas as seções com o mesmo
+    /// <see cref="HudTheme"/> da HUD in-game.
     ///
-    /// Com <c>_hideLegacyMenu</c> marcado, desativa o Canvas antigo (MainMenuController) — que
-    /// continua na cena: desmarcar a flag traz o menu antigo de volta.
+    /// Não há conta: "Jogar" abre o <see cref="PlayPanel"/>, onde o jogador digita o nome e
+    /// cria ou entra numa sala (máx. 2 jogadores).
     ///
-    /// Também é o "controlador" das ações: jogar como convidado, trocar de cena, sair, e a
-    /// pilha de painéis (Esc fecha o do topo).
+    /// Também é o "controlador" das ações: entrar em sala, sair, e a pilha de painéis
+    /// (Esc fecha o do topo).
     /// </summary>
     [DisallowMultipleComponent]
     public class MainMenuRoot : MonoBehaviour
     {
-        public const string LOBBY_SCENE = "LobbyScene";
-        public const string LOGIN_SCENE = "LoginScene";
-        public const string REGISTER_SCENE = "CreateAccountScene";
-
         [Header("Tema")]
         [Tooltip("Vazio = Resources/UI/SO_HudTheme (o mesmo da HUD in-game).")]
         [SerializeField] private HudTheme _theme;
 
-        [Header("Cenas")]
-        [SerializeField] private string _guestGameScene = GuestPlayFlow.DEFAULT_GAME_SCENE;
-
         [Header("Menu legado")]
         [Tooltip("Desativa o Canvas antigo do MainMenuController.")]
         [SerializeField] private bool _hideLegacyMenu = true;
+
+        [Header("Som")]
+        [Tooltip("Clique de todos os botões do menu (SFX_ClickMenu). Vazio = sem som.")]
+        [SerializeField] private AudioClip _clickSound;
 
         public HudTheme Theme { get; private set; }
 
@@ -50,7 +47,7 @@ namespace HoraExtra.UI.Menu
         public float ServerLatencyMs { get; private set; }
         public event Action OnServerStatusChanged;
 
-        /// <summary>True enquanto o "Jogar agora" está conectando.</summary>
+        /// <summary>True enquanto está entrando numa sala.</summary>
         public bool IsBusy { get; private set; }
         public event Action<bool, string> OnBusyChanged;   // (ocupado, mensagem de status/erro)
 
@@ -63,9 +60,15 @@ namespace HoraExtra.UI.Menu
         private void Awake()
         {
             Theme = _theme != null ? _theme : HudTheme.LoadOrDefault();
+            MenuButton.ClickSound = _clickSound;
 
-            // Restaura o login salvo (PlayerPrefs) já na primeira tela.
-            SessionManager.EnsureExists();
+            // Voltou de uma partida: garante que não sobrou conexão aberta e solta o cursor
+            // (o jogador o trava no centro da tela).
+            if (SocketManager.Instance != null && SocketManager.Instance.IsConnected)
+                SocketManager.Instance.Disconnect();
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+
             EnsureEventSystem();
             if (_hideLegacyMenu) HideLegacyMenu();
 
@@ -78,14 +81,21 @@ namespace HoraExtra.UI.Menu
             _mainLayer = layer.gameObject.AddComponent<CanvasGroup>();
 
             Add<MainColumn>("MainColumn", layer);
-            Add<ProfileCard>("ProfileCard", layer);
             Add<MenuFooter>("Footer", layer);
 
+            AddPanel<PlayPanel>("Panel_Play");
             AddPanel<HowToPlayPanel>("Panel_HowToPlay");
             AddPanel<SettingsPanel>("Panel_Settings");
             AddPanel<CreditsPanel>("Panel_Credits");
 
             Debug.Log("[UI] MainMenuRoot — menu principal montado.");
+        }
+
+        private void Start()
+        {
+            // Mensagem deixada por quem trouxe o jogador de volta (ex: conexão caiu).
+            string aviso = MatchSession.TakeMenuMessage();
+            if (!string.IsNullOrEmpty(aviso)) SetBusy(false, aviso);
         }
 
         private void Update()
@@ -96,27 +106,29 @@ namespace HoraExtra.UI.Menu
 
         // === Ações ===
 
-        public async void PlayAsGuest()
+        /// <summary>Cria uma sala com o nome dado e entra nela.</summary>
+        public async void CreateRoom(string nomeJogador, string nomeSala)
         {
             if (IsBusy) return;
-            SetBusy(true, "Conectando ao servidor…");
+            SetBusy(true, "Criando a sala…");
 
-            var result = await GuestPlayFlow.Start(_guestGameScene);
+            var result = await MatchJoinFlow.CreateAndJoin(nomeJogador, nomeSala);
 
             // Sucesso troca de cena: este objeto já está sendo destruído.
             if (this == null) return;
-            if (!result.Success) SetBusy(false, result.Error);
+            SetBusy(false, result.Success ? null : result.Error);
         }
 
-        public void LoadScene(string sceneName)
+        /// <summary>Entra numa sala da lista (inclusive em andamento).</summary>
+        public async void JoinRoom(string nomeJogador, HoraExtra.Network.Models.RoomData sala)
         {
-            if (!Application.CanStreamedLevelBeLoaded(sceneName))
-            {
-                Debug.LogError($"[UI] MainMenuRoot — cena '{sceneName}' não está no Build Settings.");
-                return;
-            }
-            Debug.Log($"[UI] MainMenuRoot — carregando {sceneName}.");
-            SceneManager.LoadScene(sceneName);
+            if (IsBusy || sala == null) return;
+            SetBusy(true, $"Entrando em \"{sala.Nome}\"…");
+
+            var result = await MatchJoinFlow.Join(nomeJogador, sala.Id, sala.Nome);
+
+            if (this == null) return;
+            SetBusy(false, result.Success ? null : result.Error);
         }
 
         public void Quit()
@@ -127,12 +139,6 @@ namespace HoraExtra.UI.Menu
 #else
             Application.Quit();
 #endif
-        }
-
-        public void Logout()
-        {
-            SessionManager.Instance?.ClearSession();
-            NetworkSettings.ClearToken();
         }
 
         // === Painéis ===

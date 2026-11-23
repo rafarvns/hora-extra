@@ -54,6 +54,12 @@ namespace HoraExtra.Interactions
         [Tooltip("Volume do som de guardar.")]
         [SerializeField, Range(0f, 1f)] private float _depositVolume = 1f;
 
+        [Header("Visual (opcional)")]
+        [Tooltip("Objetos que aparecem no destino conforme as entregas (ex: caixas na estante). " +
+                 "Começam desligados; o n-ésimo liga quando a sala tiver n itens contados nas " +
+                 "tarefas deste tipo — vale também para o colega e para quem entra no meio.")]
+        [SerializeField] private GameObject[] _placedVisuals = new GameObject[0];
+
         // === Estado da entrega em voo ===
         private PlayerCarrier _carrierInRange;
         private CarryableItem _pendingItem;
@@ -115,12 +121,19 @@ namespace HoraExtra.Interactions
         {
             TaskSystemBridge.OnTaskUpdated += HandleTaskUpdated;
             TaskSystemBridge.OnTaskRejected += HandleTaskRejected;
+            TaskSystemBridge.OnRoomStateChanged += RefreshPlacedVisuals;
+        }
+
+        private void Start()
+        {
+            RefreshPlacedVisuals();
         }
 
         private void OnDisable()
         {
             TaskSystemBridge.OnTaskUpdated -= HandleTaskUpdated;
             TaskSystemBridge.OnTaskRejected -= HandleTaskRejected;
+            TaskSystemBridge.OnRoomStateChanged -= RefreshPlacedVisuals;
 
             ClearPending();
             _carrierInRange = null;
@@ -344,6 +357,21 @@ namespace HoraExtra.Interactions
                 DispatchNext(taskId, task.CurrentProgress);
             else
                 ClearPending();
+        }
+
+        /// <summary>
+        /// Liga os <see cref="_placedVisuals"/> conforme o estado da sala. Lê o retrato
+        /// compartilhado (não a entrega local), por isso o colega vê o mesmo resultado.
+        /// </summary>
+        private void RefreshPlacedVisuals()
+        {
+            if (_placedVisuals == null || _placedVisuals.Length == 0) return;
+
+            var bridge = TaskSystemBridge.Instance;
+            int contados = bridge != null ? bridge.CountCollectedOfType(_taskType) : 0;
+
+            for (int i = 0; i < _placedVisuals.Length; i++)
+                if (_placedVisuals[i] != null) _placedVisuals[i].SetActive(i < contados);
         }
 
         private void ClearPending()

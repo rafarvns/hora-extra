@@ -1,6 +1,6 @@
 import { SocketHandlerConstructor, ISocketHandler } from '../types/SocketEvent.js';
 // Handlers (serão adicionados conforme implementados)
-import { JoinRoomHandler } from '../handlers/JoinRoom.Handler.js';
+import { LeaveRoomHandler } from '../handlers/LeaveRoom.Handler.js';
 import { PlayerMoveHandler } from '../handlers/PlayerMove.Handler.js';
 import { NpcMoveHandler } from '../handlers/NpcMove.Handler.js';
 import { NpcRegisterHandler } from '../handlers/NpcRegister.Handler.js';
@@ -26,7 +26,7 @@ export class SocketHandlerFactory {
      * Registra o mapeamento estático de eventos.
      */
     static {
-        this.handlers.set('join_room', JoinRoomHandler);
+        this.handlers.set('leave_room', LeaveRoomHandler);
         this.handlers.set('player_move', PlayerMoveHandler);
         this.handlers.set('npc_move_request', NpcMoveHandler);
         this.handlers.set('npc_register', NpcRegisterHandler);

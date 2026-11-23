@@ -2439,6 +2439,37 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 7166050396316604535, guid: 562dea507fa81aa4bbdb746388dd0a1d, type: 3}
+--- !u!1 &79283879
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 79283880}
+  m_Layer: 0
+  m_Name: '-------------------------------------------  '
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &79283880
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 79283879}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -16.93704, y: 1.2, z: 1.24468}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &82294523
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2514,7 +2545,16 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 1956597881070382525, guid: 5fab3d9a08a16ed429bbc510962997d8, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 778000301}
+    - targetCorrespondingSourceObject: {fileID: 1956597881070382525, guid: 5fab3d9a08a16ed429bbc510962997d8, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 778000302}
+    - targetCorrespondingSourceObject: {fileID: 1956597881070382525, guid: 5fab3d9a08a16ed429bbc510962997d8, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 778000303}
   m_SourcePrefab: {fileID: 100100000, guid: 5fab3d9a08a16ed429bbc510962997d8, type: 3}
 --- !u!1 &82560531
 GameObject:
@@ -3282,6 +3322,9 @@ Transform:
   - {fileID: 1179054115}
   - {fileID: 449056301}
   - {fileID: 151098201}
+  - {fileID: 778000601}
+  - {fileID: 778000611}
+  - {fileID: 778000621}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &105504354
@@ -3563,12 +3606,18 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 768843a56882af240aaa7909ec9b98f0, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 2147483647
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 768843a56882af240aaa7909ec9b98f0, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 778000401}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 768843a56882af240aaa7909ec9b98f0, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 778000402}
   m_SourcePrefab: {fileID: 100100000, guid: 768843a56882af240aaa7909ec9b98f0, type: 3}
 --- !u!4 &118936291 stripped
 Transform:
@@ -4646,6 +4695,7 @@ GameObject:
   - component: {fileID: 185780723}
   - component: {fileID: 185780722}
   - component: {fileID: 185780721}
+  - component: {fileID: 778000101}
   m_Layer: 0
   m_Name: Sujeira_Terra
   m_TagString: Vassoura
@@ -5829,6 +5879,7 @@ GameObject:
   - component: {fileID: 246464832}
   - component: {fileID: 246464831}
   - component: {fileID: 246464830}
+  - component: {fileID: 778000104}
   m_Layer: 0
   m_Name: Sujeira_Terra4
   m_TagString: Vassoura
@@ -6931,6 +6982,7 @@ GameObject:
   - component: {fileID: 291397502}
   - component: {fileID: 291397501}
   - component: {fileID: 291397500}
+  - component: {fileID: 778000102}
   m_Layer: 0
   m_Name: Sujeira_Terra2
   m_TagString: Vassoura
@@ -11546,6 +11598,8 @@ GameObject:
   - component: {fileID: 504051939}
   - component: {fileID: 504051938}
   - component: {fileID: 504051937}
+  - component: {fileID: 778000205}
+  - component: {fileID: 778000206}
   m_Layer: 0
   m_Name: Lata3
   m_TagString: Untagged
@@ -12088,6 +12142,7 @@ GameObject:
   - component: {fileID: 531686581}
   - component: {fileID: 531686580}
   - component: {fileID: 531686579}
+  - component: {fileID: 778000106}
   m_Layer: 0
   m_Name: Sujeira_Chips2
   m_TagString: Vassoura
@@ -13140,6 +13195,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f45576c33875edd48ab4eb47e2414a5f, type: 3}
       insertIndex: -1
       addedObject: {fileID: 566171211}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f45576c33875edd48ab4eb47e2414a5f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 778000501}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f45576c33875edd48ab4eb47e2414a5f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 778000502}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f45576c33875edd48ab4eb47e2414a5f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 778000503}
   m_SourcePrefab: {fileID: 100100000, guid: f45576c33875edd48ab4eb47e2414a5f, type: 3}
 --- !u!4 &566171209 stripped
 Transform:
@@ -16132,6 +16196,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Characters.TaskSystemBridge
   _initialCatalog:
+  - id: task-collect-papers-01
+    description: "(1\xBA andar) Colete os pap\xE9is e coloque no recipiente na mesa"
+    type: collect_papers
+    targetCount: 4
+    items:
+    - papel-01
+    - papel-02
+    - papel-03
+    - papel-04
+    pairs: []
   - id: task-throw-trash-01
     description: "(2\xBA andar) Arremesse os papeis de lixo na lixeira"
     type: throw_trash_papers
@@ -16147,16 +16221,6 @@ MonoBehaviour:
     - papel-lixo-08
     - papel-lixo-09
     - papel-lixo-10
-    pairs: []
-  - id: task-collect-papers-01
-    description: "(1\xBA andar) Colete os pap\xE9is e coloque no recipiente na mesa"
-    type: collect_papers
-    targetCount: 4
-    items:
-    - papel-01
-    - papel-02
-    - papel-03
-    - papel-04
     pairs: []
   - id: task-collect-pens-01
     description: "(1\xBA andar) Organizar as canetas"
@@ -16185,6 +16249,52 @@ MonoBehaviour:
     - mancha-agua-04
     - mancha-cafe-01
     - mancha-cafe-02
+    pairs: []
+  - id: task-varrer-chao-01
+    description: "(1\xBA andar) Varra a terra e os chips do ch\xE3o"
+    type: sweep_floor
+    targetCount: 7
+    items:
+    - sujeira-terra-01
+    - sujeira-terra-02
+    - sujeira-terra-03
+    - sujeira-terra-04
+    - sujeira-chips-01
+    - sujeira-chips-02
+    - sujeira-chips-03
+    pairs: []
+  - id: task-maquina-vendas-01
+    description: "(1\xBA andar) Leve as latas at\xE9 a m\xE1quina de vendas"
+    type: return_cans
+    targetCount: 4
+    items:
+    - lata-01
+    - lata-02
+    - lata-03
+    - lata-04
+    pairs: []
+  - id: task-caixas-estante-01
+    description: "(1\xBA andar) Guarde as caixas de papel\xE3o na estante do almoxarifado"
+    type: shelve_boxes
+    targetCount: 3
+    items:
+    - caixa-01
+    - caixa-02
+    - caixa-03
+    pairs: []
+  - id: task-cofres-01
+    description: "(3\xBA andar) Abra os cofres e recolha o dinheiro"
+    type: open_safe_collect_money
+    targetCount: 2
+    items:
+    - cofre-direito
+    - cofre-esquerdo
+    pairs: []
+  - id: task-enviar-email-01
+    description: "(3\xBA andar) Envie o e-mail pendente no computador do Financeiro"
+    type: send_email_upload
+    targetCount: 1
+    items: []
     pairs: []
   _autoRequestTasksOnConnect: 1
   _autoRequestDelaySeconds: 0.5
@@ -18518,6 +18628,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 577ca1237c420e34f82a66a2852777f8, type: 3}
       insertIndex: -1
       addedObject: {fileID: 727708625}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 577ca1237c420e34f82a66a2852777f8, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 778000001}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 577ca1237c420e34f82a66a2852777f8, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 778000002}
   m_SourcePrefab: {fileID: 100100000, guid: 577ca1237c420e34f82a66a2852777f8, type: 3}
 --- !u!1 &727708624 stripped
 GameObject:
@@ -19520,7 +19636,7 @@ MonoBehaviour:
   _isTool: 0
   _pickupMessage: Aperte [E] para pegar o papel
   _prompt: {fileID: 771000001}
-  _pickupSound: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb3, type: 3}
+  _pickupSound: {fileID: 0}
   _pickupVolume: 1
 --- !u!114 &771000003
 MonoBehaviour:
@@ -19539,7 +19655,7 @@ MonoBehaviour:
   _isTool: 0
   _pickupMessage: Aperte [E] para pegar o papel
   _prompt: {fileID: 771000001}
-  _pickupSound: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb3, type: 3}
+  _pickupSound: {fileID: 0}
   _pickupVolume: 1
 --- !u!114 &771000004
 MonoBehaviour:
@@ -19558,7 +19674,7 @@ MonoBehaviour:
   _isTool: 0
   _pickupMessage: Aperte [E] para pegar o papel
   _prompt: {fileID: 771000001}
-  _pickupSound: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb3, type: 3}
+  _pickupSound: {fileID: 0}
   _pickupVolume: 1
 --- !u!114 &771000005
 MonoBehaviour:
@@ -19577,7 +19693,7 @@ MonoBehaviour:
   _isTool: 0
   _pickupMessage: Aperte [E] para pegar o papel
   _prompt: {fileID: 771000001}
-  _pickupSound: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb3, type: 3}
+  _pickupSound: {fileID: 0}
   _pickupVolume: 1
 --- !u!114 &771000006
 MonoBehaviour:
@@ -19684,7 +19800,7 @@ MonoBehaviour:
   _isTool: 0
   _pickupMessage: Aperte [E] para pegar a caneta
   _prompt: {fileID: 771000001}
-  _pickupSound: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb3, type: 3}
+  _pickupSound: {fileID: 0}
   _pickupVolume: 1
 --- !u!65 &773000003
 BoxCollider:
@@ -19724,7 +19840,7 @@ MonoBehaviour:
   _isTool: 0
   _pickupMessage: Aperte [E] para pegar a caneta
   _prompt: {fileID: 771000001}
-  _pickupSound: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb3, type: 3}
+  _pickupSound: {fileID: 0}
   _pickupVolume: 1
 --- !u!114 &773000005
 MonoBehaviour:
@@ -19743,7 +19859,7 @@ MonoBehaviour:
   _isTool: 0
   _pickupMessage: Aperte [E] para pegar a revista
   _prompt: {fileID: 771000001}
-  _pickupSound: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb3, type: 3}
+  _pickupSound: {fileID: 0}
   _pickupVolume: 1
 --- !u!114 &773000006
 MonoBehaviour:
@@ -19762,7 +19878,7 @@ MonoBehaviour:
   _isTool: 0
   _pickupMessage: Aperte [E] para pegar a revista
   _prompt: {fileID: 771000001}
-  _pickupSound: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb3, type: 3}
+  _pickupSound: {fileID: 0}
   _pickupVolume: 1
 --- !u!1 &773000010 stripped
 GameObject:
@@ -19808,7 +19924,7 @@ MonoBehaviour:
   _promptMessage: Aperte [E] para guardar a caneta
   _prompt: {fileID: 771000001}
   _rejectionMessageSeconds: 3
-  _depositSound: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb3, type: 3}
+  _depositSound: {fileID: 8300000, guid: 68ca569d0f769df488b2bf593d0f4ae6, type: 3}
   _depositVolume: 1
 --- !u!1 &774000001
 GameObject:
@@ -19930,7 +20046,7 @@ MonoBehaviour:
   _promptMessage: Aperte [E] para colocar a revista na mesa
   _prompt: {fileID: 771000001}
   _rejectionMessageSeconds: 3
-  _depositSound: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb3, type: 3}
+  _depositSound: {fileID: 8300000, guid: 4ff3840903d2f57408850cfd4a3c03a9, type: 3}
   _depositVolume: 1
 --- !u!114 &776000001
 MonoBehaviour:
@@ -20049,7 +20165,7 @@ MonoBehaviour:
   _promptMessage: Segure [E] para limpar a agua
   _promptSemFerramenta: Voce precisa do rodo para limpar isso
   _prompt: {fileID: 771000001}
-  _somLimpeza: {fileID: 0}
+  _somLimpeza: {fileID: 8300000, guid: f6b9aa69e4ba3a440bd20d2fbb7d3525, type: 3}
   _volume: 1
 --- !u!114 &777000012
 MonoBehaviour:
@@ -20071,7 +20187,7 @@ MonoBehaviour:
   _promptMessage: Segure [E] para limpar a agua
   _promptSemFerramenta: Voce precisa do rodo para limpar isso
   _prompt: {fileID: 771000001}
-  _somLimpeza: {fileID: 0}
+  _somLimpeza: {fileID: 8300000, guid: f6b9aa69e4ba3a440bd20d2fbb7d3525, type: 3}
   _volume: 1
 --- !u!114 &777000013
 MonoBehaviour:
@@ -20093,7 +20209,7 @@ MonoBehaviour:
   _promptMessage: Segure [E] para limpar a agua
   _promptSemFerramenta: Voce precisa do rodo para limpar isso
   _prompt: {fileID: 771000001}
-  _somLimpeza: {fileID: 0}
+  _somLimpeza: {fileID: 8300000, guid: f6b9aa69e4ba3a440bd20d2fbb7d3525, type: 3}
   _volume: 1
 --- !u!114 &777000014
 MonoBehaviour:
@@ -20115,7 +20231,7 @@ MonoBehaviour:
   _promptMessage: Segure [E] para limpar a agua
   _promptSemFerramenta: Voce precisa do rodo para limpar isso
   _prompt: {fileID: 771000001}
-  _somLimpeza: {fileID: 0}
+  _somLimpeza: {fileID: 8300000, guid: f6b9aa69e4ba3a440bd20d2fbb7d3525, type: 3}
   _volume: 1
 --- !u!114 &777000015
 MonoBehaviour:
@@ -20137,7 +20253,7 @@ MonoBehaviour:
   _promptMessage: Segure [E] para limpar o cafe
   _promptSemFerramenta: Voce precisa do rodo para limpar isso
   _prompt: {fileID: 771000001}
-  _somLimpeza: {fileID: 0}
+  _somLimpeza: {fileID: 8300000, guid: f6b9aa69e4ba3a440bd20d2fbb7d3525, type: 3}
   _volume: 1
 --- !u!114 &777000016
 MonoBehaviour:
@@ -20159,7 +20275,7 @@ MonoBehaviour:
   _promptMessage: Segure [E] para limpar o cafe
   _promptSemFerramenta: Voce precisa do rodo para limpar isso
   _prompt: {fileID: 771000001}
-  _somLimpeza: {fileID: 0}
+  _somLimpeza: {fileID: 8300000, guid: f6b9aa69e4ba3a440bd20d2fbb7d3525, type: 3}
   _volume: 1
 --- !u!1001 &779882962
 PrefabInstance:
@@ -21364,6 +21480,8 @@ GameObject:
   - component: {fileID: 827919201}
   - component: {fileID: 827919200}
   - component: {fileID: 827919199}
+  - component: {fileID: 778000207}
+  - component: {fileID: 778000208}
   m_Layer: 0
   m_Name: Lata4
   m_TagString: Untagged
@@ -27688,6 +27806,7 @@ GameObject:
   - component: {fileID: 1116949258}
   - component: {fileID: 1116949257}
   - component: {fileID: 1116949256}
+  - component: {fileID: 778000107}
   m_Layer: 0
   m_Name: Sujeira_Chips3
   m_TagString: Vassoura
@@ -28118,6 +28237,8 @@ GameObject:
   - component: {fileID: 1126169485}
   - component: {fileID: 1126169484}
   - component: {fileID: 1126169483}
+  - component: {fileID: 778000203}
+  - component: {fileID: 778000204}
   m_Layer: 0
   m_Name: Lata2
   m_TagString: Untagged
@@ -30113,12 +30234,18 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: b24820a9688e07543b6af9c6b9b5c9cb, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 2147483647
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: b24820a9688e07543b6af9c6b9b5c9cb, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 778000411}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: b24820a9688e07543b6af9c6b9b5c9cb, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 778000412}
   m_SourcePrefab: {fileID: 100100000, guid: b24820a9688e07543b6af9c6b9b5c9cb, type: 3}
 --- !u!4 &1179054115 stripped
 Transform:
@@ -33571,6 +33698,7 @@ GameObject:
   - component: {fileID: 1354882297}
   - component: {fileID: 1354882296}
   - component: {fileID: 1354882295}
+  - component: {fileID: 778000105}
   m_Layer: 0
   m_Name: Sujeira_Chips
   m_TagString: Vassoura
@@ -39943,6 +40071,8 @@ GameObject:
   - component: {fileID: 1641821107}
   - component: {fileID: 1641821106}
   - component: {fileID: 1641821105}
+  - component: {fileID: 778000201}
+  - component: {fileID: 778000202}
   m_Layer: 0
   m_Name: Lata
   m_TagString: Untagged
@@ -41747,12 +41877,18 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: db68100f6df72d849bb604a12d32b2e8, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 2147483647
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: db68100f6df72d849bb604a12d32b2e8, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 778000421}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: db68100f6df72d849bb604a12d32b2e8, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 778000422}
   m_SourcePrefab: {fileID: 100100000, guid: db68100f6df72d849bb604a12d32b2e8, type: 3}
 --- !u!4 &1706819787 stripped
 Transform:
@@ -44771,6 +44907,7 @@ GameObject:
   - component: {fileID: 1893545741}
   - component: {fileID: 1893545740}
   - component: {fileID: 1893545739}
+  - component: {fileID: 778000103}
   m_Layer: 0
   m_Name: Sujeira_Terra3
   m_TagString: Vassoura
@@ -51249,6 +51386,886 @@ MonoBehaviour:
   _showObjectiveMarker: 1
   _showNetworkStatus: 1
   _hideLegacyHud: 1
+--- !u!65 &778000001
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 727708624}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1.2, y: 1.6, z: 1.2}
+  m_Center: {x: 0, y: 0.75, z: 0}
+--- !u!114 &778000002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 727708624}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91c3e3a6c17a61744b1e2607dd1e3ef9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.CarryableItem
+  _itemId: ferramenta-vassoura
+  _kind: vassoura
+  _isTool: 1
+  _pickupMessage: Aperte [E] para pegar a vassoura
+  _prompt: {fileID: 771000001}
+  _pickupSound: {fileID: 0}
+  _pickupVolume: 1
+--- !u!114 &778000101
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 185780720}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d41f8a2b6c9e4f7a8b3d5e1c2a9f6b40, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.DirtSpot
+  _itemId: sujeira-terra-01
+  _requiredKind: vassoura
+  _taskType: sweep_floor
+  _slotId: chao
+  _segundosParaLimpar: 1.8
+  _promptMessage: Segure [E] para varrer a terra
+  _promptSemFerramenta: Voce precisa da vassoura para limpar isso
+  _prompt: {fileID: 771000001}
+  _somLimpeza: {fileID: 8300000, guid: 1be2dac00cb96d7448452f1fa4a599f1, type: 3}
+  _volume: 1
+--- !u!114 &778000102
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 291397499}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d41f8a2b6c9e4f7a8b3d5e1c2a9f6b40, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.DirtSpot
+  _itemId: sujeira-terra-02
+  _requiredKind: vassoura
+  _taskType: sweep_floor
+  _slotId: chao
+  _segundosParaLimpar: 1.8
+  _promptMessage: Segure [E] para varrer a terra
+  _promptSemFerramenta: Voce precisa da vassoura para limpar isso
+  _prompt: {fileID: 771000001}
+  _somLimpeza: {fileID: 8300000, guid: 1be2dac00cb96d7448452f1fa4a599f1, type: 3}
+  _volume: 1
+--- !u!114 &778000103
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1893545738}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d41f8a2b6c9e4f7a8b3d5e1c2a9f6b40, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.DirtSpot
+  _itemId: sujeira-terra-03
+  _requiredKind: vassoura
+  _taskType: sweep_floor
+  _slotId: chao
+  _segundosParaLimpar: 1.8
+  _promptMessage: Segure [E] para varrer a terra
+  _promptSemFerramenta: Voce precisa da vassoura para limpar isso
+  _prompt: {fileID: 771000001}
+  _somLimpeza: {fileID: 8300000, guid: 1be2dac00cb96d7448452f1fa4a599f1, type: 3}
+  _volume: 1
+--- !u!114 &778000104
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 246464829}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d41f8a2b6c9e4f7a8b3d5e1c2a9f6b40, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.DirtSpot
+  _itemId: sujeira-terra-04
+  _requiredKind: vassoura
+  _taskType: sweep_floor
+  _slotId: chao
+  _segundosParaLimpar: 1.8
+  _promptMessage: Segure [E] para varrer a terra
+  _promptSemFerramenta: Voce precisa da vassoura para limpar isso
+  _prompt: {fileID: 771000001}
+  _somLimpeza: {fileID: 8300000, guid: 1be2dac00cb96d7448452f1fa4a599f1, type: 3}
+  _volume: 1
+--- !u!114 &778000105
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1354882294}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d41f8a2b6c9e4f7a8b3d5e1c2a9f6b40, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.DirtSpot
+  _itemId: sujeira-chips-01
+  _requiredKind: vassoura
+  _taskType: sweep_floor
+  _slotId: chao
+  _segundosParaLimpar: 1.8
+  _promptMessage: Segure [E] para varrer os chips
+  _promptSemFerramenta: Voce precisa da vassoura para limpar isso
+  _prompt: {fileID: 771000001}
+  _somLimpeza: {fileID: 8300000, guid: 1be2dac00cb96d7448452f1fa4a599f1, type: 3}
+  _volume: 1
+--- !u!114 &778000106
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 531686578}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d41f8a2b6c9e4f7a8b3d5e1c2a9f6b40, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.DirtSpot
+  _itemId: sujeira-chips-02
+  _requiredKind: vassoura
+  _taskType: sweep_floor
+  _slotId: chao
+  _segundosParaLimpar: 1.8
+  _promptMessage: Segure [E] para varrer os chips
+  _promptSemFerramenta: Voce precisa da vassoura para limpar isso
+  _prompt: {fileID: 771000001}
+  _somLimpeza: {fileID: 8300000, guid: 1be2dac00cb96d7448452f1fa4a599f1, type: 3}
+  _volume: 1
+--- !u!114 &778000107
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1116949255}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d41f8a2b6c9e4f7a8b3d5e1c2a9f6b40, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.DirtSpot
+  _itemId: sujeira-chips-03
+  _requiredKind: vassoura
+  _taskType: sweep_floor
+  _slotId: chao
+  _segundosParaLimpar: 1.8
+  _promptMessage: Segure [E] para varrer os chips
+  _promptSemFerramenta: Voce precisa da vassoura para limpar isso
+  _prompt: {fileID: 771000001}
+  _somLimpeza: {fileID: 8300000, guid: 1be2dac00cb96d7448452f1fa4a599f1, type: 3}
+  _volume: 1
+--- !u!65 &778000201
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1641821104}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 80, y: 80, z: 80}
+  m_Center: {x: 0.017738346, y: -0.009004474, z: 3.3094618}
+--- !u!114 &778000202
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1641821104}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91c3e3a6c17a61744b1e2607dd1e3ef9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.CarryableItem
+  _itemId: lata-01
+  _kind: lata
+  _isTool: 0
+  _pickupMessage: Aperte [E] para pegar a lata
+  _prompt: {fileID: 771000001}
+  _pickupSound: {fileID: 0}
+  _pickupVolume: 1
+--- !u!65 &778000203
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1126169482}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 80, y: 80, z: 80}
+  m_Center: {x: 0.017738346, y: -0.009004474, z: 3.3094618}
+--- !u!114 &778000204
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1126169482}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91c3e3a6c17a61744b1e2607dd1e3ef9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.CarryableItem
+  _itemId: lata-02
+  _kind: lata
+  _isTool: 0
+  _pickupMessage: Aperte [E] para pegar a lata
+  _prompt: {fileID: 771000001}
+  _pickupSound: {fileID: 0}
+  _pickupVolume: 1
+--- !u!65 &778000205
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 504051936}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 80, y: 80, z: 80}
+  m_Center: {x: 0.017738346, y: -0.009004474, z: 3.3094618}
+--- !u!114 &778000206
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 504051936}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91c3e3a6c17a61744b1e2607dd1e3ef9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.CarryableItem
+  _itemId: lata-03
+  _kind: lata
+  _isTool: 0
+  _pickupMessage: Aperte [E] para pegar a lata
+  _prompt: {fileID: 771000001}
+  _pickupSound: {fileID: 0}
+  _pickupVolume: 1
+--- !u!65 &778000207
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 827919198}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 80, y: 80, z: 80}
+  m_Center: {x: 0.017738346, y: -0.009004474, z: 3.3094618}
+--- !u!114 &778000208
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 827919198}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91c3e3a6c17a61744b1e2607dd1e3ef9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.CarryableItem
+  _itemId: lata-04
+  _kind: lata
+  _isTool: 0
+  _pickupMessage: Aperte [E] para pegar a lata
+  _prompt: {fileID: 771000001}
+  _pickupSound: {fileID: 0}
+  _pickupVolume: 1
+--- !u!1 &778000300 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1956597881070382525, guid: 5fab3d9a08a16ed429bbc510962997d8, type: 3}
+  m_PrefabInstance: {fileID: 82294523}
+  m_PrefabAsset: {fileID: 0}
+--- !u!65 &778000301
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 778000300}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 2, y: 3, z: 3.5}
+  m_Center: {x: 0, y: 1.2, z: 0}
+--- !u!114 &778000302
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 778000300}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ddd9a14725e16d439b47d9f5e939a28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.TaskDepositPoint
+  _slotId: slot-maquina-vendas
+  _acceptedKind: lata
+  _taskType: return_cans
+  _promptMessage: "Aperte [E] para colocar a lata na m\xE1quina"
+  _prompt: {fileID: 771000001}
+  _rejectionMessageSeconds: 3
+  _depositSound: {fileID: 8300000, guid: 3edd11fad3a2ffc4b9767bdb3f07fc2b, type: 3}
+  _depositVolume: 1
+  _placedVisuals: []
+--- !u!114 &778000303
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 778000300}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0701cc895c01c45429936418fcacea4f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.DepositHighlight
+  _altura: 2.1
+  _tamanho: 0.18
+  _amplitudeSobeDesce: 0.1
+  _velocidadeSobeDesce: 2
+  _velocidadeGiro: 90
+  _cor: {r: 1, g: 0.82, b: 0.15, a: 1}
+  _customVisual: {fileID: 0}
+--- !u!1 &778000400 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 768843a56882af240aaa7909ec9b98f0, type: 3}
+  m_PrefabInstance: {fileID: 118936290}
+  m_PrefabAsset: {fileID: 0}
+--- !u!65 &778000401
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 778000400}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 6.742, y: 6.742, z: 6.742}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &778000402
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 778000400}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91c3e3a6c17a61744b1e2607dd1e3ef9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.CarryableItem
+  _itemId: caixa-01
+  _kind: caixa
+  _isTool: 0
+  _pickupMessage: Aperte [E] para pegar a caixa
+  _prompt: {fileID: 771000001}
+  _pickupSound: {fileID: 0}
+  _pickupVolume: 1
+--- !u!1 &778000410 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: b24820a9688e07543b6af9c6b9b5c9cb, type: 3}
+  m_PrefabInstance: {fileID: 1179054114}
+  m_PrefabAsset: {fileID: 0}
+--- !u!65 &778000411
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 778000410}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 3.977, y: 3.977, z: 3.977}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &778000412
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 778000410}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91c3e3a6c17a61744b1e2607dd1e3ef9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.CarryableItem
+  _itemId: caixa-02
+  _kind: caixa
+  _isTool: 0
+  _pickupMessage: Aperte [E] para pegar a caixa
+  _prompt: {fileID: 771000001}
+  _pickupSound: {fileID: 0}
+  _pickupVolume: 1
+--- !u!1 &778000420 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: db68100f6df72d849bb604a12d32b2e8, type: 3}
+  m_PrefabInstance: {fileID: 1706819786}
+  m_PrefabAsset: {fileID: 0}
+--- !u!65 &778000421
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 778000420}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 8.413, y: 8.413, z: 8.413}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &778000422
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 778000420}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91c3e3a6c17a61744b1e2607dd1e3ef9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.CarryableItem
+  _itemId: caixa-03
+  _kind: caixa
+  _isTool: 0
+  _pickupMessage: Aperte [E] para pegar a caixa
+  _prompt: {fileID: 771000001}
+  _pickupSound: {fileID: 0}
+  _pickupVolume: 1
+--- !u!1001 &778000600
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 101856330}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.22397193
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.22397192
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.22397193
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -26.903
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1.278
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 9.599
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 90
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_Name
+      value: Caixa_Estante_01
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: a275092847f3c684eab24129010b43ce, type: 3}
+--- !u!4 &778000601 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
+  m_PrefabInstance: {fileID: 778000600}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &778000602 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: a275092847f3c684eab24129010b43ce, type: 3}
+  m_PrefabInstance: {fileID: 778000600}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &778000610
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 101856330}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.22397193
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.22397192
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.22397193
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -26.453
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1.278
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 9.599
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 90
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_Name
+      value: Caixa_Estante_02
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: a275092847f3c684eab24129010b43ce, type: 3}
+--- !u!4 &778000611 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
+  m_PrefabInstance: {fileID: 778000610}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &778000612 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: a275092847f3c684eab24129010b43ce, type: 3}
+  m_PrefabInstance: {fileID: 778000610}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &778000620
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 101856330}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.22397193
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.22397192
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.22397193
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -26.003
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1.278
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 9.599
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 90
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_Name
+      value: Caixa_Estante_03
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: a275092847f3c684eab24129010b43ce, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: a275092847f3c684eab24129010b43ce, type: 3}
+--- !u!4 &778000621 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: a275092847f3c684eab24129010b43ce, type: 3}
+  m_PrefabInstance: {fileID: 778000620}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &778000622 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: a275092847f3c684eab24129010b43ce, type: 3}
+  m_PrefabInstance: {fileID: 778000620}
+  m_PrefabAsset: {fileID: 0}
+--- !u!65 &778000501
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 566171210}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 2.4, y: 2.6, z: 2.3}
+  m_Center: {x: 0, y: 0, z: -1.04}
+--- !u!114 &778000502
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 566171210}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ddd9a14725e16d439b47d9f5e939a28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.TaskDepositPoint
+  _slotId: slot-estante-almoxarifado
+  _acceptedKind: caixa
+  _taskType: shelve_boxes
+  _promptMessage: Aperte [E] para guardar a caixa na estante
+  _prompt: {fileID: 771000001}
+  _rejectionMessageSeconds: 3
+  _depositSound: {fileID: 8300000, guid: df683f146c10c2b43a92a6585c058ac0, type: 3}
+  _depositVolume: 1
+  _placedVisuals:
+  - {fileID: 778000602}
+  - {fileID: 778000612}
+  - {fileID: 778000622}
+--- !u!114 &778000503
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 566171210}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0701cc895c01c45429936418fcacea4f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoraExtra.Interactions.DepositHighlight
+  _altura: 2.4
+  _tamanho: 0.18
+  _amplitudeSobeDesce: 0.1
+  _velocidadeSobeDesce: 2
+  _velocidadeGiro: 90
+  _cor: {r: 1, g: 0.82, b: 0.15, a: 1}
+  _customVisual: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -51360,4 +52377,5 @@ SceneRoots:
   - {fileID: 700000052}
   - {fileID: 700000010}
   - {fileID: 700000049}
+  - {fileID: 79283880}
   - {fileID: 791000002}
