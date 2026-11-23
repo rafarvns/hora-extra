@@ -408,6 +408,20 @@ namespace HoraExtra.Characters
             return false;
         }
 
+        /// <summary>
+        /// Quantos itens já foram contados, na sala, nas tarefas deste tipo (por qualquer
+        /// jogador). Usado para o mundo refletir entregas acumuladas, como as caixas que
+        /// aparecem na estante.
+        /// </summary>
+        public int CountCollectedOfType(string type)
+        {
+            if (string.IsNullOrEmpty(type)) return 0;
+            int n = 0;
+            foreach (var t in _roomTasks.Values)
+                if (t.CollectedItems != null && TypeOf(t.Id) == type) n += t.CollectedItems.Count;
+            return n;
+        }
+
         /// <summary>Alguma tarefa deste tipo já foi encerrada na sala?</summary>
         public bool IsTaskTypeDone(string type)
         {

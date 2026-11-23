@@ -29,6 +29,11 @@ namespace HoraExtra.UI
 
         // Tarefa 18 — Limpar recepção e almoxarifado (plano 0006).
         public const string TYPE_CLEAN_FLOOR = "clean_floor";
+        public const string TYPE_SWEEP_FLOOR = "sweep_floor";
+
+        // Recepção e almoxarifado — latas na máquina de vendas e caixas na estante.
+        public const string TYPE_RETURN_CANS   = "return_cans";
+        public const string TYPE_SHELVE_BOXES  = "shelve_boxes";
 
         // Financeiro (3º andar) — Tarefa 6 (cofres) e Tarefa 7 (enviar e-mail).
         public const string TYPE_OPEN_SAFE_COLLECT_MONEY = "open_safe_collect_money";
@@ -68,8 +73,11 @@ namespace HoraExtra.UI
                 case TYPE_COLLECT:
                 case TYPE_COLLECT_PAPERS:
                 case TYPE_COLLECT_PENS:
-                case TYPE_COLLECT_MAGAZINES: return TaskCategory.Organize;
-                case TYPE_CLEAN_FLOOR:       return TaskCategory.Clean;
+                case TYPE_COLLECT_MAGAZINES:
+                case TYPE_RETURN_CANS:
+                case TYPE_SHELVE_BOXES:      return TaskCategory.Organize;
+                case TYPE_CLEAN_FLOOR:
+                case TYPE_SWEEP_FLOOR:       return TaskCategory.Clean;
                 case TYPE_COFFEE_MAKER:      return TaskCategory.Coffee;
                 case TYPE_OPEN_SAFE_COLLECT_MONEY:
                 case TYPE_SEND_EMAIL_UPLOAD: return TaskCategory.Finance;
@@ -104,6 +112,9 @@ namespace HoraExtra.UI
                 case "caneta":  return plural ? "Canetas" : "Caneta";
                 case "revista": return plural ? "Revistas" : "Revista";
                 case "rodo":    return "Rodo";
+                case "vassoura": return "Vassoura";
+                case "lata":    return plural ? "Latas" : "Lata";
+                case "caixa":   return plural ? "Caixas" : "Caixa";
                 default:        return char.ToUpper(kind[0]) + kind.Substring(1);
             }
         }
@@ -128,6 +139,9 @@ namespace HoraExtra.UI
                 case TYPE_COLLECT_PENS:      return "Organizar as canetas";
                 case TYPE_COLLECT_MAGAZINES: return "Organizar as revistas";
                 case TYPE_CLEAN_FLOOR:       return "Limpar as manchas do chão";
+                case TYPE_SWEEP_FLOOR:       return "Varrer a sujeira do chão";
+                case TYPE_RETURN_CANS:       return "Levar as latas à máquina de vendas";
+                case TYPE_SHELVE_BOXES:      return "Guardar as caixas na estante";
                 case TYPE_OPEN_SAFE_COLLECT_MONEY: return "Abrir os cofres e recolher o dinheiro";
                 case TYPE_SEND_EMAIL_UPLOAD: return "Enviar o e-mail pendente";
                 default:
@@ -154,6 +168,9 @@ namespace HoraExtra.UI
                 case TYPE_COLLECT_PENS:     return "Organizar as canetas";
                 case TYPE_COLLECT_MAGAZINES:return "Organizar as revistas";
                 case TYPE_CLEAN_FLOOR:      return "Limpar as manchas do chão";
+                case TYPE_SWEEP_FLOOR:      return "Varrer a sujeira do chão";
+                case TYPE_RETURN_CANS:      return "Levar as latas à máquina de vendas";
+                case TYPE_SHELVE_BOXES:     return "Guardar as caixas na estante";
                 case TYPE_OPEN_SAFE_COLLECT_MONEY: return "Abrir os cofres e recolher o dinheiro";
                 case TYPE_SEND_EMAIL_UPLOAD: return "Enviar o e-mail pendente";
                 default:                    return "Tarefa";
@@ -192,6 +209,20 @@ namespace HoraExtra.UI
                            "Primeiro pegue o rodo com [E] — ele fica perto da entrada.\n" +
                            "Depois vá até cada mancha e SEGURE [E] até a barra encher.\n" +
                            "O rodo continua na sua mão: dá para limpar todas sem voltar.";
+                case TYPE_SWEEP_FLOOR:
+                    return $"Há {task.TargetCount} sujeiras de terra e de chips pelo chão.\n" +
+                           "Primeiro pegue a vassoura com [E] (se estiver com o rodo, solte-o com [Q]).\n" +
+                           "Depois vá até cada sujeira e SEGURE [E] até a barra encher.\n" +
+                           "O losango dourado mostra a vassoura e depois cada sujeira.";
+                case TYPE_RETURN_CANS:
+                    return $"Há {task.TargetCount} latas largadas pelo andar.\n" +
+                           "Aperte [E] para pegar — dá para juntar várias de uma vez.\n" +
+                           "Leve até a máquina de vendas e aperte [E] para guardar.\n" +
+                           "O losango dourado mostra onde entregar.";
+                case TYPE_SHELVE_BOXES:
+                    return $"Há {task.TargetCount} caixas de papelão fora do lugar no almoxarifado.\n" +
+                           "Aperte [E] para pegar uma caixa e leve até a estante.\n" +
+                           "Aperte [E] na estante para guardar. O losango dourado mostra onde.";
                 case TYPE_OPEN_SAFE_COLLECT_MONEY:
                     // TEMPORÁRIO: senhas no texto porque os post-its estão ilegíveis na cena
                     // (cadeira na frente). Tirar quando a Alice reposicionar os post-its.
