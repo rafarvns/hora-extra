@@ -36,6 +36,10 @@ namespace HoraExtra.UI.Menu
         [Tooltip("Desativa o Canvas antigo do MainMenuController.")]
         [SerializeField] private bool _hideLegacyMenu = true;
 
+        [Header("Som")]
+        [Tooltip("Clique de todos os botões do menu (SFX_ClickMenu). Vazio = sem som.")]
+        [SerializeField] private AudioClip _clickSound;
+
         public HudTheme Theme { get; private set; }
 
         /// <summary>null = ainda não checado; true/false = último resultado do health check.</summary>
@@ -56,6 +60,7 @@ namespace HoraExtra.UI.Menu
         private void Awake()
         {
             Theme = _theme != null ? _theme : HudTheme.LoadOrDefault();
+            MenuButton.ClickSound = _clickSound;
 
             // Voltou de uma partida: garante que não sobrou conexão aberta e solta o cursor
             // (o jogador o trava no centro da tela).

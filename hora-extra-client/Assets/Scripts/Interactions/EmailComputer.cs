@@ -25,6 +25,11 @@ namespace HoraExtra.Interactions
         [SerializeField] private string _promptMessage = "Aperte [E] para usar o computador";
         [SerializeField] private InteractionPrompt _prompt;
 
+        [Header("Som (opcional)")]
+        [Tooltip("Tocado ao clicar em \"Enviar email\" (SFX_Click).")]
+        [SerializeField] private AudioClip _somClique;
+        [SerializeField, Range(0f, 1f)] private float _volume = 1f;
+
         /// <summary>Tipo da task. Lido pelo marcador de objetivo da HUD.</summary>
         public string TaskType => _taskType;
 
@@ -95,7 +100,7 @@ namespace HoraExtra.Interactions
             if (task.Status == TaskPresentation.STATUS_PENDING)
                 TaskSystemBridge.Instance.SendStartInteraction(task.Id);
 
-            EmailUploadPanel.Open(_segundosEnvio, AoTerminarEnvio, AoFecharPainel);
+            EmailUploadPanel.Open(_segundosEnvio, AoTerminarEnvio, AoFecharPainel, _somClique, _volume);
             Debug.Log($"[GAMEPLAY] EmailComputer — tela aberta (taskId={task.Id}, status={task.Status}).");
         }
 

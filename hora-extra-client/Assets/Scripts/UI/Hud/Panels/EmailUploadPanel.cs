@@ -3,6 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using HoraExtra.Audio;
 using HoraExtra.Interactions;
 
 #if ENABLE_INPUT_SYSTEM
@@ -51,6 +52,8 @@ namespace HoraExtra.UI.Hud.Panels
         private float _fecharEm;
         private Action _aoTerminarEnvio;
         private Action _aoFechar;
+        private AudioClip _somClique;
+        private float _volumeClique = 1f;
 
         /// <summary>
         /// Abre a tela.
@@ -58,9 +61,16 @@ namespace HoraExtra.UI.Hud.Panels
         /// <param name="segundosEnvio">Duração da barra.</param>
         /// <param name="aoTerminarEnvio">Barra cheia: o dono envia o resultado ao servidor.</param>
         /// <param name="aoFechar">Tela fechada (por [Esc], botão X ou após concluir).</param>
-        public static void Open(float segundosEnvio, Action aoTerminarEnvio, Action aoFechar)
+        /// <param name="somClique">Tocado ao clicar em "Enviar email" (SFX_Click). Null = sem som.
+        /// Vem do dono porque o painel é criado em runtime e não tem Inspector.</param>
+        /// <param name="volumeClique">Volume do <paramref name="somClique"/> (0..1).</param>
+        public static void Open(float segundosEnvio, Action aoTerminarEnvio, Action aoFechar,
+            AudioClip somClique = null, float volumeClique = 1f)
         {
-            Ensure().AbrirInterno(segundosEnvio, aoTerminarEnvio, aoFechar);
+            var painel = Ensure();
+            painel._somClique = somClique;
+            painel._volumeClique = volumeClique;
+            painel.AbrirInterno(segundosEnvio, aoTerminarEnvio, aoFechar);
         }
 
         /// <summary>O servidor confirmou: mostra "Enviado!" e fecha sozinho.</summary>
@@ -250,6 +260,7 @@ namespace HoraExtra.UI.Hud.Panels
         private void AoClicarEnviar()
         {
             if (_estado != Estado.Pronto) return;
+            InteractionAudio.PlayOneShot(_somClique, _volumeClique);
             _estado = Estado.Enviando;
             _progresso = 0f;
             _botaoEnviar.interactable = false;

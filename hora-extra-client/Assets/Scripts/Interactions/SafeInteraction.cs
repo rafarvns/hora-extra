@@ -51,6 +51,9 @@ namespace HoraExtra.Interactions
         [SerializeField] private InteractionPrompt _prompt;
 
         [Header("Som (opcional)")]
+        [Tooltip("Tocado a cada dígito digitado no teclado do cofre (SFX_Password).")]
+        [SerializeField] private AudioClip _somSenha;
+        [Tooltip("Tocado quando começa a recolher o dinheiro (SFX_Cash).")]
         [SerializeField] private AudioClip _somRecolher;
         [SerializeField, Range(0f, 1f)] private float _volume = 1f;
 
@@ -169,7 +172,9 @@ namespace HoraExtra.Interactions
             SafeKeypadPanel.Open("COFRE", Mathf.Max(1, _codigo.Length),
                 validar: digitado => digitado == _codigo,
                 aoAbrir: AoAcertarSenha,
-                aoCancelar: AoCancelarTeclado);
+                aoCancelar: AoCancelarTeclado,
+                somDigito: _somSenha,
+                volumeDigito: _volume);
         }
 
         private void AoAcertarSenha()

@@ -3,6 +3,7 @@ using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using HoraExtra.Audio;
 using HoraExtra.Interactions;
 
 namespace HoraExtra.UI.Hud.Panels
@@ -39,6 +40,8 @@ namespace HoraExtra.UI.Hud.Panels
         private Func<string, bool> _validar;
         private Action _aoAbrir;
         private Action _aoCancelar;
+        private AudioClip _somDigito;
+        private float _volumeDigito = 1f;
 
         /// <summary>
         /// Abre o teclado.
@@ -48,9 +51,16 @@ namespace HoraExtra.UI.Hud.Panels
         /// <param name="validar">Recebe o que foi digitado; true = senha certa.</param>
         /// <param name="aoAbrir">Chamado depois do feedback verde, com o painel já fechado.</param>
         /// <param name="aoCancelar">Chamado ao sair com [Esc].</param>
-        public static void Open(string titulo, int digitos, Func<string, bool> validar, Action aoAbrir, Action aoCancelar)
+        /// <param name="somDigito">Tocado a cada dígito digitado (SFX_Password). Null = sem som.
+        /// Vem de quem abre porque o painel é criado em runtime e não tem Inspector.</param>
+        /// <param name="volumeDigito">Volume do <paramref name="somDigito"/> (0..1).</param>
+        public static void Open(string titulo, int digitos, Func<string, bool> validar, Action aoAbrir, Action aoCancelar,
+            AudioClip somDigito = null, float volumeDigito = 1f)
         {
-            Ensure().AbrirInterno(titulo, digitos, validar, aoAbrir, aoCancelar);
+            var painel = Ensure();
+            painel._somDigito = somDigito;
+            painel._volumeDigito = volumeDigito;
+            painel.AbrirInterno(titulo, digitos, validar, aoAbrir, aoCancelar);
         }
 
         /// <summary>Fecha sem chamar callbacks (ex: o cofre saiu de cena).</summary>
@@ -156,6 +166,7 @@ namespace HoraExtra.UI.Hud.Panels
             if (InteractionInput.DigitPressed(out int d) && _digitado.Length < _digitos)
             {
                 _digitado += d.ToString();
+                InteractionAudio.PlayOneShot(_somDigito, _volumeDigito);
                 AtualizarVisor(_theme.Accent);
                 if (_digitado.Length == _digitos) Confirmar();
                 return;

@@ -24878,7 +24878,7 @@ MonoBehaviour:
   _slotId: lixeira-01
   _acceptedKind: papel_lixo
   _taskType: throw_trash_papers
-  _hitSound: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb3, type: 3}
+  _hitSound: {fileID: 8300000, guid: 2fc70b89f64dd1442a74a1605f63750b, type: 3}
   _hitVolume: 1
 --- !u!65 &910000011
 BoxCollider:
@@ -24916,7 +24916,7 @@ MonoBehaviour:
   _slotId: lixeira-02
   _acceptedKind: papel_lixo
   _taskType: throw_trash_papers
-  _hitSound: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb3, type: 3}
+  _hitSound: {fileID: 8300000, guid: 2fc70b89f64dd1442a74a1605f63750b, type: 3}
   _hitVolume: 1
 --- !u!65 &910000021
 BoxCollider:
@@ -24954,7 +24954,7 @@ MonoBehaviour:
   _slotId: lixeira-03
   _acceptedKind: papel_lixo
   _taskType: throw_trash_papers
-  _hitSound: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb3, type: 3}
+  _hitSound: {fileID: 8300000, guid: 2fc70b89f64dd1442a74a1605f63750b, type: 3}
   _hitVolume: 1
 --- !u!65 &910000031
 BoxCollider:
@@ -24992,7 +24992,7 @@ MonoBehaviour:
   _slotId: lixeira-04
   _acceptedKind: papel_lixo
   _taskType: throw_trash_papers
-  _hitSound: {fileID: 8300000, guid: a71c4e0f9b2d48a4c8e35f1607d92bb3, type: 3}
+  _hitSound: {fileID: 8300000, guid: 2fc70b89f64dd1442a74a1605f63750b, type: 3}
   _hitVolume: 1
 --- !u!114 &913000011
 MonoBehaviour:

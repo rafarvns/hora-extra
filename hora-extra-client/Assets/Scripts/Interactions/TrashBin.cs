@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using HoraExtra.Audio;
 using HoraExtra.Characters;
+using HoraExtra.Network;
 using HoraExtra.Network.Models;
 using HoraExtra.UI;
 
@@ -117,6 +118,9 @@ namespace HoraExtra.Interactions
         {
             if (!IsAwaitingServer || _pending.Count == 0) return;
             if (task == null || task.Id != _pendingTaskId) return;
+            // Só a confirmação do NOSSO envio: o task_updated chega para todos da sala, e o
+            // acerto do colega não pode consumir o papel que está na nossa fila (nem tocar som).
+            if (!IsLocalPlayer(playerId)) return;
             if (task.CurrentProgress <= _progressBeforeSend) return;
 
             var paper = _pending.Dequeue();
@@ -144,6 +148,17 @@ namespace HoraExtra.Interactions
             Debug.Log($"[GAMEPLAY] TrashBin '{_slotId}' — entrega recusada ({payload.Code}): {payload.Message}");
 
             DispatchNext();
+        }
+
+        /// <summary>
+        /// Trata playerId vazio como local, como o <see cref="TaskDepositPoint"/>: no bypass de
+        /// desenvolvimento a sessão pode não expor o id.
+        /// </summary>
+        private static bool IsLocalPlayer(string playerId)
+        {
+            var localId = SocketManager.Instance?.LocalPlayerId;
+            if (string.IsNullOrEmpty(localId) || string.IsNullOrEmpty(playerId)) return true;
+            return localId == playerId;
         }
     }
 }

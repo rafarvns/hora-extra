@@ -12987,6 +12987,8 @@ MonoBehaviour:
   _segundosTimeout: 5
   _promptMessage: Aperte [E] para usar o computador
   _prompt: {fileID: 0}
+  _somClique: {fileID: 8300000, guid: 5dacc81ef364b514f842e3361330ff39, type: 3}
+  _volume: 1
 --- !u!65 &1082295335
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -16818,7 +16820,8 @@ MonoBehaviour:
   _promptTrancado: Aperte [E] para digitar a senha do cofre
   _promptAberto: Aperte [E] para recolher o dinheiro
   _prompt: {fileID: 0}
-  _somRecolher: {fileID: 0}
+  _somSenha: {fileID: 8300000, guid: 4f37bba855d05334890e3a565bfa2724, type: 3}
+  _somRecolher: {fileID: 8300000, guid: 6b499bf89e87a2f4db60a14880af33fe, type: 3}
   _volume: 1
 --- !u!114 &1443318976
 MonoBehaviour:
@@ -21933,7 +21936,8 @@ MonoBehaviour:
   _promptTrancado: Aperte [E] para digitar a senha do cofre
   _promptAberto: Aperte [E] para recolher o dinheiro
   _prompt: {fileID: 0}
-  _somRecolher: {fileID: 0}
+  _somSenha: {fileID: 8300000, guid: 4f37bba855d05334890e3a565bfa2724, type: 3}
+  _somRecolher: {fileID: 8300000, guid: 6b499bf89e87a2f4db60a14880af33fe, type: 3}
   _volume: 1
 --- !u!114 &1925304616
 MonoBehaviour:
