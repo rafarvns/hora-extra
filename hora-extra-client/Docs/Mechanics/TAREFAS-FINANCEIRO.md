@@ -71,6 +71,17 @@ do plano `0009` (etapas com `expects`), se um dia for preciso.
 Todo dono libera a trava no `OnDisable`, então sair do Play Mode ou trocar de cena não deixa o
 jogador preso.
 
+## Sons
+
+| Momento | Clipe | Campo |
+| :------ | :---- | :---- |
+| Cada dígito digitado no teclado do cofre | `SFX_Password` | `SafeInteraction._somSenha` (repassado ao `SafeKeypadPanel.Open`) |
+| Início do recolhimento do dinheiro | `SFX_Cash` | `SafeInteraction._somRecolher` |
+| Clique em "Enviar email" (ou `[Enter]`) | `SFX_Click` | `EmailComputer._somClique` (repassado ao `EmailUploadPanel.Open`) |
+
+Os painéis são criados em runtime e não têm Inspector, por isso o clipe vem do componente da cena
+que os abre. Regras gerais em [AUDIO.md](AUDIO.md).
+
 ## HUD
 
 - Categoria **FINANCEIRO** (verde) no card de tarefa (`TaskPresentation.TaskCategory.Finance`).

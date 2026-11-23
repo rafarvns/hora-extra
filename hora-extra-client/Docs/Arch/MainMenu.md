@@ -38,7 +38,9 @@ desativa em runtime; desmarque `_hideLegacyMenu` para trazê-lo de volta.
   `Cycler`, `FieldRow`, `SectionTitle`) construídos sobre o `HudFactory`.
 - `UI/Menu/MenuButton.cs`: `Selectable` com destaque animado e o estado "indisponível + motivo".
   Passar o mouse por cima também seleciona o botão, para mouse e teclado não destacarem dois
-  botões ao mesmo tempo.
+  botões ao mesmo tempo. Todo clique (mouse ou `[Enter]`) toca `MenuButton.ClickSound`
+  (`SFX_ClickMenu`), que o `MainMenuRoot` preenche no `Awake` a partir do campo `_clickSound`.
+  O som sobrevive à troca de cena de "Criar sala" (ver [AUDIO.md](../Mechanics/AUDIO.md)).
 - `UI/Menu/MenuPanel.cs`: base dos painéis laterais.
 - `UI/Menu/MenuSprites.cs`: gradiente, vinheta e brilho, gerados em runtime.
 - `Settings/GameSettings.cs`: preferências salvas em PlayerPrefs (ver abaixo).
