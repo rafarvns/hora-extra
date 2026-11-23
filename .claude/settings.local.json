@@ -44,9 +44,6 @@
     "deny": [
       "Bash(npx prisma migrate reset*)",
       "Bash(npm run db:migrate -- --reset*)",
-      "Bash(git add *)",
-      "Bash(git commit *)",
-      "Bash(git push *)",
       "Bash(rm -rf *)"
     ]
   }
