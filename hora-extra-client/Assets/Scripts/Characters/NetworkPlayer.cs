@@ -89,7 +89,7 @@ namespace HoraExtra.Characters
             _nome.color = Color.white;
             _nome.outlineWidth = 0.2f;
             _nome.outlineColor = new Color32(0, 0, 0, 200);
-            _nome.enableWordWrapping = false;
+            _nome.textWrappingMode = TextWrappingModes.NoWrap;
             _nome.rectTransform.sizeDelta = new Vector2(4f, 1f);
 
             go.AddComponent<Billboard>();
